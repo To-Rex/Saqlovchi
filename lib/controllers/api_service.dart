@@ -174,6 +174,41 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getWarehouseStats() async {
+    try {
+      // Umumiy tovarlar soni va qiymatini olish
+      final productsResponse = await _suPaBase
+          .from('products')
+          .select('quantity, cost_price, selling_price, category_id, categories(name)')
+          .order('created_at', ascending: false);
+
+      // Statistikani hisoblash
+      double totalQuantity = 0.0;
+      double totalCostValue = 0.0;
+      double totalSellingValue = 0.0;
+      Map<String, double> categoryDistribution = {};
+
+      for (var product in productsResponse) {
+        totalQuantity += product['quantity'] ?? 0.0;
+        totalCostValue += (product['cost_price'] ?? 0.0) * (product['quantity'] ?? 0.0);
+        totalSellingValue += (product['selling_price'] ?? 0.0) * (product['quantity'] ?? 0.0);
+
+        String categoryName = product['categories']['name'] ?? 'Noma’lum';
+        categoryDistribution[categoryName] =
+            (categoryDistribution[categoryName] ?? 0.0) + (product['quantity'] ?? 0.0);
+      }
+
+      return {
+        'total_quantity': totalQuantity,
+        'total_cost_value': totalCostValue,
+        'total_selling_value': totalSellingValue,
+        'category_distribution': categoryDistribution,
+      };
+    } catch (e) {
+      throw Exception('Statistikani olishda xato: $e');
+    }
+  }
+
   // Sotilgan tovarlarni olish
   Future<List<dynamic>> getSoldItems() async {
     try {
