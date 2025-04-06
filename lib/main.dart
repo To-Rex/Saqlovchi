@@ -25,24 +25,34 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
-      path: '/',
+      path: '/', // Root yo‘li
       builder: (context, state) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => MenuAppController()),
         ],
-        child: MainScreen(),
+        child: const MainScreen(initialPage: ''), // Default bo‘sh sahifa
       ),
+    ),
+    GoRoute(
+      path: '/:page', // Dinamik sahifa parametri
+      builder: (context, state) {
+        final page = state.pathParameters['page'] ?? '';
+        return MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => MenuAppController()),
+          ],
+          child: MainScreen(initialPage: page),
+        );
+      },
     ),
   ],
   redirect: (context, state) async {
     final supabase = Supabase.instance.client;
     final session = supabase.auth.currentSession;
 
-    // If no session and trying to access protected route, redirect to login
     if (session == null && state.uri.toString() != '/login') {
       return '/login';
     }
-    // If session exists and trying to access login, redirect to home
     if (session != null && state.uri.toString() == '/login') {
       return '/';
     }
@@ -61,7 +71,7 @@ Future<void> main() async {
   );
 
   Get.put(GetController());
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -71,7 +81,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Online Shop',
+      title: 'Saqlovchi',
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: bgColor,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme).apply(bodyColor: Colors.white),

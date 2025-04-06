@@ -9,64 +9,72 @@ class SideMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(10), bottomRight: Radius.circular(10))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(10),
+          bottomRight: Radius.circular(10),
+        ),
+      ),
       child: ListView(
         children: [
           DrawerHeader(
             child: Row(
               children: [
                 Image.asset("assets/images/logo.png"),
-                Text(
+                const Text(
                   'Saqlovchi',
-                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
-                )
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
-            )
+            ),
           ),
           DrawerListTile(
             title: "Uy",
             svgSrc: "assets/icons/menu_dashboard.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/home'),
           ),
           DrawerListTile(
             title: "O‘tkazmalar",
             svgSrc: "assets/icons/menu_tran.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/transfers'),
           ),
           DrawerListTile(
             title: "Vazifalar",
             svgSrc: "assets/icons/menu_task.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/tasks'),
           ),
           DrawerListTile(
             title: "Hujjatlar",
             svgSrc: "assets/icons/menu_doc.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/documents'),
           ),
           DrawerListTile(
             title: "Sotuvlar",
             svgSrc: "assets/icons/menu_store.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/sales'),
           ),
           DrawerListTile(
             title: "Bildirishnomalar",
             svgSrc: "assets/icons/menu_notification.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/notifications'),
           ),
           DrawerListTile(
             title: "Foydalanuvchilar",
             svgSrc: "assets/icons/menu_profile.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/users'),
           ),
           DrawerListTile(
             title: "Sozlamalar",
             svgSrc: "assets/icons/menu_setting.svg",
-            press: () {},
+            press: () => GoRouter.of(context).go('/settings'),
           ),
           DrawerListTile(
             title: "Chiqish",
             color: Colors.red,
-            //svgSrc: "assets/icons/menu_logout.svg",
             icon: Icons.logout,
             press: () async {
               await Supabase.instance.client.auth.signOut();
@@ -80,7 +88,14 @@ class SideMenu extends StatelessWidget {
 }
 
 class DrawerListTile extends StatelessWidget {
-  const DrawerListTile({super.key, required this.title, this.svgSrc, required this.press, this.color, this.icon});
+  const DrawerListTile({
+    super.key,
+    required this.title,
+    this.svgSrc,
+    required this.press,
+    this.color,
+    this.icon,
+  });
 
   final String? title, svgSrc;
   final Color? color;
@@ -92,8 +107,19 @@ class DrawerListTile extends StatelessWidget {
     return ListTile(
       onTap: press,
       horizontalTitleGap: 0.0,
-      leading: svgSrc == null ? Icon(icon, color: color ?? Colors.white54) : SvgPicture.asset(svgSrc!, colorFilter: ColorFilter.mode(color ?? Colors.white54, BlendMode.srcIn), height: 16),
-      title: Text(' $title', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: color ?? Colors.white54))
+      leading: svgSrc == null
+          ? Icon(icon, color: color ?? Colors.white54)
+          : SvgPicture.asset(
+        svgSrc!,
+        colorFilter: ColorFilter.mode(color ?? Colors.white54, BlendMode.srcIn),
+        height: 16,
+      ),
+      title: Text(
+        ' $title',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: color ?? Colors.white54),
+      ),
     );
   }
 }
