@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:sklad/controllers/api_service.dart';
 import 'package:sklad/screens/main/main_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'constants.dart';
@@ -46,9 +47,10 @@ final GoRouter _router = GoRouter(
       },
     ),
   ],
+
   redirect: (context, state) async {
-    final supabase = Supabase.instance.client;
-    final session = supabase.auth.currentSession;
+    final suPaBase = Supabase.instance.client;
+    final session = suPaBase.auth.currentSession;
 
     if (session == null && state.uri.toString() != '/login') {
       return '/login';

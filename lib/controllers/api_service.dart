@@ -3,10 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'get_controller.dart';
+import 'package:uuid/uuid.dart';
+
 
 class ApiService {
   final _suPaBase = Supabase.instance.client;
+  final Uuid _uuid = Uuid();
   GetController get controller => Get.find<GetController>();
+
+  String? _getCurrentUserId() {
+    final userId = _suPaBase.auth.currentUser?.id;
+    if (userId == null) throw Exception('Foydalanuvchi tizimga kirmagan');
+    return userId;
+  }
 
   // Kategoriyalarni olish
   Future<List<dynamic>> getCategories() async {
@@ -77,56 +86,42 @@ class ApiService {
     }
   }
 
-  // Filtlangan va tartiblangan mahsulotlarni olish
-  Future<List<dynamic>> getFilteredAndSortedProducts({String? unit, double? minQuantity, double? maxQuantity, DateTime? startDate, DateTime? endDate, double? minCostPrice, double? maxCostPrice, double? minSellingPrice, double? maxSellingPrice, required String sortColumn, required bool ascending,}) async {
+  Future<List<dynamic>> getFilteredAndSortedProducts({String? unit, double? minQuantity, double? maxQuantity, DateTime? startDate, DateTime? endDate, double? minCostPrice, double? maxCostPrice, double? minSellingPrice, double? maxSellingPrice, required String sortColumn, required bool ascending}) async {
     try {
-      // Boshlang‘ich so‘rov
-      var query = _suPaBase
-          .from('products')
-          .select('id, name, category_id, cost_price, selling_price, quantity, unit_id, units(name), created_at, created_by, users!products_created_by_fkey(full_name), batches(id, batch_number, cost_price, quantity)');
+      var query = _suPaBase.from('products').select('id, name, category_id, cost_price, selling_price, quantity, unit_id, units(name), created_at, created_by, users!products_created_by_fkey(full_name), batches(id, batch_number, cost_price, quantity)');
 
-      // Filtrlarni ketma-ket qo‘llash
-      if (unit != null && unit.isNotEmpty) {
-        query = query.eq('units.name', unit);
-      }
-      if (minQuantity != null) {
-        query = query.gte('quantity', minQuantity);
-      }
-      if (maxQuantity != null) {
-        query = query.lte('quantity', maxQuantity);
-      }
-      if (startDate != null) {
-        query = query.gte('created_at', startDate.toIso8601String());
-      }
-      if (endDate != null) {
-        query = query.lte('created_at', endDate.toIso8601String());
-      }
-      if (minCostPrice != null) {
-        query = query.gte('cost_price', minCostPrice);
-      }
-      if (maxCostPrice != null) {
-        query = query.lte('cost_price', maxCostPrice);
-      }
-      if (minSellingPrice != null) {
-        query = query.gte('selling_price', minSellingPrice);
-      }
-      if (maxSellingPrice != null) {
-        query = query.lte('selling_price', maxSellingPrice);
+      if (unit != null && unit.isNotEmpty) query = query.eq('units.name', unit);
+      if (minQuantity != null) query = query.gte('quantity', minQuantity);
+      if (maxQuantity != null) query = query.lte('quantity', maxQuantity);
+      if (startDate != null) query = query.gte('created_at', startDate.toIso8601String());
+      if (endDate != null) query = query.lte('created_at', endDate.toIso8601String());
+      if (minCostPrice != null) query = query.gte('cost_price', minCostPrice);
+      if (maxCostPrice != null) query = query.lte('cost_price', maxCostPrice);
+      if (minSellingPrice != null) query = query.gte('selling_price', minSellingPrice);
+      if (maxSellingPrice != null) query = query.lte('selling_price', maxSellingPrice);
+
+      // SortColumn mavjudligini tekshirish
+      final validColumns = ['name', 'quantity', 'cost_price', 'selling_price', 'created_at'];
+      if (!validColumns.contains(sortColumn)) {
+        throw Exception('Noto‘g‘ri tartiblash ustuni: $sortColumn');
       }
 
-      // Tartiblashni oxirida qo‘llash
-      final sortedQuery = query.order(sortColumn, ascending: ascending);
-
-      final response = await sortedQuery;
-      return response as List<dynamic>;
+      final response = await query.order(sortColumn, ascending: ascending);
+      return response;
     } catch (e) {
-      throw Exception('Mahsulotlarni filtrlab olishda xato: $e');
+      Get.snackbar('Xatolik', 'Mahsulotlarni filtrlab olishda xato: $e');
+      rethrow;
     }
   }
 
-  // Mahsulot qo‘shish
+  // Mahsulot qo‘shish (validatsiya qo‘shildi)
   Future<void> addProduct(String name, String categoryId, double costPrice, String unitId, {double? sellingPrice, double? quantity}) async {
     try {
+      if (name.isEmpty) throw Exception('Mahsulot nomi bo‘sh bo‘lmasligi kerak');
+      if (costPrice < 0) throw Exception('Xarid narxi manfiy bo‘lmasligi kerak');
+      if (sellingPrice != null && sellingPrice < 0) throw Exception('Sotuv narxi manfiy bo‘lmasligi kerak');
+      if (quantity != null && quantity < 0) throw Exception('Miqdor manfiy bo‘lmasligi kerak');
+
       await _suPaBase.from('products').insert({
         'name': name,
         'category_id': categoryId,
@@ -134,12 +129,12 @@ class ApiService {
         'selling_price': sellingPrice ?? 0.0,
         'quantity': quantity ?? 0.0,
         'unit_id': unitId,
-        'created_by': _suPaBase.auth.currentUser?.id,
+        'created_by': _getCurrentUserId(),
       });
-      print('Mahsulot qo‘shildi, trigger batches ga qo‘shdi');
+      Get.snackbar('Muvaffaqiyat', 'Mahsulot qo‘shildi');
     } catch (e) {
-      print('Xato yuz berdi: $e');
-      throw Exception('Mahsulot qo‘shishda xato: $e');
+      Get.snackbar('Xatolik', 'Mahsulot qo‘shishda xato: $e');
+      rethrow;
     }
   }
 
@@ -222,6 +217,158 @@ class ApiService {
     }
   }
 
+  Future<void> returnProduct(String saleId, double quantity, String reason) async {
+    try {
+      await _suPaBase.from('sales').update({'status': 'returned'}).eq('id', saleId);
+      await _suPaBase.from('stock_transactions').insert({
+        'batch_id': (await _suPaBase.from('sold_items').select('batch_id').eq('sale_id', saleId).single())['batch_id'],
+        'quantity': quantity,
+        'transaction_date': DateTime.now().toIso8601String(),
+        'notes': reason,
+        'transaction_type': 'in',
+        'source': 'Qaytarish',
+        'created_by': _getCurrentUserId(),
+      });
+      Get.snackbar('Muvaffaqiyat', 'Tovar qaytarildi');
+    } catch (e) {
+      Get.snackbar('Xatolik', 'Tovar qaytarishda xato: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<void> sellProduct({
+    required String productId,
+    required double quantity,
+    String? customerId, // Ixtiyoriy
+    String? customerName, // Agar mijoz bazada bo‘lmasa, ismi kiritiladi
+    bool isCredit = false,
+    double? creditAmount,
+    DateTime? creditDueDate,
+    double discount = 0.0,
+  }) async {
+    try {
+      if (quantity <= 0) throw Exception('Miqdor 0 dan katta bo‘lishi kerak');
+      if (isCredit && (creditAmount == null || creditDueDate == null)) {
+        throw Exception('Kredit uchun summa va muddatni kiriting');
+      }
+      if (discount < 0) throw Exception('Chegirma manfiy bo‘lmasligi kerak');
+
+      // Mahsulot ma’lumotlari
+      final productResponse = await _suPaBase
+          .from('products')
+          .select('selling_price, cost_price')
+          .eq('id', productId)
+          .single();
+      final baseSellingPrice = (productResponse['selling_price'] as num).toDouble();
+      final costPrice = (productResponse['cost_price'] as num).toDouble();
+      final totalPriceWithoutDiscount = baseSellingPrice * quantity;
+      final finalSellingPrice = totalPriceWithoutDiscount - discount;
+
+      // Zaxira tekshiruvi
+      final stockResponse = await _suPaBase
+          .from('stock')
+          .select('quantity')
+          .eq('product_id', productId)
+          .single();
+      final availableQuantity = stockResponse['quantity'] as double? ?? 0.0;
+      if (availableQuantity < quantity) {
+        throw Exception('Omborda yetarli mahsulot yo‘q: $availableQuantity');
+      }
+
+      // Batch ID
+      final batchResponse = await _suPaBase
+          .from('batches')
+          .select('id')
+          .eq('product_id', productId)
+          .order('created_at', ascending: true)
+          .limit(1)
+          .single();
+      final batchId = batchResponse['id'] as String;
+
+      // Sotilgan mahsulot
+      final soldItemResponse = await _suPaBase.from('sold_items').insert({
+        'product_id': productId,
+        'batch_id': batchId,
+        'quantity': quantity,
+        'selling_price': finalSellingPrice / quantity,
+        'sale_date': DateTime.now().toIso8601String(),
+        'created_by': _getCurrentUserId(),
+      }).select('id').single();
+
+      // Sotuv
+      final saleId = _uuid.v4();
+      await _suPaBase.from('sales').insert({
+        'id': saleId,
+        'sold_item_id': soldItemResponse['id'],
+        'customer_id': customerId,
+        'is_credit': isCredit,
+        'credit_amount': isCredit ? creditAmount : 0.0,
+        'credit_due_date': isCredit ? creditDueDate?.toIso8601String() : null,
+        'created_by': _getCurrentUserId(),
+        'status': 'completed',
+      });
+
+      // Agar mijoz bazada bo‘lmasa va ism kiritilgan bo‘lsa
+      if (customerId == null && customerName != null && customerName.isNotEmpty) {
+        final newCustomerResponse = await _suPaBase.from('customers').insert({
+          'full_name': customerName,
+          'created_by': _getCurrentUserId(),
+          'created_at': DateTime.now().toIso8601String(),
+        }).select('id').single();
+        customerId = newCustomerResponse['id'] as String;
+        await _suPaBase.from('sales').update({'customer_id': customerId}).eq('id', saleId);
+      }
+
+      // Kredit
+      if (isCredit && creditAmount != null && creditDueDate != null && customerId != null) {
+        await _suPaBase.from('credits').insert({
+          'sale_id': saleId,
+          'customer_id': customerId,
+          'credit_amount': creditAmount,
+          'due_date': creditDueDate.toIso8601String(),
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      // Stock yangilash
+      await _suPaBase
+          .from('stock')
+          .update({'quantity': availableQuantity - quantity, 'last_updated': DateTime.now().toIso8601String()})
+          .eq('product_id', productId);
+
+      // Stock tranzaksiyasi
+      await _suPaBase.from('stock_transactions').insert({
+        'batch_id': batchId,
+        'quantity': quantity,
+        'transaction_date': DateTime.now().toIso8601String(),
+        'notes': 'Sotuv (Chegirma: $discount)',
+        'product_id': productId,
+        'transaction_type': 'out',
+        'source': 'Sotuv',
+        'created_by': _getCurrentUserId(),
+      });
+
+      print('Sotuv muvaffaqiyatli amalga oshirildi');
+    } catch (e) {
+      print('Xato yuz berdi: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getCustomers() async {
+    try {
+      final response = await _suPaBase
+          .from('customers')
+          .select('id, full_name, phone, address')
+          .order('created_at', ascending: false);
+      return response;
+    } catch (e) {
+      Get.snackbar('Xatolik', 'Mijozlarni olishda xato: $e');
+      rethrow;
+    }
+  }
+
   // Kirish (Sign In)
   Future<void> signIn(BuildContext context, String email, String password) async {
     try {
@@ -245,4 +392,6 @@ class ApiService {
   Future<void> signOut() async {
     await _suPaBase.auth.signOut();
   }
+
+
 }

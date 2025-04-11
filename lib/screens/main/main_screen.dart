@@ -54,7 +54,7 @@ class MainScreen extends StatelessWidget {
       case 'documents':
         return const DocumentsScreen();
       case 'sales':
-        return const SalesScreen();
+        return SalesScreen();
       case 'notifications':
         return const NotificationsScreen();
       case 'users':

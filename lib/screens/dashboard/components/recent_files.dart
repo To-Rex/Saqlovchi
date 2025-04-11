@@ -15,6 +15,21 @@ class RecentFiles extends StatelessWidget {
   static const Color lowStockColor = Colors.redAccent;
   static const double lowStockThreshold = 10.0;
 
+  List<ProductDisplayData> _filterProducts(List<dynamic> products, String searchQuery, String filterUnit, String filterCategory) {
+    var filtered = products
+        .where((p) => (p['name'] ?? '').toString().toLowerCase().contains(searchQuery.toLowerCase()))
+        .map((p) => ProductDisplayData.fromProduct(p, controller.categories));
+
+    if (filterUnit.isNotEmpty && controller.units.any((u) => u['name'] == filterUnit)) {
+      filtered = filtered.where((p) => p.unit == filterUnit);
+    }
+    if (filterCategory.isNotEmpty && controller.categories.any((c) => c['name'] == filterCategory)) {
+      filtered = filtered.where((p) => p.categoryName == filterCategory);
+    }
+
+    return filtered.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -57,6 +72,8 @@ class RecentFiles extends StatelessWidget {
     );
   }
 
+
+/*
   List<ProductDisplayData> _filterProducts(List<dynamic> products, String searchQuery, String filterUnit, String filterCategory) {
     var filtered = products
         .where((p) => (p['name'] ?? '').toString().toLowerCase().contains(searchQuery.toLowerCase()))
@@ -74,6 +91,7 @@ class RecentFiles extends StatelessWidget {
 
     return filtered.toList();
   }
+*/
 
 
 

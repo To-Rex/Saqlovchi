@@ -9,23 +9,46 @@ import '../../responsive.dart';
 import 'components/header.dart';
 import 'components/my_fields.dart';
 import 'components/recent_files.dart';
-
 class DashboardScreen extends StatelessWidget {
   DashboardScreen({super.key});
 
   final GetController controller = Get.put(GetController());
   final ApiService apiService = ApiService();
 
+  Widget _buildWarehouseStats(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: apiService.getWarehouseStats(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CustomLoadingWidget();
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 40),
+                const SizedBox(height: 8),
+                Text("Xato: ${snapshot.error}", style: const TextStyle(color: Colors.red)),
+              ],
+            ),
+          );
+        }
+        return WarehouseStats(stats: snapshot.data!);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,
-        padding: EdgeInsets.all(defaultPadding),
+        padding: const EdgeInsets.all(defaultPadding),
         child: Column(
           children: [
-            Header(),
-            SizedBox(height: defaultPadding),
+            const Header(),
+            const SizedBox(height: defaultPadding),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -34,43 +57,18 @@ class DashboardScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       MyFiles(controller: controller),
-                      SizedBox(height: defaultPadding),
+                      const SizedBox(height: defaultPadding),
                       RecentFiles(),
-                      if (Responsive.isMobile(context))
-                        SizedBox(height: defaultPadding),
-                      if (Responsive.isMobile(context))
-                        FutureBuilder<Map<String, dynamic>>(
-                          future: apiService.getWarehouseStats(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return CustomLoadingWidget();
-                            }
-                            if (snapshot.hasError) {
-                              return Text("Xato: ${snapshot.error}");
-                            }
-                            return WarehouseStats(stats: snapshot.data!);
-                          },
-                        ),
+                      if (Responsive.isMobile(context)) const SizedBox(height: defaultPadding),
+                      if (Responsive.isMobile(context)) _buildWarehouseStats(context),
                     ],
                   ),
                 ),
-                if (!Responsive.isMobile(context))
-                  SizedBox(width: defaultPadding),
+                if (!Responsive.isMobile(context)) const SizedBox(width: defaultPadding),
                 if (!Responsive.isMobile(context))
                   Expanded(
                     flex: 2,
-                    child: FutureBuilder<Map<String, dynamic>>(
-                      future: apiService.getWarehouseStats(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return CustomLoadingWidget();
-                        }
-                        if (snapshot.hasError) {
-                          return Text("Xato: ${snapshot.error}");
-                        }
-                        return WarehouseStats(stats: snapshot.data!);
-                      },
-                    ),
+                    child: _buildWarehouseStats(context),
                   ),
               ],
             ),

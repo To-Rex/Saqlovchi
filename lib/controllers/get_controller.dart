@@ -14,6 +14,7 @@ class GetController extends GetxController {
   RxList<dynamic> soldItems = <dynamic>[].obs;
   RxList<dynamic> products = <dynamic>[].obs;
   RxList<dynamic> units = <dynamic>[].obs;
+  RxList<dynamic> customers = <dynamic>[].obs;
   RxBool isLoading = true.obs;
   RxString error = ''.obs;
 
@@ -60,6 +61,7 @@ class GetController extends GetxController {
       final fetchedSoldItems = await _apiService.getSoldItems();
       final fetchedProducts = await _apiService.getProducts();
       final fetchedUnits = await _apiService.getUnits();
+      customers.value = await _apiService.getCustomers();
       categories.assignAll(fetchedCategories);
       soldItems.assignAll(fetchedSoldItems);
       products.assignAll(fetchedProducts);
