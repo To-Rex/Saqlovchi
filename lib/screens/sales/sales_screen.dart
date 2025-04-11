@@ -23,17 +23,19 @@ class _SalesScreenState extends State<SalesScreen> {
   bool showDiscountOption = false;
   String? selectedCustomerId;
   String? newCustomerName;
+  String? newCustomerPhone;
+  String? newCustomerAddress;
   double? creditAmount;
   DateTime? creditDueDate;
   double discount = 0.0;
   final RxString searchQuery = ''.obs;
-  bool _isSelling = false; // Loading holatini kuzatish uchun
-  late Future<List<dynamic>> _recentSalesFuture; // Keshlangan so‘rov
+  bool _isSelling = false;
+  late Future<List<dynamic>> _recentSalesFuture;
 
   @override
   void initState() {
     super.initState();
-    _recentSalesFuture = apiService.getRecentSoldItems(limit: 2); // Faqat bir marta so‘rov yuboriladi
+    _recentSalesFuture = apiService.getRecentSoldItems(limit: 2);
   }
 
   double getTotalPrice() {
@@ -47,13 +49,22 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Responsive(
-          mobile: _buildMobileLayout(),
-          tablet: _buildTabletLayout(),
-          desktop: _buildDesktopLayout()
-        )
-      )
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [secondaryColor, secondaryColor.withOpacity(0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Responsive(
+            mobile: _buildMobileLayout(),
+            tablet: _buildTabletLayout(),
+            desktop: _buildDesktopLayout(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -129,14 +140,25 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Widget _buildHeader() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.1),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Sotuvlar", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white))
-        ]
-      )
+          const Text(
+            "Sotuv",
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
     );
   }
 
@@ -195,6 +217,7 @@ class _SalesScreenState extends State<SalesScreen> {
         setState(() {
           selectedCategoryId = id;
           selectedProductId = null;
+          _resetSalePanel(); // Kategoriya o‘zgarganda tozalash
         });
       },
       child: Container(
@@ -245,7 +268,9 @@ class _SalesScreenState extends State<SalesScreen> {
                 onTap: () {
                   setState(() {
                     selectedProductId = product['id'];
-                    quantity = 0.0;
+                    _resetSalePanel(); // Mahsulot tanlanganda tozalash
+                    quantity = 1.0; // Miqdor avtomatik 1
+                    controller.quantityController.text = quantity.toString();
                   });
                 },
                 child: Card(
@@ -349,7 +374,7 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
           const SizedBox(height: 8),
           FutureBuilder<List<dynamic>>(
-            future: _recentSalesFuture, // Keshlangan so‘rov ishlatiladi
+            future: _recentSalesFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator(color: primaryColor));
@@ -421,6 +446,9 @@ class _SalesScreenState extends State<SalesScreen> {
               setState(() {
                 quantity = double.tryParse(value) ?? 0.0;
                 controller.quantityController.text = quantity.toString();
+                if (showCreditOptions) {
+                  creditAmount = getTotalPrice();
+                }
               });
             },
           ),
@@ -432,6 +460,9 @@ class _SalesScreenState extends State<SalesScreen> {
             setState(() {
               if (quantity > 0) quantity--;
               controller.quantityController.text = quantity.toString();
+              if (showCreditOptions) {
+                creditAmount = getTotalPrice();
+              }
             });
           },
         ),
@@ -441,6 +472,9 @@ class _SalesScreenState extends State<SalesScreen> {
             setState(() {
               quantity++;
               controller.quantityController.text = quantity.toString();
+              if (showCreditOptions) {
+                creditAmount = getTotalPrice();
+              }
             });
           },
         ),
@@ -473,6 +507,16 @@ class _SalesScreenState extends State<SalesScreen> {
               onChanged: (value) {
                 setState(() {
                   showCreditOptions = value;
+                  if (value && selectedProductId != null && quantity > 0) {
+                    creditAmount = getTotalPrice();
+                  } else {
+                    creditAmount = null;
+                    selectedCustomerId = null;
+                    newCustomerName = null;
+                    newCustomerPhone = null;
+                    newCustomerAddress = null;
+                    creditDueDate = null;
+                  }
                 });
               },
               activeColor: primaryColor,
@@ -488,6 +532,10 @@ class _SalesScreenState extends State<SalesScreen> {
               onChanged: (value) {
                 setState(() {
                   showDiscountOption = value;
+                  if (!value) discount = 0.0; // Chegirma o‘chirilganda 0 ga qaytariladi
+                  if (showCreditOptions) {
+                    creditAmount = getTotalPrice(); // Chegirma o‘zgarganda qarz yangilanadi
+                  }
                 });
               },
               activeColor: primaryColor,
@@ -507,7 +555,7 @@ class _SalesScreenState extends State<SalesScreen> {
         Obx(
               () => DropdownButtonFormField<String>(
             decoration: InputDecoration(
-              labelText: 'Mijoz (agar mavjud bo‘lsa)',
+              labelText: 'Mavjud mijozni tanlang',
               labelStyle: const TextStyle(color: Colors.white70),
               filled: true,
               fillColor: Colors.white10,
@@ -524,14 +572,19 @@ class _SalesScreenState extends State<SalesScreen> {
             onChanged: (value) {
               setState(() {
                 selectedCustomerId = value;
+                newCustomerName = null;
+                newCustomerPhone = null;
+                newCustomerAddress = null;
               });
             },
           ),
         ),
         const SizedBox(height: 16),
+        const Text("Yoki yangi mijoz qo‘shing", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
         TextFormField(
           decoration: InputDecoration(
-            labelText: 'Yangi mijoz ismi (ixtiyoriy)',
+            labelText: 'Ism',
             labelStyle: const TextStyle(color: Colors.white70),
             filled: true,
             fillColor: Colors.white10,
@@ -541,6 +594,40 @@ class _SalesScreenState extends State<SalesScreen> {
           onChanged: (value) {
             setState(() {
               newCustomerName = value;
+              selectedCustomerId = null;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          decoration: InputDecoration(
+            labelText: 'Telefon',
+            labelStyle: const TextStyle(color: Colors.white70),
+            filled: true,
+            fillColor: Colors.white10,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(color: Colors.white),
+          onChanged: (value) {
+            setState(() {
+              newCustomerPhone = value;
+            });
+          },
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          decoration: InputDecoration(
+            labelText: 'Manzil',
+            labelStyle: const TextStyle(color: Colors.white70),
+            filled: true,
+            fillColor: Colors.white10,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          style: const TextStyle(color: Colors.white),
+          onChanged: (value) {
+            setState(() {
+              newCustomerAddress = value;
             });
           },
         ),
@@ -555,9 +642,10 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
           keyboardType: TextInputType.number,
           style: const TextStyle(color: Colors.white),
+          initialValue: creditAmount?.toString() ?? getTotalPrice().toString(),
           onChanged: (value) {
             setState(() {
-              creditAmount = double.tryParse(value);
+              creditAmount = double.tryParse(value) ?? getTotalPrice();
             });
           },
         ),
@@ -600,23 +688,44 @@ class _SalesScreenState extends State<SalesScreen> {
       onChanged: (value) {
         setState(() {
           discount = double.tryParse(value) ?? 0.0;
+          if (showCreditOptions) {
+            creditAmount = getTotalPrice();
+          }
         });
       },
     );
   }
 
+  void _resetSalePanel() {
+    quantity = 0.0;
+    showCreditOptions = false;
+    showDiscountOption = false;
+    selectedCustomerId = null;
+    newCustomerName = null;
+    newCustomerPhone = null;
+    newCustomerAddress = null;
+    creditAmount = null;
+    creditDueDate = null;
+    discount = 0.0;
+    controller.quantityController.clear();
+  }
+
   void _sellProduct() async {
     if (selectedProductId == null || quantity <= 0) {
-      Get.snackbar('Xatolik', 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin');
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin', type: CustomToast.error);
       return;
     }
     if (showCreditOptions && (creditAmount == null || creditDueDate == null)) {
-      Get.snackbar('Xatolik', 'Qarz uchun summa va muddatni kiriting');
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Qarz uchun summa va muddatni kiriting', type: CustomToast.error);
+      return;
+    }
+    if (showCreditOptions && selectedCustomerId == null && (newCustomerName == null || newCustomerName!.isEmpty)) {
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Mijozni tanlang yoki yangi mijoz ismini kiriting', type: CustomToast.error);
       return;
     }
 
     setState(() {
-      _isSelling = true; // Loading holatini yoqamiz
+      _isSelling = true;
     });
 
     try {
@@ -625,6 +734,8 @@ class _SalesScreenState extends State<SalesScreen> {
         quantity: quantity,
         customerId: selectedCustomerId,
         customerName: newCustomerName,
+        customerPhone: newCustomerPhone,
+        customerAddress: newCustomerAddress,
         isCredit: showCreditOptions,
         creditAmount: creditAmount,
         creditDueDate: creditDueDate,
@@ -632,22 +743,15 @@ class _SalesScreenState extends State<SalesScreen> {
       );
       setState(() {
         selectedProductId = null;
-        quantity = 0.0;
-        showCreditOptions = false;
-        showDiscountOption = false;
-        selectedCustomerId = null;
-        newCustomerName = null;
-        creditAmount = null;
-        creditDueDate = null;
-        discount = 0.0;
-        _recentSalesFuture = apiService.getRecentSoldItems(limit: 2); // Sotuvdan keyin yangilash
+        _resetSalePanel();
+        _recentSalesFuture = apiService.getRecentSoldItems(limit: 2);
       });
       CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'Mahsulot sotildi', type: CustomToast.success);
     } catch (e) {
       CustomToast.show(context: context, title: 'Xatolik', message: e.toString(), type: CustomToast.error);
     } finally {
       setState(() {
-        _isSelling = false; // Loading holatini o‘chiramiz
+        _isSelling = false;
       });
     }
   }

@@ -127,6 +127,7 @@ class _ToastWidget extends StatelessWidget {
                   ],
               ),
           ),
+          // close button
         ],
       ),
     );

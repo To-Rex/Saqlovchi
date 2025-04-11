@@ -236,12 +236,25 @@ class ApiService {
     }
   }
 
-
-  Future<void> sellProduct({required String productId, required double quantity, String? customerId, String? customerName, bool isCredit = false, double? creditAmount, DateTime? creditDueDate, double discount = 0.0}) async {
+  Future<void> sellProduct({
+    required String productId,
+    required double quantity,
+    String? customerId,
+    String? customerName,
+    String? customerPhone,
+    String? customerAddress,
+    bool isCredit = false,
+    double? creditAmount,
+    DateTime? creditDueDate,
+    double discount = 0.0,
+  }) async {
     try {
       if (quantity <= 0) throw Exception('Miqdor 0 dan katta bo‘lishi kerak');
       if (isCredit && (creditAmount == null || creditDueDate == null)) {
         throw Exception('Kredit uchun summa va muddatni kiriting');
+      }
+      if (isCredit && customerId == null && (customerName == null || customerName.isEmpty)) {
+        throw Exception('Mijozni tanlang yoki yangi mijoz ismini kiriting');
       }
       if (discount < 0) throw Exception('Chegirma manfiy bo‘lmasligi kerak');
 
@@ -250,9 +263,9 @@ class ApiService {
           .from('products')
           .select('selling_price, cost_price')
           .eq('id', productId)
-          .single();
+          .maybeSingle(); // .single() o‘rniga .maybeSingle()
+      if (productResponse == null) throw Exception('Mahsulot topilmadi');
       final baseSellingPrice = (productResponse['selling_price'] as num).toDouble();
-      final costPrice = (productResponse['cost_price'] as num).toDouble();
       final totalPriceWithoutDiscount = baseSellingPrice * quantity;
       final finalSellingPrice = totalPriceWithoutDiscount - discount;
 
@@ -261,7 +274,8 @@ class ApiService {
           .from('stock')
           .select('quantity')
           .eq('product_id', productId)
-          .single();
+          .maybeSingle();
+      if (stockResponse == null) throw Exception('Mahsulot uchun zaxira topilmadi');
       final availableQuantity = stockResponse['quantity'] as double? ?? 0.0;
       if (availableQuantity < quantity) {
         throw Exception('Omborda yetarli mahsulot yo‘q: $availableQuantity');
@@ -274,7 +288,8 @@ class ApiService {
           .eq('product_id', productId)
           .order('created_at', ascending: true)
           .limit(1)
-          .single();
+          .maybeSingle();
+      if (batchResponse == null) throw Exception('Mahsulot uchun batch topilmadi');
       final batchId = batchResponse['id'] as String;
 
       // Sotilgan mahsulot
@@ -300,10 +315,12 @@ class ApiService {
         'status': 'completed',
       });
 
-      // Agar mijoz bazada bo‘lmasa va ism kiritilgan bo‘lsa
+      // Yangi mijoz qo‘shish
       if (customerId == null && customerName != null && customerName.isNotEmpty) {
         final newCustomerResponse = await _suPaBase.from('customers').insert({
           'full_name': customerName,
+          'phone': customerPhone,
+          'address': customerAddress,
           'created_by': _getCurrentUserId(),
           'created_at': DateTime.now().toIso8601String(),
         }).select('id').single();
@@ -311,7 +328,7 @@ class ApiService {
         await _suPaBase.from('sales').update({'customer_id': customerId}).eq('id', saleId);
       }
 
-      // Kredit
+      // Kredit qo‘shish
       if (isCredit && creditAmount != null && creditDueDate != null && customerId != null) {
         await _suPaBase.from('credits').insert({
           'sale_id': saleId,
@@ -340,9 +357,9 @@ class ApiService {
         'created_by': _getCurrentUserId(),
       });
 
-      print('Sotuv muvaffaqiyatli amalga oshirildi');
+      Get.snackbar('Muvaffaqiyat', 'Sotuv muvaffaqiyatli amalga oshirildi');
     } catch (e) {
-      print('Xato yuz berdi: $e');
+      Get.snackbar('Xatolik', 'Sotuvda xato: $e');
       rethrow;
     }
   }
