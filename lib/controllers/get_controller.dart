@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../screens/main/main_screen.dart';
@@ -9,6 +10,18 @@ class GetController extends GetxController {
   Locale get language => Locale(GetStorage().read('language') ?? 'uz_UZ');
 
   final ApiService _apiService = ApiService();
+
+
+  //textfild controller
+  final TextEditingController categoryController = TextEditingController();
+  final TextEditingController productController = TextEditingController();
+  final TextEditingController costPriceController = TextEditingController();
+  final TextEditingController sellingPriceController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController();
+  final TextEditingController unitController = TextEditingController();
+  final TextEditingController customerController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
 
   RxList<dynamic> categories = <dynamic>[].obs;
   RxList<dynamic> soldItems = <dynamic>[].obs;
@@ -66,7 +79,6 @@ class GetController extends GetxController {
       soldItems.assignAll(fetchedSoldItems);
       products.assignAll(fetchedProducts);
       units.assignAll(fetchedUnits);
-      print('Mahsulotlar: $fetchedProducts');
     } catch (e) {
       error.value = e.toString();
       Get.snackbar('Xato', e.toString());

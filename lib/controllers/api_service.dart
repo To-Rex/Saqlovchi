@@ -237,16 +237,7 @@ class ApiService {
   }
 
 
-  Future<void> sellProduct({
-    required String productId,
-    required double quantity,
-    String? customerId, // Ixtiyoriy
-    String? customerName, // Agar mijoz bazada bo‘lmasa, ismi kiritiladi
-    bool isCredit = false,
-    double? creditAmount,
-    DateTime? creditDueDate,
-    double discount = 0.0,
-  }) async {
+  Future<void> sellProduct({required String productId, required double quantity, String? customerId, String? customerName, bool isCredit = false, double? creditAmount, DateTime? creditDueDate, double discount = 0.0}) async {
     try {
       if (quantity <= 0) throw Exception('Miqdor 0 dan katta bo‘lishi kerak');
       if (isCredit && (creditAmount == null || creditDueDate == null)) {
@@ -369,6 +360,20 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> getRecentSoldItems({int limit = 2}) async {
+    try {
+      final response = await _suPaBase
+          .from('sold_items')
+          .select('id, quantity, selling_price, sale_date, product_id, products(name)')
+          .order('sale_date', ascending: false)
+          .limit(limit);
+      print('Sotilgan mahsulotlar: $response');
+      return response;
+    } catch (e) {
+      Get.snackbar('Xatolik', 'Oxirgi sotuvlarni olishda xato: $e');
+      rethrow;
+    }
+  }
   // Kirish (Sign In)
   Future<void> signIn(BuildContext context, String email, String password) async {
     try {

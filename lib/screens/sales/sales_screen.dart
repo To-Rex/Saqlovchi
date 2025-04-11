@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:sklad/controllers/api_service.dart';
 import 'package:sklad/controllers/get_controller.dart';
 import 'package:sklad/constants.dart';
+import '../../companents/custom_toast.dart';
+import '../../responsive.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -24,7 +26,15 @@ class _SalesScreenState extends State<SalesScreen> {
   double? creditAmount;
   DateTime? creditDueDate;
   double discount = 0.0;
-  final RxString searchQuery = ''.obs; // searchQuery reaktiv qilindi
+  final RxString searchQuery = ''.obs;
+  bool _isSelling = false; // Loading holatini kuzatish uchun
+  late Future<List<dynamic>> _recentSalesFuture; // Keshlangan so‘rov
+
+  @override
+  void initState() {
+    super.initState();
+    _recentSalesFuture = apiService.getRecentSoldItems(limit: 2); // Faqat bir marta so‘rov yuboriladi
+  }
 
   double getTotalPrice() {
     if (selectedProductId == null || quantity <= 0) return 0.0;
@@ -37,61 +47,102 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [secondaryColor, secondaryColor.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
+      body: SafeArea(
+        child: Responsive(
+          mobile: _buildMobileLayout(),
+          tablet: _buildTabletLayout(),
+          desktop: _buildDesktopLayout()
+        )
+      )
+    );
+  }
+
+  // Desktop Layout
+  Widget _buildDesktopLayout() {
+    return Column(
+      children: [
+        _buildHeader(),
+        _buildSearchBar(),
+        Expanded(
+          child: Row(
             children: [
-              _buildHeader(),
-              _buildSearchBar(),
-              Expanded(
-                child: Row(
-                  children: [
-                    _buildCategoryList(),
-                    Expanded(child: _buildProductGrid()),
-                    _buildSalePanel(),
-                  ],
-                ),
-              ),
+              _buildCategoryList(width: 150),
+              Expanded(child: _buildProductGrid()),
+              _buildSalePanel(height: double.infinity),
             ],
           ),
         ),
-      ),
+        _buildRecentSales(),
+      ],
+    );
+  }
+
+  // Tablet Layout
+  Widget _buildTabletLayout() {
+    return Column(
+      children: [
+        _buildHeader(),
+        _buildSearchBar(),
+        Expanded(
+          child: Row(
+            children: [
+              _buildCategoryList(width: 120),
+              Expanded(child: _buildProductGrid()),
+              _buildSalePanel(width: 250),
+            ],
+          ),
+        ),
+        _buildRecentSales(),
+      ],
+    );
+  }
+
+  // Mobile Layout
+  Widget _buildMobileLayout() {
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: Colors.transparent,
+          flexibleSpace: FlexibleSpaceBar(
+            background: Column(
+              children: [
+                _buildHeader(),
+                _buildSearchBar(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+              ],
+            ),
+          ),
+          expandedHeight: 150,
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            children: [
+              _buildCategoryList(isHorizontal: true, height: 60),
+              _buildProductGrid(maxCrossAxisExtent: 150, childAspectRatio: 1.5, height: 400),
+              _buildSalePanel(width: double.infinity, padding: const EdgeInsets.all(8)),
+              _buildRecentSales(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildHeader() {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.1),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 5)],
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            "Sotuv",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
+          const Text("Sotuvlar", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white))
+        ]
+      )
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar({EdgeInsets padding = const EdgeInsets.all(16)}) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: padding,
       child: TextField(
         decoration: InputDecoration(
           hintText: 'Mahsulot qidirish',
@@ -103,73 +154,68 @@ class _SalesScreenState extends State<SalesScreen> {
         ),
         style: const TextStyle(color: Colors.white),
         onChanged: (value) {
-          searchQuery.value = value.toLowerCase(); // Reaktiv o‘zgaruvchi yangilanadi
+          searchQuery.value = value.toLowerCase();
         },
       ),
     );
   }
 
-  Widget _buildCategoryList() {
+  Widget _buildCategoryList({double width = 150, bool isHorizontal = false, double height = 400}) {
     return Container(
-      width: 150,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      width: isHorizontal ? double.infinity : width,
+      height: height,
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Obx(
-            () => ListView.builder(
+            () => isHorizontal
+            ? SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildCategoryItem(null, "Barchasi"),
+              ...controller.categories.map((category) => _buildCategoryItem(category['id'], category['name'])),
+            ],
+          ),
+        )
+            : ListView.builder(
+          scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
           itemCount: controller.categories.length + 1,
           itemBuilder: (context, index) {
-            if (index == 0) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedCategoryId = null;
-                    selectedProductId = null;
-                  });
-                },
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: selectedCategoryId == null ? primaryColor : Colors.white10,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    "Barchasi",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              );
-            }
+            if (index == 0) return _buildCategoryItem(null, "Barchasi");
             final category = controller.categories[index - 1];
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedCategoryId = category['id'];
-                  selectedProductId = null;
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: selectedCategoryId == category['id'] ? primaryColor : Colors.white10,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  category['name'],
-                  style: TextStyle(
-                    color: selectedCategoryId == category['id'] ? Colors.white : Colors.white70,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            );
+            return _buildCategoryItem(category['id'], category['name']);
           },
         ),
       ),
     );
   }
 
-  Widget _buildProductGrid() {
+  Widget _buildCategoryItem(String? id, String name) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedCategoryId = id;
+          selectedProductId = null;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selectedCategoryId == id ? primaryColor : Colors.white10,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          name,
+          style: TextStyle(
+            color: selectedCategoryId == id ? Colors.white : Colors.white70,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductGrid({double maxCrossAxisExtent = 200, double childAspectRatio = 1.3, double height = 400}) {
     final filteredProducts = selectedCategoryId == null
         ? controller.products
         : controller.products.where((p) => p['category_id'] == selectedCategoryId).toList();
@@ -182,61 +228,64 @@ class _SalesScreenState extends State<SalesScreen> {
 
         return searchedProducts.isEmpty
             ? const Center(child: Text("Mahsulot topilmadi", style: TextStyle(color: Colors.white70)))
-            : GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 200,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1.3,
-          ),
-          itemCount: searchedProducts.length,
-          itemBuilder: (context, index) {
-            final product = searchedProducts[index];
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedProductId = product['id'];
-                  quantity = 0.0;
-                });
-              },
-              child: Card(
-                color: selectedProductId == product['id'] ? primaryColor : Colors.white10,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        product['name'],
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Narx: ${product['cost_price']} + ${product['selling_price'] - product['cost_price']} = ${product['selling_price']}",
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
+            : SizedBox(
+          height: height,
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: maxCrossAxisExtent,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: childAspectRatio,
+            ),
+            itemCount: searchedProducts.length,
+            itemBuilder: (context, index) {
+              final product = searchedProducts[index];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedProductId = product['id'];
+                    quantity = 0.0;
+                  });
+                },
+                child: Card(
+                  color: selectedProductId == product['id'] ? primaryColor : Colors.white10,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          product['name'],
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Narx: ${product['cost_price']} + ${product['selling_price'] - product['cost_price']} = ${product['selling_price']}",
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
   }
 
-  Widget _buildSalePanel() {
+  Widget _buildSalePanel({double width = 300, EdgeInsets padding = const EdgeInsets.all(16), double? height}) {
     return Container(
-      width: 300,
-      height: double.infinity,
-      padding: const EdgeInsets.all(16),
+      width: width,
+      height: height,
+      padding: padding,
       decoration: const BoxDecoration(
         color: Colors.white10,
-        borderRadius: BorderRadius.horizontal(left: Radius.circular(20)),
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(16)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -263,17 +312,92 @@ class _SalesScreenState extends State<SalesScreen> {
             ],
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: selectedProductId == null || quantity <= 0 ? null : _sellProduct,
+              onPressed: (selectedProductId == null || quantity <= 0 || _isSelling) ? null : _sellProduct,
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 minimumSize: const Size(double.infinity, 0),
               ),
-              child: const Text("Sotish", style: TextStyle(fontSize: 16, color: Colors.white)),
+              child: _isSelling
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  : const Text("Sotish", style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildRecentSales() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.white10,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Oxirgi sotuvlar",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          FutureBuilder<List<dynamic>>(
+            future: _recentSalesFuture, // Keshlangan so‘rov ishlatiladi
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: primaryColor));
+              }
+              if (snapshot.hasError) {
+                return Text("Xato: ${snapshot.error}", style: const TextStyle(color: Colors.white70));
+              }
+              final recentSales = snapshot.data ?? [];
+              return Column(
+                children: [
+                  ...recentSales.map(
+                        (sale) => Container(
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white10,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            sale['products']['name'],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            "${sale['quantity']} x ${sale['selling_price']} = ${sale['quantity'] * sale['selling_price']} so‘m",
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      Get.toNamed('/all-sales');
+                    },
+                    child: const Text(
+                      "Barchasini ko‘rish",
+                      style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -283,6 +407,7 @@ class _SalesScreenState extends State<SalesScreen> {
       children: [
         Expanded(
           child: TextFormField(
+            controller: controller.quantityController,
             decoration: InputDecoration(
               labelText: 'Miqdor',
               labelStyle: const TextStyle(color: Colors.white70),
@@ -295,6 +420,7 @@ class _SalesScreenState extends State<SalesScreen> {
             onChanged: (value) {
               setState(() {
                 quantity = double.tryParse(value) ?? 0.0;
+                controller.quantityController.text = quantity.toString();
               });
             },
           ),
@@ -305,6 +431,7 @@ class _SalesScreenState extends State<SalesScreen> {
           onPressed: () {
             setState(() {
               if (quantity > 0) quantity--;
+              controller.quantityController.text = quantity.toString();
             });
           },
         ),
@@ -313,6 +440,7 @@ class _SalesScreenState extends State<SalesScreen> {
           onPressed: () {
             setState(() {
               quantity++;
+              controller.quantityController.text = quantity.toString();
             });
           },
         ),
@@ -487,6 +615,10 @@ class _SalesScreenState extends State<SalesScreen> {
       return;
     }
 
+    setState(() {
+      _isSelling = true; // Loading holatini yoqamiz
+    });
+
     try {
       await apiService.sellProduct(
         productId: selectedProductId!,
@@ -508,10 +640,15 @@ class _SalesScreenState extends State<SalesScreen> {
         creditAmount = null;
         creditDueDate = null;
         discount = 0.0;
+        _recentSalesFuture = apiService.getRecentSoldItems(limit: 2); // Sotuvdan keyin yangilash
       });
-      Get.snackbar('Muvaffaqiyat', 'Mahsulot sotildi');
+      CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'Mahsulot sotildi', type: CustomToast.success);
     } catch (e) {
-      Get.snackbar('Xatolik', 'Sotuvda xato: $e');
+      CustomToast.show(context: context, title: 'Xatolik', message: e.toString(), type: CustomToast.error);
+    } finally {
+      setState(() {
+        _isSelling = false; // Loading holatini o‘chiramiz
+      });
     }
   }
 }
