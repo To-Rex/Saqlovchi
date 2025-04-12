@@ -377,7 +377,7 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getRecentSoldItems({int limit = 2}) async {
+  Future<List<dynamic>> getRecentSoldItem({int limit = 2}) async {
     try {
       final response = await _suPaBase
           .from('sold_items')
@@ -387,10 +387,73 @@ class ApiService {
       print('Sotilgan mahsulotlar: $response');
       return response;
     } catch (e) {
-      Get.snackbar('Xatolik', 'Oxirgi sotuvlarni olishda xato: $e');
+      print('Xatolik: $e');
       rethrow;
     }
   }
+
+  Future<List<dynamic>> getRecentSoldItems({int limit = 3}) async {
+    try {
+      final response = await _suPaBase
+          .from('sold_items')
+          .select('''
+          id, 
+          quantity, 
+          selling_price, 
+          sale_date, 
+          product_id, 
+          products(name, selling_price), 
+          sales!inner(id, is_credit, credit_amount)
+        ''')
+          .order('sale_date', ascending: false)
+          .limit(limit);
+      print('Sotilgan mahsulotlar: $response');
+      return response;
+    } catch (e) {
+      print('Xatolik: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getAllSoldItems() async {
+    try {
+      final response = await _suPaBase
+          .from('sold_items')
+          .select('''
+          id, 
+          quantity, 
+          selling_price, 
+          sale_date, 
+          product_id, 
+          products(name, selling_price), 
+          sales!inner(id, is_credit, credit_amount)
+        ''')
+          .order('sale_date', ascending: false);
+      print('Barcha sotilgan mahsulotlar: $response');
+      return response;
+    } catch (e) {
+      print('Xatolik: $e');
+      rethrow;
+    }
+  }
+
+  Future<double> getStockQuantity(String productId) async {
+    try {
+      final response = await _suPaBase
+          .from('stock')
+          .select('quantity')
+          .eq('product_id', productId)
+          .maybeSingle();
+      if (response == null) return 0.0;
+      return (response['quantity'] as num?)?.toDouble() ?? 0.0;
+    } catch (e) {
+      print('Xatolik: $e');
+      return 0.0;
+    }
+  }
+
+
+
   // Kirish (Sign In)
   Future<void> signIn(BuildContext context, String email, String password) async {
     try {

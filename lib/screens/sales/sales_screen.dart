@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sklad/controllers/api_service.dart';
@@ -31,11 +32,15 @@ class _SalesScreenState extends State<SalesScreen> {
   final RxString searchQuery = ''.obs;
   bool _isSelling = false;
   late Future<List<dynamic>> _recentSalesFuture;
+  double? _cachedStockQuantity; // Tanlangan mahsulotning qoldigi
+  final Map<String, double> _stockCache = {}; // Barcha mahsulotlarning qoldiqlari
+  bool _isStockLoading = true; // Qoldiqlar yuklanayotgan holat
 
   @override
   void initState() {
     super.initState();
-    _recentSalesFuture = apiService.getRecentSoldItems(limit: 2);
+    _recentSalesFuture = apiService.getRecentSoldItems(limit: 3);
+    _preloadStockQuantities();
   }
 
   double getTotalPrice() {
@@ -44,6 +49,23 @@ class _SalesScreenState extends State<SalesScreen> {
     final sellingPrice = (product['selling_price'] as num).toDouble();
     final totalWithoutDiscount = sellingPrice * quantity;
     return totalWithoutDiscount - discount;
+  }
+
+  // Barcha mahsulotlar uchun qoldiqlarni oldindan yuklash
+  Future<void> _preloadStockQuantities() async {
+    setState(() {
+      _isStockLoading = true;
+    });
+    for (var product in controller.products) {
+      final productId = product['id'] as String;
+      if (!_stockCache.containsKey(productId)) {
+        final stockQuantity = await apiService.getStockQuantity(productId);
+        _stockCache[productId] = stockQuantity;
+      }
+    }
+    setState(() {
+      _isStockLoading = false;
+    });
   }
 
   @override
@@ -217,7 +239,8 @@ class _SalesScreenState extends State<SalesScreen> {
         setState(() {
           selectedCategoryId = id;
           selectedProductId = null;
-          _resetSalePanel(); // Kategoriya o‘zgarganda tozalash
+          _cachedStockQuantity = null;
+          _resetSalePanel();
         });
       },
       child: Container(
@@ -249,6 +272,12 @@ class _SalesScreenState extends State<SalesScreen> {
             .where((p) => p['name'].toString().toLowerCase().contains(searchQuery.value))
             .toList();
 
+        if (_isStockLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          );
+        }
+
         return searchedProducts.isEmpty
             ? const Center(child: Text("Mahsulot topilmadi", style: TextStyle(color: Colors.white70)))
             : SizedBox(
@@ -264,18 +293,30 @@ class _SalesScreenState extends State<SalesScreen> {
             itemCount: searchedProducts.length,
             itemBuilder: (context, index) {
               final product = searchedProducts[index];
+              final productId = product['id'] as String;
+              final stockQuantity = _stockCache[productId] ?? 0.0;
+              Color borderColor = Colors.transparent;
+              if (stockQuantity == 0) {
+                borderColor = Colors.red;
+              } else if (stockQuantity <= 10) {
+                borderColor = Colors.yellow;
+              }
               return GestureDetector(
                 onTap: () {
                   setState(() {
                     selectedProductId = product['id'];
-                    _resetSalePanel(); // Mahsulot tanlanganda tozalash
-                    quantity = 1.0; // Miqdor avtomatik 1
+                    _cachedStockQuantity = stockQuantity; // Keshdan qoldiqni olish
+                    _resetSalePanel();
+                    quantity = 1.0;
                     controller.quantityController.text = quantity.toString();
                   });
                 },
                 child: Card(
                   color: selectedProductId == product['id'] ? primaryColor : Colors.white10,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: borderColor, width: 2),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
@@ -290,6 +331,15 @@ class _SalesScreenState extends State<SalesScreen> {
                         Text(
                           "Narx: ${product['cost_price']} + ${product['selling_price'] - product['cost_price']} = ${product['selling_price']}",
                           style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
+                          style: TextStyle(
+                            color: borderColor == Colors.transparent ? Colors.white70 : borderColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
@@ -323,6 +373,33 @@ class _SalesScreenState extends State<SalesScreen> {
                 "Tanlangan: ${controller.products.firstWhere((p) => p['id'] == selectedProductId)['name']}",
                 style: const TextStyle(color: Colors.white70),
               ),
+              const SizedBox(height: 8),
+              if (_cachedStockQuantity != null) ...[
+                Builder(
+                  builder: (context) {
+                    final stockQuantity = _cachedStockQuantity ?? 0.0;
+                    Color quantityColor = stockQuantity == 0
+                        ? Colors.red
+                        : stockQuantity <= 10
+                        ? Colors.yellow
+                        : Colors.white70;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Omborda qoldiq: ${stockQuantity.toStringAsFixed(0)}",
+                          style: TextStyle(color: quantityColor, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        if (stockQuantity == 0)
+                          const Text(
+                            "Mahsulot omborda mavjud emas",
+                            style: TextStyle(color: Colors.red, fontSize: 12),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
               const SizedBox(height: 16),
             ],
             _buildQuantityInput(),
@@ -337,7 +414,13 @@ class _SalesScreenState extends State<SalesScreen> {
             ],
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: (selectedProductId == null || quantity <= 0 || _isSelling) ? null : _sellProduct,
+              onPressed: (selectedProductId == null ||
+                  quantity <= 0 ||
+                  _isSelling ||
+                  _cachedStockQuantity == null ||
+                  _cachedStockQuantity == 0)
+                  ? null
+                  : _sellProduct,
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -396,9 +479,19 @@ class _SalesScreenState extends State<SalesScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            sale['products']['name'],
-                            style: const TextStyle(color: Colors.white),
+                          Row(
+                            children: [
+                              Text(
+                                sale['products']['name'] ?? 'Noma’lum mahsulot',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              const SizedBox(width: 8),
+                              if (sale['sales'] != null && _parseIsCredit(sale['sales']))
+                                const Icon(Icons.credit_card, color: Colors.red, size: 16),
+                              if (sale['products'] != null &&
+                                  sale['selling_price'] < (sale['products']['selling_price'] ?? sale['selling_price']))
+                                const Icon(Icons.discount, color: Colors.green, size: 16),
+                            ],
                           ),
                           Text(
                             "${sale['quantity']} x ${sale['selling_price']} = ${sale['quantity'] * sale['selling_price']} so‘m",
@@ -411,7 +504,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
-                      Get.toNamed('/all-sales');
+                      _showAllSalesDialog(context);
                     },
                     child: const Text(
                       "Barchasini ko‘rish",
@@ -425,6 +518,106 @@ class _SalesScreenState extends State<SalesScreen> {
         ],
       ),
     );
+  }
+
+  void _showAllSalesDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          "Barcha sotuvlar",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: secondaryColor.withOpacity(0.9),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: FutureBuilder<List<dynamic>>(
+            future: apiService.getAllSoldItems(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: primaryColor));
+              }
+              if (snapshot.hasError) {
+                return Text(
+                  "Xato: ${snapshot.error}",
+                  style: const TextStyle(color: Colors.white70),
+                );
+              }
+              final allSales = snapshot.data ?? [];
+              if (allSales.isEmpty) {
+                return const Text(
+                  "Sotuvlar mavjud emas",
+                  style: TextStyle(color: Colors.white70),
+                );
+              }
+              return ListView.builder(
+                itemCount: allSales.length,
+                itemBuilder: (context, index) {
+                  final sale = allSales[index];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              sale['products']['name'] ?? 'Noma’lum mahsulot',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            const SizedBox(width: 8),
+                            if (sale['sales'] != null && _parseIsCredit(sale['sales']))
+                              const Icon(Icons.credit_card, color: Colors.red, size: 16),
+                            if (sale['products'] != null &&
+                                sale['selling_price'] < (sale['products']['selling_price'] ?? sale['selling_price']))
+                              const Icon(Icons.discount, color: Colors.green, size: 16),
+                          ],
+                        ),
+                        Text(
+                          "${sale['quantity']} x ${sale['selling_price']} = ${sale['quantity'] * sale['selling_price']} so‘m",
+                          style: const TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              "Yopish",
+              style: TextStyle(color: primaryColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _parseIsCredit(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is String) {
+      return value.toLowerCase() == 'true' || value == '1';
+    }
+    if (value is int) return value == 1;
+    if (value is List && value.isNotEmpty) {
+      final firstSale = value[0];
+      if (firstSale is Map && firstSale.containsKey('is_credit')) {
+        return _parseIsCredit(firstSale['is_credit']);
+      }
+    }
+    return false;
   }
 
   Widget _buildQuantityInput() {
@@ -488,8 +681,8 @@ class _SalesScreenState extends State<SalesScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (selectedProductId != null && quantity > 0) ...[
-          Text("Jami: $totalPrice so‘m", style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
-          if (discount > 0) Text("Chegirma: $discount so‘m", style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          Text("Jami: $totalPrice so‘m", style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold)),
+          if (discount > 0) Text("Chegirma: $discount so‘m", style: TextStyle(fontSize: 12, color: Colors.white70)),
         ],
       ],
     );
@@ -532,9 +725,9 @@ class _SalesScreenState extends State<SalesScreen> {
               onChanged: (value) {
                 setState(() {
                   showDiscountOption = value;
-                  if (!value) discount = 0.0; // Chegirma o‘chirilganda 0 ga qaytariladi
+                  if (!value) discount = 0.0;
                   if (showCreditOptions) {
-                    creditAmount = getTotalPrice(); // Chegirma o‘zgarganda qarz yangilanadi
+                    creditAmount = getTotalPrice();
                   }
                 });
               },
@@ -715,6 +908,10 @@ class _SalesScreenState extends State<SalesScreen> {
       CustomToast.show(context: context, title: 'Xatolik', message: 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin', type: CustomToast.error);
       return;
     }
+    if (_cachedStockQuantity != null && quantity > _cachedStockQuantity!) {
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Omborda yetarli mahsulot yo‘q', type: CustomToast.error);
+      return;
+    }
     if (showCreditOptions && (creditAmount == null || creditDueDate == null)) {
       CustomToast.show(context: context, title: 'Xatolik', message: 'Qarz uchun summa va muddatni kiriting', type: CustomToast.error);
       return;
@@ -742,9 +939,12 @@ class _SalesScreenState extends State<SalesScreen> {
         discount: discount,
       );
       setState(() {
+        // Sotuvdan so‘ng keshni yangilash
+        _stockCache[selectedProductId!] = (_stockCache[selectedProductId!] ?? 0.0) - quantity;
         selectedProductId = null;
+        _cachedStockQuantity = null;
         _resetSalePanel();
-        _recentSalesFuture = apiService.getRecentSoldItems(limit: 2);
+        _recentSalesFuture = apiService.getRecentSoldItems(limit: 3);
       });
       CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'Mahsulot sotildi', type: CustomToast.success);
     } catch (e) {
