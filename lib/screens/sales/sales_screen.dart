@@ -378,10 +378,7 @@ class SalesScreen extends StatelessWidget {
       padding: Responsive.getPadding(context, basePadding: padding),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.1),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-        ),
+        borderRadius: const BorderRadius.all(Radius.circular(15)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -391,30 +388,29 @@ class SalesScreen extends StatelessWidget {
         ],
       ),
       child: SingleChildScrollView(
-        child: Obx(
-              () => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Obx(() => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Sotish",
+              style: TextStyle(
+                fontSize: Responsive.getFontSize(context, baseSize: 20),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (controller.selectedProductId.value != null && controller.selectedBatchId.value != null) ...[
               Text(
-                "Sotish",
+                "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value)['name']}",
                 style: TextStyle(
-                  fontSize: Responsive.getFontSize(context, baseSize: 20),
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
+                  color: Colors.white70,
+                  fontSize: Responsive.getFontSize(context, baseSize: 15),
                 ),
               ),
-              const SizedBox(height: 12),
-              if (controller.selectedProductId.value != null && controller.selectedBatchId.value != null) ...[
-                Text(
-                  "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value)['name']}",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: Responsive.getFontSize(context, baseSize: 15),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (controller.cachedStockQuantity.value != null) ...[
+              const SizedBox(height: 8),
+              if (controller.cachedStockQuantity.value != null) ...[
                   Builder(
                     builder: (context) {
                       final stockQuantity = controller.cachedStockQuantity.value ?? 0.0;
@@ -462,51 +458,31 @@ class SalesScreen extends StatelessWidget {
                 if (controller.showDiscountOption.value) _buildDiscountInput(context, controller),
               ],
               const SizedBox(height: 16),
-              Obx(
-                    () => AnimatedScale(
+              Obx(() => AnimatedScale(
                   duration: const Duration(milliseconds: 150),
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
-                    onPressed: (controller.selectedProductId.value == null ||
-                        controller.selectedBatchId.value == null ||
-                        controller.quantity.value <= 0 ||
-                        controller.isSelling.value ||
-                        controller.cachedStockQuantity.value == null ||
-                        controller.cachedStockQuantity.value == 0)
-                        ? null
-                        : () => controller.sellProduct(context),
+                    onPressed: (controller.selectedProductId.value == null || controller.selectedBatchId.value == null || controller.quantity.value <= 0 || controller.isSelling.value || controller.cachedStockQuantity.value == null || controller.cachedStockQuantity.value == 0) ? null : () => controller.sellProduct(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    child: controller.isSelling.value
-                        ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Text(
-                      "Sotish",
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 16),
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+                      minimumSize: const Size(double.infinity, 50)),
+                      child: controller.isSelling.value ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text("Sotish", style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 16), color: Colors.white, fontWeight: FontWeight.w600)
+                      )
+                  )
+                )
+              )
+            ]
+          )
+        )
+      )
     );
   }
 

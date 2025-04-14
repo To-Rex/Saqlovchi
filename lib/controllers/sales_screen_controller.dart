@@ -316,48 +316,23 @@ class SalesScreenController extends GetxController {
     }
 
     if (selectedProductId.value == null || selectedBatchId.value == null || quantity.value <= 0) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin',
-        type: CustomToast.error,
-      );
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin', type: CustomToast.error,);
       return;
     }
     if (cachedStockQuantity.value != null && quantity.value > cachedStockQuantity.value!) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: 'Omborda yetarli mahsulot yo‘q',
-        type: CustomToast.error,
-      );
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Omborda yetarli mahsulot yo‘q', type: CustomToast.error);
       return;
     }
     if (showCreditOptions.value && (creditAmount.value == null || creditDueDate.value == null)) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: 'Qarz uchun summa va muddatni kiriting',
-        type: CustomToast.error,
-      );
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Qarz uchun summa va muddatni kiriting', type: CustomToast.error);
       return;
     }
     if (showCreditOptions.value && selectedCustomerId.value == null && (newCustomerName.value.isEmpty)) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: 'Mijozni tanlang yoki yangi mijoz ismini kiriting',
-        type: CustomToast.error,
-      );
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Mijozni tanlang yoki yangi mijoz ismini kiriting', type: CustomToast.error);
       return;
     }
     if (discount.value > getTotalPrice()) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: 'Chegirma jami summadan katta bo‘lmasligi kerak',
-        type: CustomToast.error,
-      );
+      CustomToast.show(context: context, title: 'Xatolik', message: 'Chegirma jami summadan katta bo‘lmasligi kerak', type: CustomToast.error);
       return;
     }
 
@@ -394,13 +369,7 @@ class SalesScreenController extends GetxController {
         discountAmount: discount.value,
         paidAmount: saleType == 'cash' || saleType == 'discount' ? getTotalPrice() : 0.0,
         createdBy: _supabase.auth.currentUser!.id,
-        comments: saleType == 'debt_with_discount'
-            ? 'Qarzga va chegirma bilan sotuv'
-            : saleType == 'debt'
-            ? 'Qarzga sotuv'
-            : saleType == 'discount'
-            ? 'Chegirma bilan sotuv'
-            : 'Naqd sotuv',
+        comments: saleType == 'debt_with_discount' ? 'Qarzga va chegirma bilan sotuv' : saleType == 'debt' ? 'Qarzga sotuv' : saleType == 'discount' ? 'Chegirma bilan sotuv' : 'Naqd sotuv'
       );
 
       await apiService.addSaleItem(
@@ -410,27 +379,16 @@ class SalesScreenController extends GetxController {
         unitPrice: basePrice.value + unitPrice.value, // Asosiy narx + ustama haq
       );
 
-      batchCache[selectedBatchId.value!]!['quantity'] =
-          (batchCache[selectedBatchId.value!]!['quantity'] ?? 0.0) - quantity.value;
+      batchCache[selectedBatchId.value!]!['quantity'] = (batchCache[selectedBatchId.value!]!['quantity'] ?? 0.0) - quantity.value;
       selectedProductId.value = null;
       selectedBatchId.value = null;
       cachedStockQuantity.value = null;
       resetSalePanel();
       recentSalesFuture.value = apiService.getRecentSales(limit: 3);
-
-      CustomToast.show(
-        context: context,
-        title: 'Muvaffaqiyat',
-        message: 'Mahsulot sotildi',
-        type: CustomToast.success,
-      );
+      CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'Mahsulot sotildi', type: CustomToast.success);
     } catch (e) {
-      CustomToast.show(
-        context: context,
-        title: 'Xatolik',
-        message: e.toString(),
-        type: CustomToast.error,
-      );
+      print('Xatolik: $e');
+      CustomToast.show(context: context, title: 'Xatolik', message: e.toString(), type: CustomToast.error);
     } finally {
       isSelling.value = false;
     }
