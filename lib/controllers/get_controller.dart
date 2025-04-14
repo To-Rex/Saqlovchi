@@ -17,12 +17,6 @@ class GetController extends GetxController {
   Locale get language => Locale(GetStorage().read('language') ?? 'uz_UZ');
 
   // TextField kontrollerlari
-  final TextEditingController categoryController = TextEditingController();
-  final TextEditingController productController = TextEditingController();
-  final TextEditingController costPriceController = TextEditingController();
-  final TextEditingController sellingPriceController = TextEditingController();
-  final TextEditingController quantityController = TextEditingController();
-  final TextEditingController unitController = TextEditingController();
   final TextEditingController customerController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
@@ -79,7 +73,6 @@ class GetController extends GetxController {
   }
 
   // Boshlang‘ich ma'lumotlarni yuklash
-
   Future<void> fetchInitialData() async {
     isLoading.value = true;
     try {
@@ -88,8 +81,8 @@ class GetController extends GetxController {
       products.value = await _apiService.getProducts();
       units.value = await _apiService.getUnits();
       customers.value = await _apiService.getCustomers();
-      soldItems.value = await _apiService.getSaleItems();
-      stats.value = await _apiService.getSaleItems();
+      soldItems.value = await _apiService.getSaleItems(); // saleId kiritilmaydi
+      stats.value = await _apiService.getSaleItems(); // saleId kiritilmaydi
       if (units.isEmpty) {
         print('Warning: No units fetched');
       } else {
@@ -102,17 +95,18 @@ class GetController extends GetxController {
       isLoading.value = false;
     }
   }
+
   // Filtrlash va tartiblash bilan ma’lumotlarni yuklash
   Future<void> fetchFilteredAndSortedData() async {
     isLoading.value = true;
     try {
       var query = _supabase.from('products').select('''
-      *,
-      categories(name),
-      units(name),
-      batches(id, quantity, batch_number, cost_price, selling_price),
-      sales(id, sale_type, discount_amount, paid_amount)
-    ''');
+        *,
+        categories(name),
+        units(name),
+        batches(id, quantity, batch_number, cost_price, selling_price),
+        sales(id, sale_type, discount_amount, paid_amount)
+      ''');
 
       // Kategoriya filtri
       if (filterCategory.value.isNotEmpty) {
@@ -302,7 +296,8 @@ class GetController extends GetxController {
   }
 
   // Mahsulotni tahrirlash
-  Future<void> editProduct(String id, String name, String categoryId, double costPrice, String unitId, {double? sellingPrice, double? quantity}) async {
+  Future<void> editProduct(String id, String name, String categoryId, double costPrice, String unitId,
+      {double? sellingPrice, double? quantity}) async {
     isLoading.value = true;
     try {
       if (name.isEmpty) {
@@ -375,7 +370,6 @@ class GetController extends GetxController {
       Get.snackbar('Muvaffaqiyat', 'Mijoz qo‘shildi', backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Mijoz qo‘shishda xato: $e';
-
     } finally {
       isLoading.value = false;
     }
@@ -400,7 +394,6 @@ class GetController extends GetxController {
     fetchInitialData();
   }
 
-
   Future<void> handleSubmit(BuildContext context) async {
     error.value = '';
     isLoading.value = true;
@@ -408,7 +401,6 @@ class GetController extends GetxController {
       await _apiService.signIn(context, email.value, password.value);
       final userId = _supabase.auth.currentUser?.id;
       if (userId != null) {
-        // Role ni checkUserRole orqali olish
         final userRole = await _apiService.checkUserRole(userId);
         role.value = userRole;
         fullName.value = _supabase.auth.currentUser?.userMetadata?['full_name'] ?? 'Noma’lum';
@@ -423,6 +415,7 @@ class GetController extends GetxController {
       isLoading.value = false;
     }
   }
+
   // Chiqish
   Future<void> signOut() async {
     isLoading.value = true;
@@ -437,7 +430,6 @@ class GetController extends GetxController {
           backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Chiqishda xato: $e';
-
     } finally {
       isLoading.value = false;
     }

@@ -3,15 +3,16 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:sklad/screens/auth/login_page.dart';
+import 'package:sklad/screens/auth/sign_up_page.dart';
 import 'package:sklad/screens/main/main_screen.dart';
+import 'package:sklad/srting.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'constants.dart';
 import 'controllers/get_controller.dart';
 import 'controllers/menu_app_controller.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
-import 'libs/pages/auth/login_page.dart';
-import 'libs/pages/auth/sign_up_page.dart';
-import 'libs/resource/srting.dart';
+
 
 void configureApp() {
   setUrlStrategy(PathUrlStrategy());

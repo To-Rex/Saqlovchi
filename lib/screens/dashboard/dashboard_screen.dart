@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../companents/ware_house_stats.dart';
 import '../../constants.dart';
 import '../../controllers/api_service.dart';
 import '../../controllers/get_controller.dart';
-import '../../libs/companents/custom_loading_widget.dart';
-import '../../libs/companents/warehouse_stats.dart';
 import '../../responsive.dart';
 import 'components/header.dart';
 import 'components/my_fields.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants.dart';
-import 'custom_loading_widget.dart';
+import '../../companents/custom_loading_widget.dart';
 
 class WarehouseStats extends StatelessWidget {
   final Map<String, dynamic>? stats; // Allow nullable stats

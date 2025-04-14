@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../constants.dart';
 import '../../../controllers/get_controller.dart';
-import '../../../libs/function/dialog_function.dart';
-import '../../../libs/resource/colors.dart';
+import '../../../function/dialog_function.dart';
 import '../../../models/product_display_data.dart';
 import '../../../responsive.dart';
 
@@ -209,7 +208,7 @@ class RecentFiles extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context, ProductDisplayData product) => Row(
     children: [
       Container(
-        decoration: BoxDecoration(color: AppColors.blue.withAlpha(20), shape: BoxShape.circle),
+        decoration: BoxDecoration(color: Colors.blue.withAlpha(20), shape: BoxShape.circle),
         child: IconButton(
           icon: Icon(Icons.edit, size: 18, color: Colors.blue[600]),
           onPressed: () {
@@ -221,7 +220,7 @@ class RecentFiles extends StatelessWidget {
       ),
       const SizedBox(width: 8),
       Container(
-        decoration: BoxDecoration(color: AppColors.red.withAlpha(20), shape: BoxShape.circle),
+        decoration: BoxDecoration(color: Colors.red.withAlpha(20), shape: BoxShape.circle),
         child: IconButton(
           icon: Icon(Icons.delete, size: 18, color: Colors.red[600]),
           onPressed: () {

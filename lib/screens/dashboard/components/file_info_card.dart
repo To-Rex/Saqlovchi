@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../constants.dart';
 import '../../../controllers/get_controller.dart';
-import '../../../libs/function/dialog_function.dart';
+import '../../../function/dialog_function.dart';
 
 class FileInfoCard extends StatelessWidget {
   final String title;
@@ -40,9 +40,9 @@ class FileInfoCard extends StatelessWidget {
                     icon: const Icon(Icons.more_vert, color: Colors.white54),
                     onSelected: (value) {
                       if (value == 'edit') {
-                        //DialogFunction().showEditCategoryDialog(context, controller, category);
+                        DialogFunction().showEditCategoryDialog(context, controller, category);
                       } else if (value == 'delete') {
-                        //DialogFunction().showDeleteCategoryDialog(context, controller, category);
+                        DialogFunction().showDeleteCategoryDialog(context, controller, category);
                       }
                     },
                     itemBuilder: (context) => [
