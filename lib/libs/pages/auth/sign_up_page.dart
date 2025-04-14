@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../samples/home_page.dart';
+import '../../../screens/dashboard/dashboard_screen.dart';
 import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -22,18 +20,20 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> _handleSignUp() async {
     setState(() => _error = '');
-
     if (!_formKey.currentState!.validate()) return;
-
     try {
       final AuthResponse response = await _supabase.auth.signUp(
         email: _email,
         password: _password,
+        data: {
+          'full_name': 'Foydalanuvchi',
+          'role': 'user',
+        }
       );
 
       if (response.user != null) {
         if (mounted) {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomePage()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DashboardScreen()));
         }
       }
     } on AuthException catch (e) {
@@ -61,16 +61,16 @@ class _SignUpPageState extends State<SignUpPage> {
               elevation: 8,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
-                padding: EdgeInsets.all(32.r),
+                padding: EdgeInsets.all(32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(Icons.person_add, color: Colors.indigo, size: 48),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 16),
                     const Text('Create Account', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8.h),
+                    SizedBox(height: 8),
                     Text('Sign up to continue', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 24),
                     if (_error.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -81,14 +81,14 @@ class _SignUpPageState extends State<SignUpPage> {
                         ),
                         child: Text(_error, style: TextStyle(color: Colors.red[700], fontSize: 14)),
                       ),
-                    if (_error.isNotEmpty) SizedBox(height: 16.h),
+                    if (_error.isNotEmpty) SizedBox(height: 16),
                     Form(
                       key: _formKey,
                       child: Column(
                         children: [
                           TextFormField(
                             decoration: InputDecoration(
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                               labelText: 'Email address',
                               prefixIcon: const Icon(Icons.mail_outline),
                               hintText: 'you@example.com',
@@ -103,7 +103,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             },
                             onChanged: (value) => _email = value,
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 16),
                           TextFormField(
                             decoration: InputDecoration(
                               labelText: 'Password',
@@ -113,7 +113,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 onPressed: () => setState(() => _showPassword = !_showPassword),
                               ),
                               hintText: '••••••••',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.r)),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
                             ),
                             obscureText: !_showPassword,
                             validator: (value) {
@@ -123,18 +123,18 @@ class _SignUpPageState extends State<SignUpPage> {
                             },
                             onChanged: (value) => _password = value,
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: _handleSignUp,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.indigo,
                               foregroundColor: Colors.white,
-                              minimumSize: Size(double.infinity, 48.h),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                              minimumSize: Size(double.infinity, 48),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             child: const Text('Sign up'),
                           ),
-                          SizedBox(height: 16.h),
+                          SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

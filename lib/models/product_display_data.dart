@@ -1,7 +1,4 @@
-import 'package:intl/intl.dart';
-
 class ProductDisplayData {
-  final String id;
   final String name;
   final String categoryName;
   final String costPrice;
@@ -9,42 +6,65 @@ class ProductDisplayData {
   final String unit;
   final String batchNumber;
   final String quantity;
-  final double quantityValue;
-  final bool isLowStock;
-  final dynamic categoryId;
-  final dynamic unitId;
+  final String saleStatus;
   final String createdAt;
-  final String createdBy;
+  final bool isLowStock;
 
-  ProductDisplayData.fromProduct(Map<String, dynamic> product, List<dynamic> categories)
-      : id = product['id']?.toString() ?? '',
-        name = product['name'] ?? '',
-        categoryName = categories.firstWhere((c) => c['id'] == product['category_id'], orElse: () => {'name': ''})['name'] ?? '',
-        costPrice = product['cost_price']?.toString() ?? '0.0',
-        sellingPrice = product['selling_price']?.toString() ?? '0.0',
-        unit = product['units'] != null ? product['units']['name'] : '',
-        batchNumber = (product['batches'] as List<dynamic>? ?? []).isNotEmpty ? product['batches'][0]['batch_number'] : 'Yo‘q',
-        quantity = product['quantity']?.toString() ?? '0.0',
-        quantityValue = (product['quantity'] as num?)?.toDouble() ?? 0.0,
-        isLowStock = ((product['quantity'] as num?)?.toDouble() ?? 0.0) < 10,
-        categoryId = product['category_id'],
-        unitId = product['unit_id'] ?? (product['units'] != null ? product['units']['id'] : null),
-        createdAt = product['created_at'] != null ? DateFormat('yyyy-MM-dd HH:mm').format(DateTime.parse(product['created_at']).toLocal()) : 'Noma’lum',
-        createdBy = product['created_by']?.toString() ?? 'Noma’lum';
+  ProductDisplayData({
+    required this.name,
+    required this.categoryName,
+    required this.costPrice,
+    required this.sellingPrice,
+    required this.unit,
+    required this.batchNumber,
+    required this.quantity,
+    required this.saleStatus,
+    required this.createdAt,
+    required this.isLowStock,
+  });
+
+  factory ProductDisplayData.fromProduct(Map<String, dynamic> product, List<dynamic> categories) {
+    final batches = product['batches'] as List<dynamic>?;
+    final latestBatch = batches != null && batches.isNotEmpty ? batches[0] : {};
+
+    final quantity = latestBatch['quantity']?.toString() ?? '0';
+    final costPrice = latestBatch['cost_price']?.toString() ?? '0';
+    final sellingPrice = latestBatch['selling_price']?.toString() ?? '0';
+    final batchNumber = latestBatch['batch_number']?.toString() ?? 'Noma’lum';
+    final isLowStock = double.tryParse(quantity) != null && double.parse(quantity) <= 10.0 && double.parse(quantity) > 0;
+
+    print('Mahsulot ma’lumatlari: name=${product['name']}, '
+        'quantity=$quantity, costPrice=$costPrice, sellingPrice=$sellingPrice');
+
+    return ProductDisplayData(
+      name: product['name']?.toString() ?? 'Noma’lum',
+      categoryName: product['categories']?['name']?.toString() ?? 'Noma’lum',
+      costPrice: costPrice,
+      sellingPrice: sellingPrice,
+      unit: product['units']?['name']?.toString() ?? 'Noma’lum',
+      batchNumber: batchNumber,
+      quantity: quantity,
+      saleStatus: product['sales'] != null && (product['sales'] as List).isNotEmpty
+          ? product['sales'][0]['sale_type']?.toString() ?? 'Noma’lum'
+          : 'Sotilmagan',
+      createdAt: product['created_at'] != null
+          ? DateTime.parse(product['created_at']).toLocal().toString().substring(0, 16)
+          : 'Noma’lum',
+      isLowStock: isLowStock,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
-      'category_id': categoryId ?? '',
-      'cost_price': double.tryParse(costPrice) ?? 0.0,
-      'selling_price': double.tryParse(sellingPrice) ?? 0.0,
-      'unit_id': unitId ?? '',
-      'units': {'name': unit},
-      'batches': batchNumber == 'Yo‘q' ? [] : [{'batch_number': batchNumber}],
-      'quantity': double.tryParse(quantity) ?? 0.0,
+      'category_name': categoryName,
+      'cost_price': costPrice,
+      'selling_price': sellingPrice,
+      'unit': unit,
+      'batch_number': batchNumber,
+      'quantity': quantity,
+      'sale_status': saleStatus,
       'created_at': createdAt,
-      'created_by': createdBy,
     };
   }
 }

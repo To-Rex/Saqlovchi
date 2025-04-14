@@ -4,9 +4,9 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sklad/libs/pages/auth/login_page.dart';
 import 'package:sklad/libs/pages/auth/sign_up_page.dart';
-import 'package:sklad/libs/pages/samples/home_page.dart';
 import 'package:sklad/libs/pages/samples/sample_page.dart';
 import 'package:sklad/libs/resource/srting.dart';
+import 'package:sklad/screens/dashboard/dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sklad/controllers/get_controller.dart';
 import 'package:universal_html/html.dart' as html;
@@ -69,14 +69,14 @@ class MyApp extends StatelessWidget {
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) => HomePage(),
+        builder: (context, state) => DashboardScreen(),
       ),
       GoRoute(
         path: '/:page',
         builder: (context, state) {
           final page = state.pathParameters['page'];
           html.window.history.replaceState(null, '', '/$page');
-          return HomePage();
+          return DashboardScreen();
         },
       ),
     ],

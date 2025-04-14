@@ -39,7 +39,7 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   void initState() {
     super.initState();
-    _recentSalesFuture = apiService.getRecentSoldItems(limit: 3);
+    //_recentSalesFuture = apiService.getRecentSoldItems(limit: 3);
     _preloadStockQuantities();
   }
 
@@ -59,7 +59,8 @@ class _SalesScreenState extends State<SalesScreen> {
     for (var product in controller.products) {
       final productId = product['id'] as String;
       if (!_stockCache.containsKey(productId)) {
-        final stockQuantity = await apiService.getStockQuantity(productId);
+        //final stockQuantity = await apiService.getStockQuantity(productId);
+        final stockQuantity = 0.0;
         _stockCache[productId] = stockQuantity;
       }
     }
@@ -504,7 +505,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   const SizedBox(height: 8),
                   TextButton(
                     onPressed: () {
-                      _showAllSalesDialog(context);
+                      //_showAllSalesDialog(context);
                     },
                     child: const Text(
                       "Barchasini ko‘rish",
@@ -519,7 +520,7 @@ class _SalesScreenState extends State<SalesScreen> {
       ),
     );
   }
-
+/*
   void _showAllSalesDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -533,7 +534,8 @@ class _SalesScreenState extends State<SalesScreen> {
           width: MediaQuery.of(context).size.width * 0.8,
           height: MediaQuery.of(context).size.height * 0.6,
           child: FutureBuilder<List<dynamic>>(
-            future: apiService.getAllSoldItems(),
+            //future: apiService.getAllSoldItems(),
+            future: _allSalesFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator(color: primaryColor));
@@ -602,7 +604,7 @@ class _SalesScreenState extends State<SalesScreen> {
         ],
       ),
     );
-  }
+  }*/
 
   bool _parseIsCredit(dynamic value) {
     if (value == null) return false;
@@ -926,7 +928,7 @@ class _SalesScreenState extends State<SalesScreen> {
     });
 
     try {
-      await apiService.sellProduct(
+      /*await apiService.sellProduct(
         productId: selectedProductId!,
         quantity: quantity,
         customerId: selectedCustomerId,
@@ -945,7 +947,7 @@ class _SalesScreenState extends State<SalesScreen> {
         _cachedStockQuantity = null;
         _resetSalePanel();
         _recentSalesFuture = apiService.getRecentSoldItems(limit: 3);
-      });
+      });*/
       CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'Mahsulot sotildi', type: CustomToast.success);
     } catch (e) {
       CustomToast.show(context: context, title: 'Xatolik', message: e.toString(), type: CustomToast.error);

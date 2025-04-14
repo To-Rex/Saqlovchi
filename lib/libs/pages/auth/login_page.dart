@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import '../../../controllers/get_controller.dart';
 
 
@@ -138,23 +139,21 @@ class LoginPage extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: 16),
-                          Obx(() => ElevatedButton(
-                              //onPressed: controller.isLoading.value ? null : controller.handleSubmit(context), // Kirishni boshqarish
-                              onPressed: (){
-                                if(formKey.currentState!.validate()){
-                                  controller.handleSubmit(context);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.indigo,
-                                foregroundColor: Colors.white,
-                                minimumSize: Size(double.infinity, 48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: controller.isLoading.value
-                                  ? const CircularProgressIndicator(color: Colors.white)
-                                  : const Text('Sign in'),
+                          ElevatedButton(
+                            //onPressed: controller.isLoading.value ? null : controller.handleSubmit(context), // Kirishni boshqarish
+                            onPressed: (){
+                              //GoRouter.of(context).go('/home');
+                              if(formKey.currentState!.validate()){
+                                controller.handleSubmit(context);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                              foregroundColor: Colors.white,
+                              minimumSize: Size(double.infinity, 48),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
+                            child: const Text('Sign in'),
                           ),
                           SizedBox(height: 16),
                           Row(
@@ -165,7 +164,10 @@ class LoginPage extends StatelessWidget {
                                 style: TextStyle(color: Colors.grey[600]),
                               ),
                               TextButton(
-                                onPressed: controller.goToSignUp, // SignUp sahifasiga o‘tish
+                                onPressed: () {
+                                  // Sign up logikasi qo‘shilishi mumkin
+                                  GoRouter.of(context).go('/signup');
+                                },
                                 child: const Text(
                                   'Sign up',
                                   style: TextStyle(color: Colors.indigo),

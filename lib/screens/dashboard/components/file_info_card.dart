@@ -40,9 +40,9 @@ class FileInfoCard extends StatelessWidget {
                     icon: const Icon(Icons.more_vert, color: Colors.white54),
                     onSelected: (value) {
                       if (value == 'edit') {
-                        DialogFunction().showEditCategoryDialog(context, controller, category);
+                        //DialogFunction().showEditCategoryDialog(context, controller, category);
                       } else if (value == 'delete') {
-                        DialogFunction().showDeleteCategoryDialog(context, controller, category);
+                        //DialogFunction().showDeleteCategoryDialog(context, controller, category);
                       }
                     },
                     itemBuilder: (context) => [
