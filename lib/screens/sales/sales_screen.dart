@@ -234,8 +234,7 @@ class SalesScreen extends StatelessWidget {
         color: Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Obx(
-        () =>
+      child: Obx(() =>
             isHorizontal
                 ? SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -328,28 +327,15 @@ class SalesScreen extends StatelessWidget {
     SalesScreenController controller, {
     double maxCrossAxisExtent = 180,
     double childAspectRatio = 1.5,
-    double height = 360,
+    double height = 400,
   }) {
     return Obx(() {
       final filteredProducts =
           controller.selectedCategoryId.value == null
               ? controller.appController.products
-              : controller.appController.products
-                  .where(
-                    (p) =>
-                        p['category_id'].toString() ==
-                        controller.selectedCategoryId.value,
-                  )
-                  .toList();
+              : controller.appController.products.where((p) => p['category_id'].toString() == controller.selectedCategoryId.value).toList();
 
-      final searchedProducts =
-          filteredProducts
-              .where(
-                (p) => p['name'].toString().toLowerCase().contains(
-                  controller.searchQuery.value,
-                ),
-              )
-              .toList();
+      final searchedProducts = filteredProducts.where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value)).toList();
 
       if (controller.isStockLoading.value) {
         return const Center(
