@@ -508,4 +508,22 @@ class SalesScreenController extends GetxController {
       isSelling.value = false;
     }
   }
+
+  Future<void> payDebt(BuildContext context, int saleId, double paymentAmount) async {
+    isSelling.value = true;
+    try {
+      // Supabase funksiyasini chaqirish
+      await apiService.payDebt(saleId, paymentAmount);
+
+      // Ro‘yxatni yangilash
+      recentSalesFuture.value = apiService.getRecentSales(limit: 2);
+
+      CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'To‘lov qabul qilindi', type: CustomToast.success);
+    } catch (e) {
+      print('To‘lov xatosi: $e');
+      CustomToast.show(context: context, title: 'Xatolik', message: 'To‘lovni amalga oshirishda xato: $e', type: CustomToast.error,);
+    } finally {
+      isSelling.value = false;
+    }
+  }
 }

@@ -257,6 +257,23 @@ class ApiService {
     }
   }
 
+  Future<void> payDebt(int saleId, double paymentAmount) async {
+    try {
+      final response = await _supabase.rpc('pay_debt', params: {
+        'p_sale_id': saleId,
+        'p_payment_amount': paymentAmount,
+      });
+      if (response != null && response is String && response.contains('error')) {
+        throw Exception(response);
+      }
+      getDebtWithDiscountReport();
+      print('Qarz to‘landi: sale_id=$saleId, miqdor=$paymentAmount');
+    } catch (e) {
+      print('Qarz to‘lashda xato: $e');
+      _handleError(e);
+    }
+  }
+
   // POST: Birlik qo‘shish
   Future<Map<String, dynamic>> addUnit({required String name, String? description, required String createdBy}) async {
     try {
@@ -344,15 +361,7 @@ class ApiService {
   }
 
   // POST: Partiya qo‘shish
-  Future<Map<String, dynamic>> addBatch({
-    required int productId,
-    required String batchNumber,
-    required int quantity,
-    required double costPrice,
-    required double sellingPrice,
-    String? comments,
-    required String createdBy,
-  }) async {
+  Future<Map<String, dynamic>> addBatch({required int productId, required String batchNumber, required int quantity, required double costPrice, required double sellingPrice, String? comments, required String createdBy,}) async {
     try {
       final response = await _supabase.from('batches').insert({
         'product_id': productId,
@@ -371,12 +380,7 @@ class ApiService {
   }
 
   // POST: Mijoz qo‘shish
-  Future<Map<String, dynamic>> addCustomer({
-    required String fullName,
-    String? phoneNumber,
-    String? address,
-    required String createdBy,
-  }) async {
+  Future<Map<String, dynamic>> addCustomer({required String fullName, String? phoneNumber, String? address, required String createdBy}) async {
     try {
       final response = await _supabase.from('customers').insert({
         'full_name': fullName,
@@ -392,15 +396,7 @@ class ApiService {
   }
 
   // POST: Sotuv qo‘shish
-  Future<Map<String, dynamic>> addSale({
-    required String saleType,
-    int? customerId,
-    required double totalAmount,
-    double? discountAmount,
-    double? paidAmount,
-    String? comments,
-    required String createdBy,
-  }) async {
+  Future<Map<String, dynamic>> addSale({required String saleType, int? customerId, required double totalAmount, double? discountAmount, double? paidAmount, String? comments, required String createdBy}) async {
     try {
       final response = await _supabase.from('sales').insert({
         'sale_type': saleType,
@@ -419,12 +415,7 @@ class ApiService {
   }
 
   // POST: Sotuv elementi qo‘shish
-  Future<Map<String, dynamic>> addSaleItem({
-    required int saleId,
-    required int batchId,
-    required int quantity,
-    required double unitPrice,
-  }) async {
+  Future<Map<String, dynamic>> addSaleItem({required int saleId, required int batchId, required int quantity, required double unitPrice}) async {
     try {
       final response = await _supabase.from('sale_items').insert({
         'sale_id': saleId,
@@ -440,14 +431,7 @@ class ApiService {
   }
 
   // POST: Tranzaksiya qo‘shish
-  Future<Map<String, dynamic>> addTransaction({
-    required String transactionType,
-    required double amount,
-    int? saleId,
-    int? customerId,
-    String? comments,
-    required String createdBy,
-  }) async {
+  Future<Map<String, dynamic>> addTransaction({required String transactionType, required double amount, int? saleId, int? customerId, String? comments, required String createdBy}) async {
     try {
       final response = await _supabase.from('transactions').insert({
         'transaction_type': transactionType,
@@ -493,13 +477,7 @@ class ApiService {
   }
 
   // PUT: Mahsulotni yangilash
-  Future<Map<String, dynamic>> updateProduct({
-    required int id,
-    required String name,
-    required int categoryId,
-    required int unitId,
-    String? description,
-  }) async {
+  Future<Map<String, dynamic>> updateProduct({required int id, required String name, required int categoryId, required int unitId, String? description}) async {
     try {
       final response = await _supabase.from('products').update({
         'name': name,
@@ -515,13 +493,7 @@ class ApiService {
   }
 
   // PUT: Partiyani yangilash
-  Future<Map<String, dynamic>> updateBatch({
-    required int id,
-    required int quantity,
-    required double costPrice,
-    required double sellingPrice,
-    String? comments,
-  }) async {
+  Future<Map<String, dynamic>> updateBatch({required int id, required int quantity, required double costPrice, required double sellingPrice, String? comments}) async {
     try {
       final response = await _supabase.from('batches').update({
         'quantity': quantity,
@@ -537,12 +509,7 @@ class ApiService {
   }
 
   // PUT: Mijozni yangilash
-  Future<Map<String, dynamic>> updateCustomer({
-    required int id,
-    required String fullName,
-    String? phoneNumber,
-    String? address,
-  }) async {
+  Future<Map<String, dynamic>> updateCustomer({required int id, required String fullName, String? phoneNumber, String? address}) async {
     try {
       final response = await _supabase.from('customers').update({
         'full_name': fullName,
@@ -669,6 +636,20 @@ class ApiService {
     } catch (e) {
       _handleError(e);
       return [];
+    }
+  }
+
+
+  Future<void> clearAllDataExceptUsersAndUnits() async {
+    try {
+      final response = await _supabase.rpc('clear_all_data_except_users_and_units');
+      if (response != null && response is String && response.contains('error')) {
+        throw Exception(response);
+      }
+      print('Ma\'lumotlar muvaffaqiyatli tozalandi');
+    } catch (e) {
+      print('Ma\'lumotlarni tozalashda xato: $e');
+      _handleError(e);
     }
   }
 }

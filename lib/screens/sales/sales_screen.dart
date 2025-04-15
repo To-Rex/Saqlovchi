@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/sales_screen_controller.dart';
+import '../../companents/custom_toast.dart';
 import '../../responsive.dart';
+import '../test_screen.dart';
 
 class SalesScreen extends StatelessWidget {
   const SalesScreen({super.key});
@@ -167,8 +170,9 @@ class SalesScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.fact_check_rounded, color: Colors.white, size: 28),
+              //TestScreen
+            onPressed: () => GoRouter.of(context).go('/test'),
             splashRadius: 24,
           ),
         ],
@@ -869,7 +873,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  void _showAllSalesDialog(BuildContext context, SalesScreenController controller,) {
+  void _showAllSalesDialog(BuildContext context, SalesScreenController controller) {
     final TextEditingController searchController = TextEditingController();
     final RxString searchQuery = ''.obs;
     final RxString selectedStatus = 'all'.obs;
@@ -881,12 +885,19 @@ class SalesScreen extends StatelessWidget {
       context: context,
       builder:
           (context) => Dialog(
-            backgroundColor: secondaryColor,
+            backgroundColor: Colors.transparent,
             insetPadding: EdgeInsets.all(Responsive.isMobile(context) ? 8 : 16),
             child: Container(
-              width: Responsive.isMobile(context) ? double.infinity : MediaQuery.of(context).size.width * 0.9,
-              height: Responsive.isMobile(context) ? MediaQuery.of(context).size.height - 32 : MediaQuery.of(context).size.height * 0.8,
+              width:
+                  Responsive.isMobile(context)
+                      ? double.infinity
+                      : MediaQuery.of(context).size.width * 0.9,
+              height:
+                  Responsive.isMobile(context)
+                      ? MediaQuery.of(context).size.height - 32
+                      : MediaQuery.of(context).size.height * 0.8,
               decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.95),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -898,6 +909,7 @@ class SalesScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  // Sarlavha va yopish tugmasi
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -914,11 +926,11 @@ class SalesScreen extends StatelessWidget {
                               baseSize: 18,
                             ),
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black87,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
+                          icon: const Icon(Icons.close, color: Colors.black54),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ],
@@ -935,14 +947,14 @@ class SalesScreen extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: 'Mahsulot bo‘yicha qidirish',
                         hintStyle: TextStyle(
-                          color: Colors.white70,
+                          color: Colors.black54,
                           fontSize: Responsive.getFontSize(
                             context,
                             baseSize: 14,
                           ),
                         ),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.2),
+                        fillColor: Colors.white.withOpacity(0.8),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -956,7 +968,7 @@ class SalesScreen extends StatelessWidget {
                         ),
                         prefixIcon: const Icon(
                           Icons.search,
-                          color: Colors.white,
+                          color: Colors.black54,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 12,
@@ -964,7 +976,7 @@ class SalesScreen extends StatelessWidget {
                         ),
                       ),
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Colors.black87,
                         fontSize: Responsive.getFontSize(context, baseSize: 14),
                       ),
                       onChanged:
@@ -985,14 +997,14 @@ class SalesScreen extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: 'Status',
                                 labelStyle: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black54,
                                   fontSize: Responsive.getFontSize(
                                     context,
                                     baseSize: 12,
                                   ),
                                 ),
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withOpacity(0.8),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
@@ -1078,14 +1090,14 @@ class SalesScreen extends StatelessWidget {
                               decoration: InputDecoration(
                                 labelText: 'Saralash',
                                 labelStyle: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.black54,
                                   fontSize: Responsive.getFontSize(
                                     context,
                                     baseSize: 12,
                                   ),
                                 ),
                                 filled: true,
-                                fillColor: Colors.white.withOpacity(0.2),
+                                fillColor: Colors.white.withOpacity(0.8),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
@@ -1253,7 +1265,7 @@ class SalesScreen extends StatelessWidget {
                             child: Text(
                               "Sotuvlar mavjud emas",
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: Colors.black54,
                                 fontSize: Responsive.getFontSize(
                                   context,
                                   baseSize: 14,
@@ -1264,7 +1276,8 @@ class SalesScreen extends StatelessWidget {
                         }
                         return Obx(() {
                           // Qidiruv, status va sana bo‘yicha filtr
-                          List<dynamic> filteredSales = allSales.where((sale) {
+                          List<dynamic> filteredSales =
+                              allSales.where((sale) {
                                 final productName =
                                     sale['sale_items'] != null &&
                                             sale['sale_items'].isNotEmpty &&
@@ -1310,6 +1323,7 @@ class SalesScreen extends StatelessWidget {
                                     matchesStatus &&
                                     matchesDate;
                               }).toList();
+
                           // Vaqt bo‘yicha saralash
                           filteredSales.sort((a, b) {
                             final dateA = DateTime.parse(a['sale_date']);
@@ -1318,13 +1332,20 @@ class SalesScreen extends StatelessWidget {
                                 ? dateB.compareTo(dateA)
                                 : dateA.compareTo(dateB);
                           });
+
                           return ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 25),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             itemCount: filteredSales.length,
                             itemBuilder: (context, index) {
                               final sale = filteredSales[index];
                               bool hasMarkup = false;
-                              if (sale['sale_items'] != null && sale['sale_items'].isNotEmpty && sale['sale_items'][0]['unit_price'] != null && sale['sale_items'][0]['batches'] != null) {
+                              if (sale['sale_items'] != null &&
+                                  sale['sale_items'].isNotEmpty &&
+                                  sale['sale_items'][0]['unit_price'] != null &&
+                                  sale['sale_items'][0]['batches'] != null) {
                                 final unitPrice =
                                     (sale['sale_items'][0]['unit_price']
                                             as num?)
@@ -1348,7 +1369,7 @@ class SalesScreen extends StatelessWidget {
                                 margin: const EdgeInsets.symmetric(vertical: 4),
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withOpacity(0.8),
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
@@ -1359,7 +1380,8 @@ class SalesScreen extends StatelessWidget {
                                   ],
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Row(
@@ -1370,22 +1392,47 @@ class SalesScreen extends StatelessWidget {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  sale['sale_items'] != null && sale['sale_items'].isNotEmpty && sale['sale_items'][0]['batches'] != null && sale['sale_items'][0]['batches']['products'] != null ? sale['sale_items'][0]['batches']['products']['name'] ?? 'Noma’lum mahsulot' : 'Noma’lum mahsulot',
+                                                  sale['sale_items'] != null &&
+                                                          sale['sale_items']
+                                                              .isNotEmpty &&
+                                                          sale['sale_items'][0]['batches'] !=
+                                                              null &&
+                                                          sale['sale_items'][0]['batches']['products'] !=
+                                                              null
+                                                      ? sale['sale_items'][0]['batches']['products']['name'] ??
+                                                          'Noma’lum mahsulot'
+                                                      : 'Noma’lum mahsulot',
                                                   style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                                    color: Colors.black87,
+                                                    fontSize:
+                                                        Responsive.getFontSize(
+                                                          context,
+                                                          baseSize: 14,
+                                                        ),
                                                     fontWeight: FontWeight.w600,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 Text(
-                                                  sale['sale_date'] != null ? sale['sale_date'].substring(0,16,) : 'Noma’lum vaqt',
+                                                  sale['sale_date'] != null
+                                                      ? sale['sale_date']
+                                                          .substring(
+                                                            0,
+                                                            16,
+                                                          ) // YYYY-MM-DD HH:MM
+                                                      : 'Noma’lum vaqt',
                                                   style: TextStyle(
-                                                    color: Colors.white70,
-                                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                                    color: Colors.black54,
+                                                    fontSize:
+                                                        Responsive.getFontSize(
+                                                          context,
+                                                          baseSize: 12,
+                                                        ),
                                                   ),
                                                 ),
-                                                if (sale['sale_type'] == 'returned')
+                                                if (sale['sale_type'] ==
+                                                    'returned')
                                                   Text(
                                                     "Qaytarildi",
                                                     style: TextStyle(
@@ -1410,13 +1457,15 @@ class SalesScreen extends StatelessWidget {
                                               size: 18,
                                             ),
                                           const SizedBox(width: 8),
-                                          if ((sale['paid_amount'] as num) < (sale['total_amount'] as num))
+                                          if ((sale['paid_amount'] as num) <
+                                              (sale['total_amount'] as num))
                                             const Icon(
                                               Icons.credit_card,
                                               color: Colors.red,
                                               size: 18,
                                             ),
-                                          if ((sale['discount_amount'] as num) > 0)
+                                          if ((sale['discount_amount'] as num) >
+                                              0)
                                             const Icon(
                                               Icons.discount,
                                               color: Colors.green,
@@ -1430,7 +1479,7 @@ class SalesScreen extends StatelessWidget {
                                         Text(
                                           "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: Colors.black87,
                                             fontSize: Responsive.getFontSize(
                                               context,
                                               baseSize: 14,
@@ -1439,6 +1488,25 @@ class SalesScreen extends StatelessWidget {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
+                                        if (sale['sale_type'] == 'debt' ||
+                                            sale['sale_type'] ==
+                                                'debt_with_discount')
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.payment,
+                                              color: Colors.blue,
+                                              size: 18,
+                                            ),
+                                            tooltip: 'To‘lash',
+                                            onPressed:
+                                                controller.isSelling.value
+                                                    ? null
+                                                    : () => _showPaymentDialog(
+                                                      context,
+                                                      controller,
+                                                      sale,
+                                                    ),
+                                          ),
                                         if (sale['sale_type'] != 'returned')
                                           IconButton(
                                             icon: const Icon(
@@ -1464,7 +1532,7 @@ class SalesScreen extends StatelessWidget {
                                                           .value = controller
                                                           .apiService
                                                           .getRecentSales(
-                                                            limit: 3,
+                                                            limit: 2,
                                                           ); // Ro‘yxatni yangilash
                                                     },
                                           ),
@@ -1479,49 +1547,6 @@ class SalesScreen extends StatelessWidget {
                       },
                     ),
                   ),
-                  //shartli belgilar
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.attach_money,
-                          color: Colors.yellow, size: 16),
-                        Text(
-                            "Ustama bilan",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Responsive.getFontSize(context, baseSize: 14),
-                              fontWeight: FontWeight.bold,
-                            )),
-                        SizedBox(width: 10,),
-                        Icon(
-                          Icons.discount,
-                          color: Colors.green, size: 16),
-                        Text(
-                            "Chegirma",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Responsive.getFontSize(context, baseSize: 14),
-                              fontWeight: FontWeight.bold,
-                            )),
-                        SizedBox(width: 10,),
-                        Icon(
-                          Icons.credit_card,
-                          color: Colors.red, size: 16),
-                        Text(
-                            "Qarz",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Responsive.getFontSize(context, baseSize: 14),
-                              fontWeight: FontWeight.bold,
-                            ))
-
-                      ],
-                    )
-                  ),
-
                 ],
               ),
             ),
@@ -1529,10 +1554,64 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuantityInput(
+  void _showPaymentDialog(
     BuildContext context,
     SalesScreenController controller,
+    Map<String, dynamic> sale,
   ) {
+    final TextEditingController paymentController = TextEditingController();
+    final remainingDebt = ((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0);
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Qarzni to‘lash'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Jami qarz: ${remainingDebt.toStringAsFixed(0)} so‘m'),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: paymentController,
+                  decoration: InputDecoration(
+                    labelText: 'To‘lov miqdori (so‘m)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryColor, width: 2)),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Bekor qilish', style: TextStyle(color: Colors.red))
+              ),
+              Obx(() => ElevatedButton(onPressed: controller.isSelling.value ? null : () {
+                final paymentAmount = double.tryParse(paymentController.text) ?? 0.0;
+                if (paymentAmount <= 0 || paymentAmount > remainingDebt) {
+                  //paymentController maximal miqdori
+                  paymentController.text = remainingDebt.toStringAsFixed(0);
+                  CustomToast.show(context: context, title: 'Xatolik', message: 'Noto‘g‘ri to‘lov miqdori', type: CustomToast.error);
+                  return;
+                }
+                controller.payDebt(context, sale['id'], paymentAmount).then((_) {Navigator.pop(context,);Navigator.pop(context,);});
+                },
+                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: controller.isSelling.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('To‘lash', style: TextStyle(color: Colors.white)))
+              )
+            ]
+          )
+    );
+  }
+
+  Widget _buildQuantityInput(BuildContext context, SalesScreenController controller) {
     return GetBuilder<SalesScreenController>(
       id: 'quantity',
       builder: (controller) {

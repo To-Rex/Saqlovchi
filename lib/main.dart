@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:sklad/screens/auth/login_page.dart';
 import 'package:sklad/screens/auth/sign_up_page.dart';
 import 'package:sklad/screens/main/main_screen.dart';
+import 'package:sklad/screens/test_screen.dart';
 import 'package:sklad/srting.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'constants.dart';
@@ -29,6 +30,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/signup',
       builder: (context, state) => const SignUpPage(),
+    ),
+    GoRoute(
+      path: '/test',
+      builder: (context, state) => const TestScreen(),
     ),
     GoRoute(
       path: '/', // Root yo‘li
