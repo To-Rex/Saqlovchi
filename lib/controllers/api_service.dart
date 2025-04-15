@@ -170,10 +170,10 @@ class ApiService {
       final response = await _supabase
           .from('sales')
           .select('''
-          id, total_amount, discount_amount, paid_amount, sale_date, comments,
-          customers(full_name),
-          sale_items(id, quantity, unit_price, batches(id, batch_number, product_id, products(name)))
-        ''')
+      id, total_amount, discount_amount, paid_amount, sale_date, comments, sale_type,
+      customers(full_name),
+      sale_items(id, quantity, unit_price, batches(id, batch_number, product_id, products(name)))
+    ''')
           .order('sale_date', ascending: false)
           .limit(limit);
       print('Oxirgi sotuvlar: ${response.length} ta');

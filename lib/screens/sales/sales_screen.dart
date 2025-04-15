@@ -174,23 +174,33 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryList(BuildContext context, SalesScreenController controller,
-      {double width = 160, bool isHorizontal = false, double height = 400}) {
+  Widget _buildCategoryList(BuildContext context, SalesScreenController controller, {double width = 160, bool isHorizontal = false, double height = 400}) {
     return Container(
       width: isHorizontal ? double.infinity : width,
       height: height,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
-      child: Obx(() => isHorizontal
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Obx(
+            () => isHorizontal
             ? SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
               _buildCategoryItem(context, controller, null, "Barchasi"),
-              ...controller.appController.categories.map((category) => _buildCategoryItem(context, controller, category['id'].toString(), category['name']))
-            ]
-          )
-        ) : ListView.builder(
+              ...controller.appController.categories.map(
+                    (category) => _buildCategoryItem(
+                  context,
+                  controller,
+                  category['id'].toString(),
+                  category['name'],
+                ),
+              ),
+            ],
+          ),
+        )
+            : ListView.builder(
           scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
           itemCount: controller.appController.categories.length + 1,
           itemBuilder: (context, index) {
@@ -198,10 +208,15 @@ class SalesScreen extends StatelessWidget {
               return _buildCategoryItem(context, controller, null, "Barchasi");
             }
             final category = controller.appController.categories[index - 1];
-            return _buildCategoryItem(context, controller, category['id'].toString(), category['name']);
-          }
-        )
-      )
+            return _buildCategoryItem(
+              context,
+              controller,
+              category['id'].toString(),
+              category['name'],
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -209,21 +224,30 @@ class SalesScreen extends StatelessWidget {
       BuildContext context, SalesScreenController controller, String? id, String name) {
     return GestureDetector(
       onTap: () => controller.selectCategory(id),
-      child: Obx(() => AnimatedContainer(
+      child: Obx(
+            () => AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: controller.selectedCategoryId.value == id ? primaryColor.withOpacity(0.9) : Colors.white.withOpacity(0.1),
+            color: controller.selectedCategoryId.value == id
+                ? primaryColor.withOpacity(0.9)
+                : Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))]
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Text(
             name,
             style: TextStyle(
               color: controller.selectedCategoryId.value == id ? Colors.white : Colors.white70,
               fontWeight: FontWeight.w600,
-              fontSize: Responsive.getFontSize(context, baseSize: 13),
+              fontSize: Responsive.getFontSize(context, baseSize: 15),
             ),
           ),
         ),
@@ -233,26 +257,18 @@ class SalesScreen extends StatelessWidget {
 
   Widget _buildProductGrid(BuildContext context, SalesScreenController controller,
       {double maxCrossAxisExtent = 180, double childAspectRatio = 1.5, double height = 360}) {
-    return Obx(
-          () {
+    return Obx(() {
         final filteredProducts = controller.selectedCategoryId.value == null
             ? controller.appController.products
             : controller.appController.products
             .where((p) => p['category_id'].toString() == controller.selectedCategoryId.value)
             .toList();
 
-        final searchedProducts = filteredProducts
-            .where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value))
-            .toList();
+        final searchedProducts = filteredProducts.where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value)).toList();
 
-        if (controller.isStockLoading.value) {
-          return const Center(
-            child: CircularProgressIndicator(color: primaryColor),
-          );
-        }
+        if (controller.isStockLoading.value) {return const Center(child: CircularProgressIndicator(color: primaryColor),);}
 
-        return searchedProducts.isEmpty
-            ? Center(
+        return searchedProducts.isEmpty ? Center(
           child: Text(
             "Mahsulot topilmadi",
             style: TextStyle(
@@ -279,7 +295,6 @@ class SalesScreen extends StatelessWidget {
               double sellingPrice = 0.0;
               double costPrice = 0.0;
 
-              // Mahsulot uchun eng so‘nggi partiyani topish
               for (var entry in controller.batchCache.entries) {
                 if (entry.value['product_id'] == product['id'].toString()) {
                   batchId = entry.key;
@@ -305,8 +320,7 @@ class SalesScreen extends StatelessWidget {
                   costPrice,
                   sellingPrice,
                 ),
-                child: Obx(
-                      () => AnimatedScale(
+                child: Obx(() => AnimatedScale(
                     duration: const Duration(milliseconds: 200),
                     scale: controller.selectedProductId.value == product['id'].toString() ? 0.95 : 1.0,
                     child: Card(
@@ -370,8 +384,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSalePanel(BuildContext context, SalesScreenController controller,
-      {double width = 320, EdgeInsets padding = const EdgeInsets.all(12), double? height}) {
+  Widget _buildSalePanel(BuildContext context, SalesScreenController controller, {double width = 320, EdgeInsets padding = const EdgeInsets.all(12), double? height}) {
     return Container(
       width: width,
       height: height,
@@ -389,28 +402,28 @@ class SalesScreen extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         child: Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Sotish",
-              style: TextStyle(
-                fontSize: Responsive.getFontSize(context, baseSize: 20),
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 0.5,
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (controller.selectedProductId.value != null && controller.selectedBatchId.value != null) ...[
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value)['name']}",
+                "Sotish",
                 style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: Responsive.getFontSize(context, baseSize: 15),
+                  fontSize: Responsive.getFontSize(context, baseSize: 20),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
-              if (controller.cachedStockQuantity.value != null) ...[
+              const SizedBox(height: 12),
+              if (controller.selectedProductId.value != null && controller.selectedBatchId.value != null) ...[
+                Text(
+                  "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value)['name']}",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 15),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (controller.cachedStockQuantity.value != null) ...[
                   Builder(
                     builder: (context) {
                       final stockQuantity = controller.cachedStockQuantity.value ?? 0.0;
@@ -462,34 +475,55 @@ class SalesScreen extends StatelessWidget {
                   duration: const Duration(milliseconds: 150),
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
-                    onPressed: (controller.selectedProductId.value == null || controller.selectedBatchId.value == null || controller.quantity.value <= 0 || controller.isSelling.value || controller.cachedStockQuantity.value == null || controller.cachedStockQuantity.value == 0) ? null : () => controller.sellProduct(context),
+                    onPressed: (controller.selectedProductId.value == null ||
+                        controller.selectedBatchId.value == null ||
+                        controller.quantity.value <= 0 ||
+                        controller.isSelling.value ||
+                        controller.cachedStockQuantity.value == null ||
+                        controller.cachedStockQuantity.value == 0)
+                        ? null
+                        : () => controller.sellProduct(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
-                      minimumSize: const Size(double.infinity, 50)),
-                      child: controller.isSelling.value ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text("Sotish", style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 16), color: Colors.white, fontWeight: FontWeight.w600)
-                      )
-                  )
-                )
-              )
-            ]
-          )
-        )
-      )
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: controller.isSelling.value
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Text(
+                      "Sotish",
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 16),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildRecentSales(BuildContext context, SalesScreenController controller) {
     return Container(
       width: double.infinity,
-      padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(12)),
+      margin: const EdgeInsets.only(top: 16),
+      padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(10)),
+      constraints: const BoxConstraints(minHeight: 200),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: const BorderRadius.only(
@@ -509,8 +543,7 @@ class SalesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Obx(
-                () => FutureBuilder<List<dynamic>>(
+          Obx(() => FutureBuilder<List<dynamic>>(
               future: controller.recentSalesFuture.value,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -528,58 +561,81 @@ class SalesScreen extends StatelessWidget {
                 final recentSales = snapshot.data ?? [];
                 return Column(
                   children: [
-                    ...recentSales.map(
-                          (sale) => Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      sale['sale_items'] != null && sale['sale_items'].isNotEmpty
-                                          ? sale['sale_items'][0]['batches']['products']['name'] ??
-                                          'Noma’lum mahsulot'
-                                          : 'Noma’lum mahsulot',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                    ...recentSales.map((sale) {
+                        // Ustama haqni tekshirish uchun null xavfsizligi
+                        bool hasMarkup = false;
+                        if (sale['sale_items'] != null && sale['sale_items'].isNotEmpty && sale['sale_items'][0]['unit_price'] != null && sale['sale_items'][0]['batches'] != null) {
+                          final unitPrice = (sale['sale_items'][0]['unit_price'] as num?)?.toDouble() ?? 0.0;
+                          final costPrice = (sale['sale_items'][0]['batches']['cost_price'] as num?)?.toDouble() ?? 0.0;
+                          final sellingPrice = (sale['sale_items'][0]['batches']['selling_price'] as num?)?.toDouble() ?? 0.0;
+                          hasMarkup = unitPrice > (costPrice + sellingPrice);
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 1),)
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            sale['sale_items'] != null && sale['sale_items'].isNotEmpty
+                                                ? sale['sale_items'][0]['batches']['products']['name'] ??
+                                                'Noma’lum mahsulot'
+                                                : 'Noma’lum mahsulot',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: Responsive.getFontSize(context, baseSize: 13),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          if (sale['sale_type'] == 'returned')
+                                            Text("Qaytarildi", style: TextStyle(color: Colors.red, fontSize: Responsive.getFontSize(context, baseSize: 11), fontWeight: FontWeight.bold))
+                                        ]
+                                      )
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  if ((sale['paid_amount'] as num) < (sale['total_amount'] as num))
-                                    const Icon(Icons.credit_card, color: Colors.red, size: 18),
-                                  if ((sale['discount_amount'] as num) > 0)
-                                    const Icon(Icons.discount, color: Colors.green, size: 18),
+                                    const SizedBox(width: 6),
+                                    if (hasMarkup)
+                                      const Icon(Icons.attach_money, color: Colors.yellow, size: 16),
+                                    const SizedBox(width: 6),
+                                    if ((sale['paid_amount'] as num) < (sale['total_amount'] as num))
+                                      const Icon(Icons.credit_card, color: Colors.red, size: 16),
+                                    if ((sale['discount_amount'] as num) > 0)
+                                      const Icon(Icons.discount, color: Colors.green, size: 16)
+                                  ]
+                                )
+                              ),
+                              Row(
+                                children: [
+                                  Text("${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m", style: TextStyle(color: Colors.white70, fontSize: Responsive.getFontSize(context, baseSize: 13))),
+                                  const SizedBox(width: 6),
+                                  if (sale['sale_type'] != 'returned')
+                                    IconButton(
+                                      icon: const Icon(Icons.undo, color: Colors.orange, size: 16),
+                                      tooltip: 'Qaytarish',
+                                      onPressed: controller.isSelling.value
+                                          ? null
+                                          : () => controller.returnProduct(context, sale['id']),
+                                    ),
                                 ],
                               ),
-                            ),
-                            Text(
-                              "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: Responsive.getFontSize(context, baseSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 8),
                     TextButton(
@@ -635,7 +691,7 @@ class SalesScreen extends StatelessWidget {
                   fontSize: Responsive.getFontSize(context, baseSize: 16),
                 ),
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // Raqamlar va nuqta
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
                 ],
                 onChanged: controller.updateQuantity,
               ),
@@ -734,14 +790,8 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSwitchTile(
-      BuildContext context, {
-        required String title,
-        required RxBool value,
-        required ValueChanged<bool> onChanged,
-      }) {
-    return Obx(
-          () => Container(
+  Widget _buildSwitchTile(BuildContext context, {required String title, required RxBool value, required ValueChanged<bool> onChanged}) {
+    return Obx(() => Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
