@@ -1481,14 +1481,13 @@ class SalesScreen extends StatelessWidget {
                   ),
                   //shartli belgilar
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-
                       children: [
                         Icon(
                           Icons.attach_money,
-                          color: Colors.yellow,),
+                          color: Colors.yellow, size: 16),
                         Text(
                             "Ustama bilan",
                             style: TextStyle(
@@ -1499,7 +1498,7 @@ class SalesScreen extends StatelessWidget {
                         SizedBox(width: 10,),
                         Icon(
                           Icons.discount,
-                          color: Colors.green,),
+                          color: Colors.green, size: 16),
                         Text(
                             "Chegirma",
                             style: TextStyle(
@@ -1510,7 +1509,7 @@ class SalesScreen extends StatelessWidget {
                         SizedBox(width: 10,),
                         Icon(
                           Icons.credit_card,
-                          color: Colors.red,),
+                          color: Colors.red, size: 16),
                         Text(
                             "Qarz",
                             style: TextStyle(
