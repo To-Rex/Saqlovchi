@@ -296,8 +296,7 @@ class GetController extends GetxController {
   }
 
   // Mahsulotni tahrirlash
-  Future<void> editProduct(String id, String name, String categoryId, double costPrice, String unitId,
-      {double? sellingPrice, double? quantity}) async {
+  Future<void> editProduct(String id, String name, String categoryId, double costPrice, String unitId, {double? sellingPrice, double? quantity}) async {
     isLoading.value = true;
     try {
       if (name.isEmpty) {
@@ -306,15 +305,7 @@ class GetController extends GetxController {
       if (costPrice <= 0 || (sellingPrice != null && sellingPrice <= 0) || (quantity != null && quantity <= 0)) {
         throw Exception('Miqdor va narxlar ijobiy bo‘lishi kerak');
       }
-
-      await _apiService.updateProduct(
-        id: int.parse(id),
-        name: name,
-        categoryId: int.parse(categoryId),
-        unitId: int.parse(unitId),
-        description: null,
-      );
-
+      await _apiService.updateProduct(id: int.parse(id), name: name, categoryId: int.parse(categoryId), unitId: int.parse(unitId), description: null);
       // Partiyani yangilash
       if (quantity != null || sellingPrice != null || costPrice != 0) {
         final product = products.firstWhere((p) => p['id'].toString() == id);
@@ -329,10 +320,8 @@ class GetController extends GetxController {
           );
         }
       }
-
       await fetchInitialData();
-      Get.snackbar('Muvaffaqiyat', 'Mahsulot tahrirlandi',
-          backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Muvaffaqiyat', 'Mahsulot tahrirlandi', backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Mahsulot tahrirlashda xato: $e';
     } finally {

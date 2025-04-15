@@ -1,9 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'get_controller.dart';
+
 
 class ApiService {
   // Supabase mijozini olish
@@ -16,7 +15,7 @@ class ApiService {
   }
 
   // Kirish (Sign In)
-  Future<void> signIn(BuildContext context, String email, String password) async {
+  Future<void> signIn(context, String email, String password) async {
     try {
       final AuthResponse responses = await _supabase.auth.signInWithPassword(email: email, password: password);
       if (responses.user != null) {
@@ -27,6 +26,7 @@ class ApiService {
         } else {
           controller.fullName.value = 'Noma’lum';
         }
+        controller.fetchInitialData();
         GoRouter.of(context).go('/');
       }
     } catch (e) {
@@ -239,19 +239,6 @@ class ApiService {
     }
   }
 
-/*  Future<List<dynamic>> getPremiumSale() async {
-    try {
-      final response = await _supabase
-          .from('sale_items')
-          .select('*, batches(selling_price, products(name)), sales(customer_id, customers(full_name))')
-          .gt('unit_price', _supabase.rpc('batches.selling_price'));
-      return response;
-    } catch (e) {
-      _handleError(e);
-      return [];
-    }
-  }*/
-
   Future<List<dynamic>> getPremiumSales() async {
     try {
       final response = await _supabase.rpc('get_premium_sales').select();
@@ -295,13 +282,7 @@ class ApiService {
   }
 
   // POST: Mahsulot qo‘shish
-  Future<Map<String, dynamic>> addProduct({
-    required String name,
-    required int categoryId,
-    required int unitId,
-    String? description,
-    required String createdBy,
-  }) async {
+  Future<Map<String, dynamic>> addProduct({required String name, required int categoryId, required int unitId, String? description, required String createdBy}) async {
     print('Mahsulot qo‘shish boshlandi: name=$name, category_id=$categoryId, '
         'unit_id=$unitId, description=$description, created_by=$createdBy');
     try {

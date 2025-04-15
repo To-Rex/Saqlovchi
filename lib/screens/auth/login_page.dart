@@ -27,7 +27,8 @@ class LoginPage extends StatelessWidget {
             child: Card(
               elevation: 8,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
                 padding: EdgeInsets.all(32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -87,8 +88,7 @@ class LoginPage extends StatelessWidget {
                             onChanged: (value) => controller.email.value = value, // Emailni controllerga yozamiz
                           ),
                           SizedBox(height: 16),
-                          Obx(
-                                () => TextFormField(
+                          Obx(() => TextFormField(
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outline),
@@ -131,10 +131,7 @@ class LoginPage extends StatelessWidget {
                                 onPressed: () {
                                   // Forgot password logikasi qo‘shilishi mumkin
                                 },
-                                child: const Text(
-                                  'Forgot password?',
-                                  style: TextStyle(color: Colors.indigo),
-                                ),
+                                child: const Text('Forgot password?', style: TextStyle(color: Colors.indigo)),
                               ),
                             ],
                           ),
