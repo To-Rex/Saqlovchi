@@ -76,8 +76,7 @@ class TransactionsScreen extends StatelessWidget {
                               child: CircularProgressIndicator(color: primaryColor),
                             );
                           }
-                          final stats =
-                              snapshot.data ?? {'income': 0.0, 'expense': 0.0, 'profit': 0.0};
+                          final stats = snapshot.data ?? {'income': 0.0, 'expense': 0.0, 'profit': 0.0};
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
@@ -689,17 +688,10 @@ class TransactionsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(
-      BuildContext context,
-      String title,
-      String value,
-      Color color,
-      IconData icon,
-      ) {
+  Widget _buildStatCard(BuildContext context, String title, String value, Color color, IconData icon) {
     return Container(
-      width: Responsive.isMobile(context)
-          ? MediaQuery.of(context).size.width * 0.28
-          : 120,
+      //width: Responsive.isMobile(context) ? MediaQuery.of(context).size.width * 0.28 : 120,
+      width: Responsive.isMobile(context) ? MediaQuery.of(context).size.width * 0.28 : Responsive.isTablet(context) ? MediaQuery.of(context).size.width * 0.28 : Responsive.isDesktop(context) ? MediaQuery.of(context).size.width * 0.25 : 120,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.4),

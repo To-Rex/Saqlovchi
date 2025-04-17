@@ -58,6 +58,86 @@ class ApiService {
     }
   }
 
+
+
+  // Barcha foydalanuvchilarni olish
+  Future<List<dynamic>> getAllUsers({
+    String? searchQuery,
+    String? sortOrder = 'newest',
+  }) async {
+    try {
+      var query = _supabase.from('users').select('id, full_name, email, role, is_blocked, created_at');
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or('full_name.ilike.%$searchQuery%,email.ilike.%$searchQuery%');
+      }
+
+      // Saralash: created_at bo‘yicha
+      final response = await query.order('created_at', ascending: sortOrder == 'oldest');
+      print('Foydalanuvchilar: ${response.length} ta');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Foydalanuvchilarni olishda xato: $e');
+      _handleError(e);
+      return [];
+    }
+  }
+
+
+  // Yangi foydalanuvchi qo‘shish
+  Future<void> addUser({
+    required String fullName,
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    try {
+      await _supabase.from('users').insert({
+        'full_name': fullName,
+        'email': email,
+        'password': password, // Parol hashlanishi kerak (serverda yoki bu yerda)
+        'role': role,
+        'is_blocked': false,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      print('Foydalanuvchi muvaffaqiyatli qo‘shildi: $email');
+    } catch (e) {
+      print('Foydalanuvchi qo‘shishda xato: $e');
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  // Foydalanuvchini bloklash yoki blokdan ochish
+  Future<void> toggleUserBlock(String userId, bool isBlocked) async {
+    try {
+      await _supabase.from('users').update({'is_blocked': isBlocked}).eq('id', userId);
+      print('Foydalanuvchi blok holati o‘zgartirildi: $userId, is_blocked: $isBlocked');
+    } catch (e) {
+      print('Foydalanuvchi blok holatini o‘zgartirishda xato: $e');
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  // Foydalanuvchi admin ekanligini tekshirish
+  Future<bool> isAdmin(String userId) async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select('role')
+          .eq('id', userId)
+          .single();
+      return response['role'] == 'admin';
+    } catch (e) {
+      print('Admin tekshiruvida xato: $e');
+      _handleError(e);
+      return false;
+    }
+  }
+
+
+
   // GET: Birliklarni olish
   Future<List<dynamic>> getUnits() async {
     try {
