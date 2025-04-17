@@ -8,7 +8,7 @@ import '../notifications/notifications_screen.dart';
 import '../sales/sales_screen.dart';
 import '../settings/settings_screen.dart';
 import '../tasks/tasks_screen.dart';
-import '../transfers/transfers_screen.dart';
+import '../transfers/transactions_screen.dart';
 import '../users.dart';
 import 'components/side_menu.dart';
 
@@ -48,7 +48,7 @@ class MainScreen extends StatelessWidget {
       case 'home':
         return DashboardScreen();
       case 'transfers':
-        return const TransfersScreen();
+        return TransactionsScreen();
       case 'tasks':
         return const TasksScreen();
       case 'documents':

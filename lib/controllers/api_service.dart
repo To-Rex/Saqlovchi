@@ -257,6 +257,147 @@ class ApiService {
     }
   }
 
+
+
+
+
+  Future<List<dynamic>> getAllTransactions({
+    String? searchQuery,
+    String? transactionType,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      var query = _supabase.from('transactions').select('''
+        id, transaction_type, amount, sale_id, customer_id, comments, created_by, created_at,
+        sales(sale_type, total_amount, paid_amount, discount_amount),
+        customers(full_name)
+      ''');
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or(
+          'comments.ilike.%$searchQuery%,and(customers.full_name.ilike.%$searchQuery%)',
+          referencedTable: 'customers',
+        );
+      }
+
+      if (transactionType != null && transactionType != 'all') {
+        query = query.eq('transaction_type', transactionType);
+      }
+
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        query = query.lte('created_at', endDate.toIso8601String());
+      }
+
+      final response = await query.order('created_at', ascending: false, nullsFirst: false);
+      print('Tranzaksiyalar: ${response.length} ta');
+      return response as List<dynamic>;
+    } catch (e) {
+      print('Tranzaksiyalarni olishda xato: $e');
+      _handleError(e);
+      return [];
+    }
+  }
+
+  // Kirim/chiqim statistikalarini olish
+  Future<Map<String, dynamic>> getTransactionStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      var query = _supabase.from('transactions').select('transaction_type, amount');
+
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        query = query.lte('created_at', endDate.toIso8601String());
+      }
+
+      final response = await query;
+      double income = 0.0;
+      double expense = 0.0;
+
+      for (var transaction in response) {
+        final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+        final type = transaction['transaction_type'] as String;
+        if (['payment', 'debt_payment', 'income'].contains(type)) {
+          income += amount;
+        } else if (['debt_sale', 'return', 'expense'].contains(type)) {
+          expense += amount;
+        }
+      }
+
+      final profit = income - expense;
+      return {
+        'income': income,
+        'expense': expense,
+        'profit': profit,
+      };
+    } catch (e) {
+      print('Statistikani olishda xato: $e');
+      _handleError(e);
+      return {'income': 0.0, 'expense': 0.0, 'profit': 0.0};
+    }
+  }
+
+  // Tranzaksiya turlari bo‘yicha statistika olish (summa va son)
+  Future<Map<String, Map<String, dynamic>>> getTransactionTypeStats({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      var query = _supabase.from('transactions').select('transaction_type, amount');
+
+      if (startDate != null) {
+        query = query.gte('created_at', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        query = query.lte('created_at', endDate.toIso8601String());
+      }
+
+      final response = await query;
+      Map<String, Map<String, dynamic>> typeStats = {
+        'debt_sale': {'total': 0.0, 'count': 0},
+        'payment': {'total': 0.0, 'count': 0},
+        'debt_payment': {'total': 0.0, 'count': 0},
+        'return': {'total': 0.0, 'count': 0},
+        'income': {'total': 0.0, 'count': 0},
+        'expense': {'total': 0.0, 'count': 0},
+      };
+
+      for (var transaction in response) {
+        final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
+        final type = transaction['transaction_type'] as String;
+        if (typeStats.containsKey(type)) {
+          typeStats[type]!['total'] = typeStats[type]!['total'] + amount;
+          typeStats[type]!['count'] = typeStats[type]!['count'] + 1;
+        }
+      }
+
+      return typeStats;
+    } catch (e) {
+      print('Tranzaksiya turlari statistikasini olishda xato: $e');
+      _handleError(e);
+      return {
+        'debt_sale': {'total': 0.0, 'count': 0},
+        'payment': {'total': 0.0, 'count': 0},
+        'debt_payment': {'total': 0.0, 'count': 0},
+        'return': {'total': 0.0, 'count': 0},
+        'income': {'total': 0.0, 'count': 0},
+        'expense': {'total': 0.0, 'count': 0},
+      };
+    }
+  }
+
+
+
+
+
+
   Future<void> payDebt(int saleId, double paymentAmount) async {
     try {
       final response = await _supabase.rpc('pay_debt', params: {
