@@ -858,7 +858,6 @@ class SalesScreen extends StatelessWidget {
       ),
     );
   }
-
   void _showAllSalesDialog(BuildContext context, SalesScreenController controller) {
     final TextEditingController searchController = TextEditingController();
     final RxString searchQuery = ''.obs;
@@ -869,674 +868,561 @@ class SalesScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.all(Responsive.isMobile(context) ? 8 : 16),
-            child: Container(
-              width:
-                  Responsive.isMobile(context)
-                      ? double.infinity
-                      : MediaQuery.of(context).size.width * 0.9,
-              height:
-                  Responsive.isMobile(context)
-                      ? MediaQuery.of(context).size.height - 32
-                      : MediaQuery.of(context).size.height * 0.8,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Sarlavha va yopish tugmasi
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Barcha sotuvlar",
-                          style: TextStyle(
-                            fontSize: Responsive.getFontSize(
-                              context,
-                              baseSize: 18,
-                            ),
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.black54),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Qidiruv maydoni
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Mahsulot bo‘yicha qidirish',
-                        hintStyle: TextStyle(
-                          color: Colors.black54,
-                          fontSize: Responsive.getFontSize(
-                            context,
-                            baseSize: 14,
-                          ),
-                        ),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: primaryColor,
-                            width: 2,
-                          ),
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.black54,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 12,
-                          horizontal: 16,
-                        ),
-                      ),
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontSize: Responsive.getFontSize(context, baseSize: 14),
-                      ),
-                      onChanged:
-                          (value) => searchQuery.value = value.toLowerCase(),
-                    ),
-                  ),
-                  // Status va vaqt saralash
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Obx(
-                            () => DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                labelText: 'Status',
-                                labelStyle: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 12,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.8),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 16,
-                                ),
-                              ),
-                              value: selectedStatus.value,
-                              items: [
-                                DropdownMenuItem(
-                                  value: 'all',
-                                  child: Text(
-                                    'Barchasi',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'returned',
-                                  child: Text(
-                                    'Qaytarilgan',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'debt',
-                                  child: Text(
-                                    'Qarzga sotilgan',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'discount',
-                                  child: Text(
-                                    'Chegirmali',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'cash',
-                                  child: Text(
-                                    'Naqd',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) selectedStatus.value = value;
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Obx(
-                            () => DropdownButtonFormField<String>(
-                              decoration: InputDecoration(
-                                labelText: 'Saralash',
-                                labelStyle: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 12,
-                                  ),
-                                ),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.8),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 16,
-                                ),
-                              ),
-                              value: sortOrder.value,
-                              items: [
-                                DropdownMenuItem(
-                                  value: 'newest',
-                                  child: Text(
-                                    'Eng yangi',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'oldest',
-                                  child: Text(
-                                    'Eng eski',
-                                    style: TextStyle(
-                                      fontSize: Responsive.getFontSize(
-                                        context,
-                                        baseSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) sortOrder.value = value;
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Sana tanlash
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Obx(
-                            () => ElevatedButton(
-                              onPressed: () async {
-                                final selectedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate:
-                                      startDate.value ?? DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime.now(),
-                                );
-                                if (selectedDate != null) {
-                                  startDate.value = selectedDate;
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                startDate.value == null
-                                    ? 'Boshlang‘ich sana'
-                                    : 'Boshlang‘ich: ${startDate.value!.toString().substring(0, 10)}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Obx(
-                            () => ElevatedButton(
-                              onPressed: () async {
-                                final selectedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: endDate.value ?? DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime.now(),
-                                );
-                                if (selectedDate != null) {
-                                  endDate.value = selectedDate;
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Text(
-                                endDate.value == null
-                                    ? 'Oxirgi sana'
-                                    : 'Oxirgi: ${endDate.value!.toString().substring(0, 10)}',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Sotuvlar ro‘yxati
-                  Expanded(
-                    child: FutureBuilder<List<dynamic>>(
-                      future: controller.apiService.getSales(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: primaryColor,
-                            ),
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Text(
-                              "Xato: ${snapshot.error}",
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: Responsive.getFontSize(
-                                  context,
-                                  baseSize: 14,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        final allSales = snapshot.data ?? [];
-                        if (allSales.isEmpty) {
-                          return Center(
-                            child: Text(
-                              "Sotuvlar mavjud emas",
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontSize: Responsive.getFontSize(
-                                  context,
-                                  baseSize: 14,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        return Obx(() {
-                          // Qidiruv, status va sana bo‘yicha filtr
-                          List<dynamic> filteredSales =
-                              allSales.where((sale) {
-                                final productName =
-                                    sale['sale_items'] != null &&
-                                            sale['sale_items'].isNotEmpty &&
-                                            sale['sale_items'][0]['batches'] !=
-                                                null &&
-                                            sale['sale_items'][0]['batches']['products'] !=
-                                                null
-                                        ? sale['sale_items'][0]['batches']['products']['name']
-                                                ?.toString()
-                                                .toLowerCase() ??
-                                            ''
-                                        : '';
-                                final matchesSearch =
-                                    searchQuery.value.isEmpty ||
-                                    productName.contains(searchQuery.value);
-                                final matchesStatus =
-                                    selectedStatus.value == 'all' ||
-                                    (selectedStatus.value == 'returned' &&
-                                        sale['sale_type'] == 'returned') ||
-                                    (selectedStatus.value == 'debt' &&
-                                        (sale['sale_type'] == 'debt' ||
-                                            sale['sale_type'] ==
-                                                'debt_with_discount')) ||
-                                    (selectedStatus.value == 'discount' &&
-                                        (sale['sale_type'] == 'discount' ||
-                                            sale['sale_type'] ==
-                                                'debt_with_discount')) ||
-                                    (selectedStatus.value == 'cash' &&
-                                        sale['sale_type'] == 'cash');
-                                final saleDate = DateTime.parse(
-                                  sale['sale_date'],
-                                );
-                                final matchesDate =
-                                    (startDate.value == null ||
-                                        saleDate.isAfter(startDate.value!)) &&
-                                    (endDate.value == null ||
-                                        saleDate.isBefore(
-                                          endDate.value!.add(
-                                            const Duration(days: 1),
-                                          ),
-                                        ));
-                                return matchesSearch &&
-                                    matchesStatus &&
-                                    matchesDate;
-                              }).toList();
-
-                          // Vaqt bo‘yicha saralash
-                          filteredSales.sort((a, b) {
-                            final dateA = DateTime.parse(a['sale_date']);
-                            final dateB = DateTime.parse(b['sale_date']);
-                            return sortOrder.value == 'newest'
-                                ? dateB.compareTo(dateA)
-                                : dateA.compareTo(dateB);
-                          });
-
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 8,
-                            ),
-                            itemCount: filteredSales.length,
-                            itemBuilder: (context, index) {
-                              final sale = filteredSales[index];
-                              bool hasMarkup = false;
-                              if (sale['sale_items'] != null &&
-                                  sale['sale_items'].isNotEmpty &&
-                                  sale['sale_items'][0]['unit_price'] != null &&
-                                  sale['sale_items'][0]['batches'] != null) {
-                                final unitPrice =
-                                    (sale['sale_items'][0]['unit_price']
-                                            as num?)
-                                        ?.toDouble() ??
-                                    0.0;
-                                final costPrice =
-                                    (sale['sale_items'][0]['batches']['cost_price']
-                                            as num?)
-                                        ?.toDouble() ??
-                                    0.0;
-                                final sellingPrice =
-                                    (sale['sale_items'][0]['batches']['selling_price']
-                                            as num?)
-                                        ?.toDouble() ??
-                                    0.0;
-                                hasMarkup =
-                                    unitPrice > (costPrice + sellingPrice);
-                              }
-
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  sale['sale_items'] != null &&
-                                                          sale['sale_items']
-                                                              .isNotEmpty &&
-                                                          sale['sale_items'][0]['batches'] !=
-                                                              null &&
-                                                          sale['sale_items'][0]['batches']['products'] !=
-                                                              null
-                                                      ? sale['sale_items'][0]['batches']['products']['name'] ??
-                                                          'Noma’lum mahsulot'
-                                                      : 'Noma’lum mahsulot',
-                                                  style: TextStyle(
-                                                    color: Colors.black87,
-                                                    fontSize:
-                                                        Responsive.getFontSize(
-                                                          context,
-                                                          baseSize: 14,
-                                                        ),
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                Text(
-                                                  sale['sale_date'] != null
-                                                      ? sale['sale_date']
-                                                          .substring(
-                                                            0,
-                                                            16,
-                                                          ) // YYYY-MM-DD HH:MM
-                                                      : 'Noma’lum vaqt',
-                                                  style: TextStyle(
-                                                    color: Colors.black54,
-                                                    fontSize:
-                                                        Responsive.getFontSize(
-                                                          context,
-                                                          baseSize: 12,
-                                                        ),
-                                                  ),
-                                                ),
-                                                if (sale['sale_type'] ==
-                                                    'returned')
-                                                  Text(
-                                                    "Qaytarildi",
-                                                    style: TextStyle(
-                                                      color: Colors.red,
-                                                      fontSize:
-                                                          Responsive.getFontSize(
-                                                            context,
-                                                            baseSize: 12,
-                                                          ),
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          if (hasMarkup)
-                                            const Icon(
-                                              Icons.attach_money,
-                                              color: Colors.yellow,
-                                              size: 18,
-                                            ),
-                                          const SizedBox(width: 8),
-                                          if ((sale['paid_amount'] as num) <
-                                              (sale['total_amount'] as num))
-                                            const Icon(
-                                              Icons.credit_card,
-                                              color: Colors.red,
-                                              size: 18,
-                                            ),
-                                          if ((sale['discount_amount'] as num) >
-                                              0)
-                                            const Icon(
-                                              Icons.discount,
-                                              color: Colors.green,
-                                              size: 18,
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
-                                          style: TextStyle(
-                                            color: Colors.black87,
-                                            fontSize: Responsive.getFontSize(
-                                              context,
-                                              baseSize: 14,
-                                            ),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        if (sale['sale_type'] == 'debt' ||
-                                            sale['sale_type'] ==
-                                                'debt_with_discount')
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.payment,
-                                              color: Colors.blue,
-                                              size: 18,
-                                            ),
-                                            tooltip: 'To‘lash',
-                                            onPressed:
-                                                controller.isSelling.value
-                                                    ? null
-                                                    : () => _showPaymentDialog(
-                                                      context,
-                                                      controller,
-                                                      sale,
-                                                    ),
-                                          ),
-                                        if (sale['sale_type'] != 'returned')
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.undo,
-                                              color: Colors.orange,
-                                              size: 18,
-                                            ),
-                                            tooltip: 'Qaytarish',
-                                            onPressed:
-                                                controller.isSelling.value
-                                                    ? null
-                                                    : () async {
-                                                      await controller
-                                                          .returnProduct(
-                                                            context,
-                                                            sale['id'],
-                                                          );
-                                                      Navigator.pop(
-                                                        context,
-                                                      ); // Dialogni yopish
-                                                      controller
-                                                          .recentSalesFuture
-                                                          .value = controller
-                                                          .apiService
-                                                          .getRecentSales(
-                                                            limit: 2,
-                                                          ); // Ro‘yxatni yangilash
-                                                    },
-                                          ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(Responsive.isMobile(context) ? 8 : 16),
+        child: Container(
+          width: Responsive.isMobile(context)
+              ? double.infinity
+              : MediaQuery.of(context).size.width * 0.9,
+          height: Responsive.isMobile(context)
+              ? MediaQuery.of(context).size.height - 32
+              : MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                secondaryColor,
+                secondaryColor.withOpacity(0.9),
+                secondaryColor.withOpacity(0.7),
+                Colors.black.withOpacity(0.6),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              stops: const [0.0, 0.4, 0.7, 1.0],
             ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
+          child: Column(
+            children: [
+              // Sarlavha va yopish tugmasi
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Barcha sotuvlar",
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 18),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              // Qidiruv maydoni
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Mahsulot bo‘yicha qidirish',
+                    hintStyle: TextStyle(
+                      color: Colors.white70,
+                      fontSize: Responsive.getFontSize(context, baseSize: 14),
+                    ),
+                    filled: true,
+                    fillColor: Colors.black.withOpacity(0.3),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: primaryColor,
+                        width: 2,
+                      ),
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.white70,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                  ),
+                  onChanged: (value) => searchQuery.value = value.toLowerCase(),
+                ),
+              ),
+              // Status va vaqt saralash
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Obx(
+                            () => DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Status',
+                            labelStyle: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                          ),
+                          value: selectedStatus.value,
+                          dropdownColor: Colors.black.withOpacity(0.9),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'all',
+                              child: Text('Barchasi'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'returned',
+                              child: Text('Qaytarilgan'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'debt',
+                              child: Text('Qarzga sotilgan'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'discount',
+                              child: Text('Chegirmali'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cash',
+                              child: Text('Naqd'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) selectedStatus.value = value;
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Obx(
+                            () => DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Saralash',
+                            labelStyle: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                          ),
+                          value: sortOrder.value,
+                          dropdownColor: Colors.black.withOpacity(0.9),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          ),
+                          items: [
+                            DropdownMenuItem(
+                              value: 'newest',
+                              child: Text('Eng yangi'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'oldest',
+                              child: Text('Eng eski'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) sortOrder.value = value;
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Sana tanlash
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Obx(
+                            () => ElevatedButton(
+                          onPressed: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: startDate.value ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: primaryColor,
+                                      onPrimary: Colors.white,
+                                      surface: Colors.black,
+                                      onSurface: Colors.white70,
+                                    ),
+                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (selectedDate != null) {
+                              startDate.value = selectedDate;
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            startDate.value == null
+                                ? 'Boshlang‘ich sana'
+                                : 'Boshlang‘ich: ${startDate.value!.toString().substring(0, 10)}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Obx(
+                            () => ElevatedButton(
+                          onPressed: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: endDate.value ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: primaryColor,
+                                      onPrimary: Colors.white,
+                                      surface: Colors.black,
+                                      onSurface: Colors.white70,
+                                    ),
+                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (selectedDate != null) {
+                              endDate.value = selectedDate;
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            endDate.value == null
+                                ? 'Oxirgi sana'
+                                : 'Oxirgi: ${endDate.value!.toString().substring(0, 10)}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Sotuvlar ro‘yxati
+              Expanded(
+                child: FutureBuilder<List<dynamic>>(
+                  future: controller.apiService.getSales(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: primaryColor),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          "Xato: ${snapshot.error}",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: Responsive.getFontSize(context, baseSize: 14),
+                          ),
+                        ),
+                      );
+                    }
+                    final allSales = snapshot.data ?? [];
+                    if (allSales.isEmpty) {
+                      return Center(
+                        child: Text(
+                          "Sotuvlar mavjud emas",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: Responsive.getFontSize(context, baseSize: 14),
+                          ),
+                        ),
+                      );
+                    }
+                    return Obx(() {
+                      // Qidiruv, status va sana bo‘yicha filtr
+                      List<dynamic> filteredSales = allSales.where((sale) {
+                        final productName = sale['sale_items'] != null &&
+                            sale['sale_items'].isNotEmpty &&
+                            sale['sale_items'][0]['batches'] != null &&
+                            sale['sale_items'][0]['batches']['products'] != null
+                            ? sale['sale_items'][0]['batches']['products']['name']
+                            ?.toString()
+                            .toLowerCase() ??
+                            ''
+                            : '';
+                        final matchesSearch =
+                            searchQuery.value.isEmpty || productName.contains(searchQuery.value);
+                        final matchesStatus = selectedStatus.value == 'all' ||
+                            (selectedStatus.value == 'returned' &&
+                                sale['sale_type'] == 'returned') ||
+                            (selectedStatus.value == 'debt' &&
+                                (sale['sale_type'] == 'debt' ||
+                                    sale['sale_type'] == 'debt_with_discount')) ||
+                            (selectedStatus.value == 'discount' &&
+                                (sale['sale_type'] == 'discount' ||
+                                    sale['sale_type'] == 'debt_with_discount')) ||
+                            (selectedStatus.value == 'cash' && sale['sale_type'] == 'cash');
+                        final saleDate = DateTime.parse(sale['sale_date']);
+                        final matchesDate = (startDate.value == null ||
+                            saleDate.isAfter(startDate.value!)) &&
+                            (endDate.value == null ||
+                                saleDate.isBefore(endDate.value!.add(const Duration(days: 1))));
+                        return matchesSearch && matchesStatus && matchesDate;
+                      }).toList();
+
+                      // Vaqt bo‘yicha saralash
+                      filteredSales.sort((a, b) {
+                        final dateA = DateTime.parse(a['sale_date']);
+                        final dateB = DateTime.parse(b['sale_date']);
+                        return sortOrder.value == 'newest'
+                            ? dateB.compareTo(dateA)
+                            : dateA.compareTo(dateB);
+                      });
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        itemCount: filteredSales.length,
+                        itemBuilder: (context, index) {
+                          final sale = filteredSales[index];
+                          bool hasMarkup = false;
+                          if (sale['sale_items'] != null &&
+                              sale['sale_items'].isNotEmpty &&
+                              sale['sale_items'][0]['unit_price'] != null &&
+                              sale['sale_items'][0]['batches'] != null) {
+                            final unitPrice =
+                                (sale['sale_items'][0]['unit_price'] as num?)?.toDouble() ?? 0.0;
+                            final costPrice =
+                                (sale['sale_items'][0]['batches']['cost_price'] as num?)
+                                    ?.toDouble() ??
+                                    0.0;
+                            final sellingPrice =
+                                (sale['sale_items'][0]['batches']['selling_price'] as num?)
+                                    ?.toDouble() ??
+                                    0.0;
+                            hasMarkup = unitPrice > (costPrice + sellingPrice);
+                          }
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              sale['sale_items'] != null &&
+                                                  sale['sale_items'].isNotEmpty &&
+                                                  sale['sale_items'][0]['batches'] !=
+                                                      null &&
+                                                  sale['sale_items'][0]['batches']
+                                                  ['products'] !=
+                                                      null
+                                                  ? sale['sale_items'][0]['batches']
+                                              ['products']['name'] ??
+                                                  'Noma’lum mahsulot'
+                                                  : 'Noma’lum mahsulot',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize:
+                                                Responsive.getFontSize(context, baseSize: 14),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              sale['sale_date'] != null
+                                                  ? sale['sale_date'].substring(0, 16)
+                                                  : 'Noma’lum vaqt',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize:
+                                                Responsive.getFontSize(context, baseSize: 12),
+                                              ),
+                                            ),
+                                            if (sale['sale_type'] == 'returned')
+                                              Text(
+                                                "Qaytarildi",
+                                                style: TextStyle(
+                                                  color: Colors.redAccent,
+                                                  fontSize: Responsive.getFontSize(
+                                                      context, baseSize: 12),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      if (hasMarkup)
+                                        const Icon(
+                                          Icons.attach_money,
+                                          color: Colors.yellow,
+                                          size: 18,
+                                        ),
+                                      const SizedBox(width: 8),
+                                      if ((sale['paid_amount'] as num) <
+                                          (sale['total_amount'] as num))
+                                        const Icon(
+                                          Icons.credit_card,
+                                          color: Colors.redAccent,
+                                          size: 18,
+                                        ),
+                                      if ((sale['discount_amount'] as num) > 0)
+                                        const Icon(
+                                          Icons.discount,
+                                          color: Colors.greenAccent,
+                                          size: 18,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize:
+                                        Responsive.getFontSize(context, baseSize: 14),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    if (sale['sale_type'] == 'debt' ||
+                                        sale['sale_type'] == 'debt_with_discount')
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.payment,
+                                          color: Colors.blueAccent,
+                                          size: 18,
+                                        ),
+                                        tooltip: 'To‘lash',
+                                        onPressed: controller.isSelling.value
+                                            ? null
+                                            : () => _showPaymentDialog(
+                                          context,
+                                          controller,
+                                          sale,
+                                        ),
+                                      ),
+                                    if (sale['sale_type'] != 'returned')
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.undo,
+                                          color: Colors.orangeAccent,
+                                          size: 18,
+                                        ),
+                                        tooltip: 'Qaytarish',
+                                        onPressed: controller.isSelling.value
+                                            ? null
+                                            : () async {
+                                          await controller.returnProduct(
+                                            context,
+                                            sale['id'],
+                                          );
+                                          Navigator.pop(context); // Dialogni yopish
+                                          controller.recentSalesFuture.value =
+                                              controller.apiService
+                                                  .getRecentSales(limit: 2);
+                                        },
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1550,8 +1436,7 @@ class SalesScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
+      builder: (context) => AlertDialog(
             title: const Text('Qarzni to‘lash'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
