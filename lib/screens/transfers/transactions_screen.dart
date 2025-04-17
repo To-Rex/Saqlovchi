@@ -364,8 +364,7 @@ class TransactionsScreen extends StatelessWidget {
                               child: CircularProgressIndicator(color: primaryColor),
                             );
                           }
-                          final typeStats = snapshot.data ??
-                              {
+                          final typeStats = snapshot.data ?? {
                                 'debt_sale': {'total': 0.0, 'count': 0},
                                 'payment': {'total': 0.0, 'count': 0},
                                 'debt_payment': {'total': 0.0, 'count': 0},
@@ -376,6 +375,8 @@ class TransactionsScreen extends StatelessWidget {
                           return Wrap(
                             spacing: 8,
                             runSpacing: 8,
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               _buildTypeStatCard(
                                 context,
