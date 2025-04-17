@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/transactions_screen_controller.dart';
 import '../../responsive.dart';
@@ -114,13 +115,29 @@ class TransactionsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Filtrlar",
-                        style: TextStyle(
-                          fontSize: Responsive.getFontSize(context, baseSize: 18),
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Filtrlar",
+                            style: TextStyle(
+                              fontSize: Responsive.getFontSize(context, baseSize: 18),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: controller.clearFilters,
+                            child: Text(
+                              "Tozalash",
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       TextField(
@@ -334,9 +351,8 @@ class TransactionsScreen extends StatelessWidget {
                       Text(
                         "Tranzaksiya turlari bo‘yicha",
                         style: TextStyle(
-                          fontSize: Responsive.getFontSize(context, baseSize: 18),
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                            fontSize: Responsive.getFontSize(context, baseSize: 18),
+                            fontWeight: FontWeight.bold
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -457,143 +473,205 @@ class TransactionsScreen extends StatelessWidget {
                             );
                           }
 
-                          // Saralash
-                          final sortedTransactions = transactions.toList();
-                          if (controller.sortOrder.value == 'amount_asc') {
-                            sortedTransactions.sort((a, b) =>
-                                (a['amount'] as num).compareTo(b['amount'] as num));
-                          } else if (controller.sortOrder.value == 'amount_desc') {
-                            sortedTransactions.sort((a, b) =>
-                                (b['amount'] as num).compareTo(a['amount'] as num));
-                          } else if (controller.sortOrder.value == 'oldest') {
-                            sortedTransactions.sort((a, b) => DateTime.parse(a['created_at'])
-                                .compareTo(DateTime.parse(b['created_at'])));
+                          // Kunlarga ajratish
+                          Map<String, List<dynamic>> groupedTransactions = {};
+                          for (var transaction in transactions) {
+                            final date = DateTime.parse(transaction['created_at']);
+                            final dateKey = DateFormat('yyyy-MM-dd').format(date);
+                            groupedTransactions.putIfAbsent(dateKey, () => []).add(transaction);
                           }
+
+                          // Saralash
+                          final sortedDates = groupedTransactions.keys.toList()
+                            ..sort((a, b) => controller.sortOrder.value == 'oldest'
+                                ? a.compareTo(b)
+                                : b.compareTo(a));
 
                           return ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: sortedTransactions.length,
+                            itemCount: sortedDates.length,
                             itemBuilder: (context, index) {
-                              final transaction = sortedTransactions[index];
-                              Color typeColor;
-                              String typeLabel;
-                              switch (transaction['transaction_type']) {
-                                case 'debt_sale':
-                                  typeColor = Colors.redAccent;
-                                  typeLabel = 'Qarzga sotuv';
-                                  break;
-                                case 'payment':
-                                  typeColor = Colors.greenAccent;
-                                  typeLabel = 'To‘lov';
-                                  break;
-                                case 'debt_payment':
-                                  typeColor = Colors.blueAccent;
-                                  typeLabel = 'Qarz to‘lovi';
-                                  break;
-                                case 'return':
-                                  typeColor = Colors.orangeAccent;
-                                  typeLabel = 'Qaytarish';
-                                  break;
-                                case 'income':
-                                  typeColor = Colors.greenAccent;
-                                  typeLabel = 'Kirim';
-                                  break;
-                                case 'expense':
-                                  typeColor = Colors.redAccent;
-                                  typeLabel = 'Chiqim';
-                                  break;
-                                default:
-                                  typeColor = Colors.white70;
-                                  typeLabel = 'Noma’lum';
+                              final date = sortedDates[index];
+                              final dailyTransactions = groupedTransactions[date]!;
+                              // Tranzaksiyalarni saralash
+                              if (controller.sortOrder.value == 'amount_asc') {
+                                dailyTransactions.sort((a, b) =>
+                                    (a['amount'] as num).compareTo(b['amount'] as num));
+                              } else if (controller.sortOrder.value == 'amount_desc') {
+                                dailyTransactions.sort((a, b) =>
+                                    (b['amount'] as num).compareTo(a['amount'] as num));
                               }
 
-                              return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
+                              // Kun formatini o‘zbekchaga o‘zgartirish
+                              final dateTime = DateTime.parse(date);
+                              final formattedDate = '${DateFormat('yyyy').format(dateTime)} yil ${DateFormat('d').format(dateTime)} - ${DateFormat('MMMM').format(dateTime)}';
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    padding:
+                                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    child: Text(
+                                      formattedDate,
+                                      style: TextStyle(
+                                        fontSize:
+                                        Responsive.getFontSize(context, baseSize: 16),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          typeLabel,
-                                          style: TextStyle(
+                                  ),
+                                  ...dailyTransactions.map((transaction) {
+                                    Color typeColor;
+                                    String typeLabel;
+                                    switch (transaction['transaction_type']) {
+                                      case 'debt_sale':
+                                        typeColor = Colors.redAccent;
+                                        typeLabel = 'Qarzga sotuv';
+                                        break;
+                                      case 'payment':
+                                        typeColor = Colors.greenAccent;
+                                        typeLabel = 'To‘lov';
+                                        break;
+                                      case 'debt_payment':
+                                        typeColor = Colors.blueAccent;
+                                        typeLabel = 'Qarz to‘lovi';
+                                        break;
+                                      case 'return':
+                                        typeColor = Colors.orangeAccent;
+                                        typeLabel = 'Qaytarish';
+                                        break;
+                                      case 'income':
+                                        typeColor = Colors.greenAccent;
+                                        typeLabel = 'Kirim';
+                                        break;
+                                      case 'expense':
+                                        typeColor = Colors.redAccent;
+                                        typeLabel = 'Chiqim';
+                                        break;
+                                      default:
+                                        typeColor = Colors.white70;
+                                        typeLabel = 'Noma’lum';
+                                    }
+
+                                    final dateTime = DateTime.parse(transaction['created_at']);
+                                    final time = DateFormat('HH:mm').format(dateTime);
+
+                                    return Container(
+                                      margin: const EdgeInsets.symmetric(vertical: 4),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.black.withOpacity(0.5),
+                                            typeColor.withOpacity(0.1),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: typeColor.withOpacity(0.3)),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 4,
+                                            height: 40,
                                             color: typeColor,
-                                            fontSize:
-                                            Responsive.getFontSize(context, baseSize: 14),
-                                            fontWeight: FontWeight.bold,
+                                            margin: const EdgeInsets.only(right: 8),
                                           ),
-                                        ),
-                                        Text(
-                                          "${(transaction['amount'] as num).toStringAsFixed(0)} so‘m",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize:
-                                            Responsive.getFontSize(context, baseSize: 14),
-                                            fontWeight: FontWeight.w500,
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  mainAxisAlignment:
+                                                  MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                      typeLabel,
+                                                      style: TextStyle(
+                                                        color: typeColor,
+                                                        fontSize: Responsive.getFontSize(
+                                                            context,
+                                                            baseSize: 14),
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      "${(transaction['amount'] as num).toStringAsFixed(0)} so‘m",
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: Responsive.getFontSize(
+                                                            context,
+                                                            baseSize: 14),
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  transaction['customers'] != null
+                                                      ? transaction['customers']['full_name'] ??
+                                                      'Noma’lum mijoz'
+                                                      : 'Mijozsiz',
+                                                  style: TextStyle(
+                                                    color: Colors.white70,
+                                                    fontSize: Responsive.getFontSize(context,
+                                                        baseSize: 12),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  transaction['sale_id'] != null
+                                                      ? 'Sotuv ID: ${transaction['sale_id']}'
+                                                      : 'Sotuvsiz',
+                                                  style: TextStyle(
+                                                    color: Colors.white70,
+                                                    fontSize: Responsive.getFontSize(context,
+                                                        baseSize: 12),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  time,
+                                                  style: TextStyle(
+                                                    color: Colors.white70,
+                                                    fontSize: Responsive.getFontSize(context,
+                                                        baseSize: 12),
+                                                  ),
+                                                ),
+                                                if (transaction['comments'] != null)
+                                                  Text(
+                                                    transaction['comments'],
+                                                    style: TextStyle(
+                                                      color: Colors.white70,
+                                                      fontSize: Responsive.getFontSize(context,
+                                                          baseSize: 12),
+                                                    ),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      transaction['customers'] != null
-                                          ? transaction['customers']['full_name'] ??
-                                          'Noma’lum mijoz'
-                                          : 'Mijozsiz',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize:
-                                        Responsive.getFontSize(context, baseSize: 12),
+                                        ],
                                       ),
-                                    ),
-                                    Text(
-                                      transaction['sale_id'] != null
-                                          ? 'Sotuv ID: ${transaction['sale_id']}'
-                                          : 'Sotuvsiz',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize:
-                                        Responsive.getFontSize(context, baseSize: 12),
-                                      ),
-                                    ),
-                                    Text(
-                                      transaction['created_at'] != null
-                                          ? transaction['created_at'].substring(0, 16)
-                                          : 'Noma’lum vaqt',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize:
-                                        Responsive.getFontSize(context, baseSize: 12),
-                                      ),
-                                    ),
-                                    if (transaction['comments'] != null)
-                                      Text(
-                                        transaction['comments'],
-                                        style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize:
-                                          Responsive.getFontSize(context, baseSize: 12),
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
+                                    );
+                                  }).toList(),
+                                ],
                               );
                             },
                           );

@@ -77,4 +77,15 @@ class TransactionsScreenController extends GetxController {
     _updateStats();
     _updateTypeStats();
   }
+
+  void clearFilters() {
+    searchQuery.value = '';
+    selectedType.value = 'all';
+    sortOrder.value = 'newest';
+    startDate.value = null;
+    endDate.value = null;
+    _updateTransactions();
+    _updateStats();
+    _updateTypeStats();
+  }
 }
