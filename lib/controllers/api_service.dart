@@ -83,31 +83,6 @@ class ApiService {
     }
   }
 
-
-  // Yangi foydalanuvchi qo‘shish
-  Future<void> addUser({
-    required String fullName,
-    required String email,
-    required String password,
-    required String role,
-  }) async {
-    try {
-      await _supabase.from('users').insert({
-        'full_name': fullName,
-        'email': email,
-        'password': password, // Parol hashlanishi kerak (serverda yoki bu yerda)
-        'role': role,
-        'is_blocked': false,
-        'created_at': DateTime.now().toIso8601String(),
-      });
-      print('Foydalanuvchi muvaffaqiyatli qo‘shildi: $email');
-    } catch (e) {
-      print('Foydalanuvchi qo‘shishda xato: $e');
-      _handleError(e);
-      rethrow;
-    }
-  }
-
   // Foydalanuvchini bloklash yoki blokdan ochish
   Future<void> toggleUserBlock(String userId, bool isBlocked) async {
     try {
@@ -128,14 +103,15 @@ class ApiService {
           .select('role')
           .eq('id', userId)
           .single();
-      return response['role'] == 'admin';
+
+      // Null tekshiruvi
+      final role = response['role'] as String?;
+      return role != null && role == 'admin';
     } catch (e) {
-      print('Admin tekshiruvida xato: $e');
-      _handleError(e);
-      return false;
+      print('isAdmin xatosi: $e');
+      return false; // Xato yoki ma‘lumot topilmasa false qaytariladi
     }
   }
-
 
 
   // GET: Birliklarni olish

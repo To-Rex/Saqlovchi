@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sklad/controllers/api_service.dart';
+import 'package:sklad/companents/custom_toast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UsersScreenController extends GetxController {
@@ -13,19 +15,24 @@ class UsersScreenController extends GetxController {
   var isAdmin = false.obs;
   var isLoading = false.obs;
 
+  // onInit da context ishlatishdan qochamiz
   @override
   void onInit() {
     super.onInit();
-    _checkAdminStatus();
+    // _checkAdminStatus faqat context mavjud bo‘lganda chaqiriladi
   }
 
-  void _checkAdminStatus() async {
+  void checkAdminStatus(BuildContext context) async {
     isLoading.value = true;
-    // Joriy foydalanuvchi ID sini Supabase Auth’dan olish
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
-      print('Foydalanuvchi tizimga kirmagan');
-      Get.back();
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Foydalanuvchi tizimga kirmagan',
+        type: CustomToast.error,
+      );
+      context.go('/login'); // Navigator.pop o‘rniga GoRouter
       isLoading.value = false;
       return;
     }
@@ -35,12 +42,22 @@ class UsersScreenController extends GetxController {
       if (isAdmin.value) {
         _updateUsers();
       } else {
-        print('Faqat adminlar bu sahifaga kirishi mumkin');
-        Get.back();
+        CustomToast.show(
+          title: 'Xatolik',
+          context: context,
+          message: 'Faqat adminlar bu sahifaga kirishi mumkin',
+          type: CustomToast.error,
+        );
+        context.go('/login'); // Navigator.pop o‘rniga GoRouter
       }
     } catch (e) {
-      print('Adminligini tekshirishda xato: $e');
-      Get.back();
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Admin tekshiruvida xato: $e',
+        type: CustomToast.error,
+      );
+      context.go('/login'); // Navigator.pop o‘rniga GoRouter
     } finally {
       isLoading.value = false;
     }
@@ -65,41 +82,95 @@ class UsersScreenController extends GetxController {
     }
   }
 
-  Future<void> addUser({
+  Future<void> _handleSignUp({
     required String fullName,
     required String email,
     required String password,
     required String role,
+    required BuildContext context,
   }) async {
+    isLoading.value = true;
     try {
-      isLoading.value = true;
-      await apiService.addUser(
-        fullName: fullName,
+      final AuthResponse response = await supabase.auth.signUp(
         email: email,
         password: password,
-        role: role,
+        data: {
+          'full_name': fullName,
+          'role': role,
+        },
       );
-      print('Foydalanuvchi muvaffaqiyatli qo‘shildi: $email');
-      _updateUsers();
+
+      if (response.user != null) {
+        CustomToast.show(
+          title: 'Muvaffaqiyat',
+          context: context,
+          message: 'Foydalanuvchi muvaffaqiyatli qo‘shildi',
+          type: CustomToast.success,
+        );
+        _updateUsers();
+      }
+    } on AuthException catch (e) {
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Ro‘yxatdan o‘tishda xatolik: ${e.message}',
+        type: CustomToast.error,
+      );
     } catch (e) {
-      print('Foydalanuvchi qo‘shishda xato: $e');
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Kutilmagan xatolik: $e',
+        type: CustomToast.error,
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
-  Future<void> toggleUserBlock(String? userId, bool isBlocked) async {
+  Future<void> addUser({
+    required String fullName,
+    required String email,
+    required String password,
+    required String role,
+    required BuildContext context,
+  }) async {
+    await _handleSignUp(
+      fullName: fullName,
+      email: email,
+      password: password,
+      role: role,
+      context: context,
+    );
+  }
+
+  Future<void> toggleUserBlock(String? userId, bool isBlocked, BuildContext context) async {
     if (userId == null) {
-      print('Foydalanuvchi ID topilmadi');
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Foydalanuvchi ID topilmadi',
+        type: CustomToast.error,
+      );
       return;
     }
     try {
       isLoading.value = true;
       await apiService.toggleUserBlock(userId, isBlocked);
-      print('Foydalanuvchi blok holati o‘zgartirildi: $userId, is_blocked: $isBlocked');
+      CustomToast.show(
+        title: 'Muvaffaqiyat',
+        context: context,
+        message: isBlocked ? 'Foydalanuvchi bloklandi' : 'Foydalanuvchi blokdan ochildi',
+        type: CustomToast.success,
+      );
       _updateUsers();
     } catch (e) {
-      print('Foydalanuvchi blok holatini o‘zgartirishda xato: $e');
+      CustomToast.show(
+        title: 'Xatolik',
+        context: context,
+        message: 'Blok holatini o‘zgartirishda xato: $e',
+        type: CustomToast.error,
+      );
     } finally {
       isLoading.value = false;
     }
