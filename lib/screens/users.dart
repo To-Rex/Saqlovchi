@@ -21,7 +21,6 @@ class _UsersScreenState extends State<UsersScreen> {
   @override
   void initState() {
     super.initState();
-    // Sahifa ochilganda admin tekshiruvi amalga oshiriladi
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isAdminChecked) {
         controller.checkAdminStatus(context);
@@ -35,7 +34,6 @@ class _UsersScreenState extends State<UsersScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // Sticky header: Faqat sarlavha va orqaga tugmasi
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.transparent,
@@ -44,9 +42,9 @@ class _UsersScreenState extends State<UsersScreen> {
                 gradient: LinearGradient(
                   colors: [
                     secondaryColor,
-                    secondaryColor.withAlpha(229), // 0.9 * 255 ≈ 229
-                    secondaryColor.withAlpha(179), // 0.7 * 255 ≈ 179
-                    Colors.black.withAlpha(153), // 0.6 * 255 ≈ 153
+                    secondaryColor.withAlpha(229),
+                    secondaryColor.withAlpha(179),
+                    Colors.black.withAlpha(153),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -73,7 +71,7 @@ class _UsersScreenState extends State<UsersScreen> {
                         ),
                         IconButton(
                           icon: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-                          onPressed: () => context.pop(), // Navigator.pop o‘rniga GoRouter
+                          onPressed: () => context.pop(),
                         ),
                       ],
                     ),
@@ -82,12 +80,10 @@ class _UsersScreenState extends State<UsersScreen> {
               ),
             ),
           ),
-          // Qolgan kontent
           SliverToBoxAdapter(
             child: Obx(() => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Qidiruv maydoni
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
@@ -98,7 +94,7 @@ class _UsersScreenState extends State<UsersScreen> {
                         fontSize: Responsive.getFontSize(context, baseSize: 14),
                       ),
                       filled: true,
-                      fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                      fillColor: Colors.black.withAlpha(77),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -118,7 +114,6 @@ class _UsersScreenState extends State<UsersScreen> {
                     onChanged: controller.setSearchQuery,
                   ),
                 ),
-                // Saralash va qo‘shish tugmasi
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
@@ -133,7 +128,7 @@ class _UsersScreenState extends State<UsersScreen> {
                               fontSize: Responsive.getFontSize(context, baseSize: 12),
                             ),
                             filled: true,
-                            fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                            fillColor: Colors.black.withAlpha(77),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide.none,
@@ -142,7 +137,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                           ),
                           value: controller.sortOrder.value,
-                          dropdownColor: Colors.black.withAlpha(229), // 0.9 * 255 ≈ 229
+                          dropdownColor: Colors.black.withAlpha(229),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -176,7 +171,6 @@ class _UsersScreenState extends State<UsersScreen> {
                     ],
                   ),
                 ),
-                // Foydalanuvchilar ro‘yxati
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: FutureBuilder<List<dynamic>>(
@@ -232,7 +226,7 @@ class _UsersScreenState extends State<UsersScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.black.withAlpha(128), // 0.5 * 255 ≈ 128
+                                  Colors.black.withAlpha(128),
                                   (role == 'admin'
                                       ? Colors.blueAccent
                                       : role == 'seller'
@@ -240,7 +234,7 @@ class _UsersScreenState extends State<UsersScreen> {
                                       : role == 'manager'
                                       ? Colors.orangeAccent
                                       : Colors.grey)
-                                      .withAlpha(26), // 0.1 * 255 ≈ 26
+                                      .withAlpha(26),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -254,10 +248,10 @@ class _UsersScreenState extends State<UsersScreen> {
                                       : role == 'manager'
                                       ? Colors.orangeAccent
                                       : Colors.grey)
-                                      .withAlpha(77)), // 0.3 * 255 ≈ 77
+                                      .withAlpha(77)),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withAlpha(51), // 0.2 * 255 ≈ 51
+                                  color: Colors.black.withAlpha(51),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -358,6 +352,53 @@ class _UsersScreenState extends State<UsersScreen> {
                                               ),
                                             ),
                                           ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: controller.isLoading.value
+                                                ? null
+                                                : () => _showEditUserDialog(
+                                                context, controller, user),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.blueAccent,
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12, vertical: 6),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(8)),
+                                            ),
+                                            child: Text(
+                                              'Tahrirlash',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: Responsive.getFontSize(
+                                                    context, baseSize: 12),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: controller.isLoading.value
+                                                ? null
+                                                : () => _showDeleteUserDialog(
+                                                context, controller, userId,
+                                                fullName),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.redAccent,
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12, vertical: 6),
+                                              shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                  BorderRadius.circular(8)),
+                                            ),
+                                            child: Text(
+                                              'O‘chirish',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: Responsive.getFontSize(
+                                                    context, baseSize: 12),
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ],
@@ -383,7 +424,7 @@ class _UsersScreenState extends State<UsersScreen> {
     final fullNameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
-    String role = 'seller'; // Default rol sifatida seller
+    String role = 'seller';
 
     showDialog(
       context: context,
@@ -409,7 +450,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
                   ),
                   filled: true,
-                  fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                  fillColor: Colors.black.withAlpha(77),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -430,7 +471,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
                   ),
                   filled: true,
-                  fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                  fillColor: Colors.black.withAlpha(77),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -451,7 +492,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
                   ),
                   filled: true,
-                  fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                  fillColor: Colors.black.withAlpha(77),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -472,14 +513,14 @@ class _UsersScreenState extends State<UsersScreen> {
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
                   ),
                   filled: true,
-                  fillColor: Colors.black.withAlpha(77), // 0.3 * 255 ≈ 77
+                  fillColor: Colors.black.withAlpha(77),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
                 value: role,
-                dropdownColor: Colors.black.withAlpha(229), // 0.9 * 255 ≈ 229
+                dropdownColor: Colors.black.withAlpha(229),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -529,7 +570,7 @@ class _UsersScreenState extends State<UsersScreen> {
                 role: role,
                 context: context,
               );
-              context.pop(); // Navigator.pop o‘rniga GoRouter
+              context.pop();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
@@ -537,6 +578,231 @@ class _UsersScreenState extends State<UsersScreen> {
             ),
             child: Text(
               'Qo‘shish',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: Responsive.getFontSize(context, baseSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditUserDialog(
+      BuildContext context, UsersScreenController controller, Map<String, dynamic> user) {
+    final fullNameController = TextEditingController(text: user['full_name'] ?? '');
+    final emailController = TextEditingController(text: user['email'] ?? '');
+    final passwordController = TextEditingController();
+    String role = user['role'] ?? 'seller';
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: secondaryColor,
+        title: Text(
+          'Foydalanuvchi ma‘lumotlarini tahrirlash',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: Responsive.getFontSize(context, baseSize: 18),
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: fullNameController,
+                decoration: InputDecoration(
+                  labelText: 'Ism',
+                  labelStyle: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withAlpha(77),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withAlpha(77),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Yangi parol (ixtiyoriy)',
+                  labelStyle: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withAlpha(77),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                ),
+                obscureText: true,
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Rol',
+                  labelStyle: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withAlpha(77),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                value: role,
+                dropdownColor: Colors.black.withAlpha(229),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'seller', child: Text('Sotuvchi')),
+                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                  DropdownMenuItem(value: 'manager', child: Text('Menejer')),
+                ],
+                onChanged: (value) {
+                  if (value != null) role = value;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: Responsive.getFontSize(context, baseSize: 12),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: controller.isLoading.value
+                ? null
+                : () async {
+              if (fullNameController.text.isEmpty ||
+                  emailController.text.isEmpty) {
+                CustomToast.show(
+                  title: 'Xatolik',
+                  context: context,
+                  message: "Ism va email to‘ldirilishi shart",
+                  type: CustomToast.error,
+                );
+                return;
+              }
+              await controller.updateUser(
+                userId: user['id'],
+                fullName: fullNameController.text,
+                email: emailController.text,
+                password: passwordController.text.isEmpty
+                    ? null
+                    : passwordController.text,
+                role: role,
+                context: context,
+              );
+              context.pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(
+              'Saqlash',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: Responsive.getFontSize(context, baseSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteUserDialog(
+      BuildContext context, UsersScreenController controller, String? userId, String fullName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: secondaryColor,
+        title: Text(
+          'Foydalanuvchi o‘chirish',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: Responsive.getFontSize(context, baseSize: 18),
+          ),
+        ),
+        content: Text(
+          '$fullName ni o‘chirishni tasdiqlaysizmi? Bu amalni qaytarib bo‘lmaydi.',
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: Responsive.getFontSize(context, baseSize: 14),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: Responsive.getFontSize(context, baseSize: 12),
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: controller.isLoading.value ? null : () async {
+              await controller.deleteUser(userId, context);
+              context.pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(
+              'O‘chirish',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: Responsive.getFontSize(context, baseSize: 12),

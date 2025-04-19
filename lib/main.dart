@@ -82,8 +82,8 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://kzlqfcfrcybhrmvujoye.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bHFmY2ZyY3liaHJtdnVqb3llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1NDEwNjgsImV4cCI6MjA2MDExNzA2OH0.jjRILXnDR3ycT_AHPB0kWKErAXTdUIpAk0iacOfo1bk',
-    //anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bHFmY2ZyY3liaHJtdnVqb3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0MTA2OCwiZXhwIjoyMDYwMTE3MDY4fQ.owr3Mk5q7J1zXfBFuIe_FthFEc_-bw4ocwWwv6nBtgk',
+    //anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bHFmY2ZyY3liaHJtdnVqb3llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1NDEwNjgsImV4cCI6MjA2MDExNzA2OH0.jjRILXnDR3ycT_AHPB0kWKErAXTdUIpAk0iacOfo1bk',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bHFmY2ZyY3liaHJtdnVqb3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0MTA2OCwiZXhwIjoyMDYwMTE3MDY4fQ.owr3Mk5q7J1zXfBFuIe_FthFEc_-bw4ocwWwv6nBtgk',
   );
 
   Get.put(GetController());
