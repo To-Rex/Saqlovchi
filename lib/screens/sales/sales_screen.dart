@@ -42,9 +42,9 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildDesktopLayout(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      ) {
     return Column(
       children: [
         _buildHeader(context),
@@ -64,9 +64,9 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildTabletLayout(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      ) {
     return Column(
       children: [
         _buildHeader(context),
@@ -86,9 +86,9 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      ) {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
@@ -171,7 +171,6 @@ class SalesScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.fact_check_rounded, color: Colors.white, size: 28),
-              //TestScreen
             onPressed: () => GoRouter.of(context).go('/test'),
             splashRadius: 24,
           ),
@@ -181,10 +180,10 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildSearchBar(
-    BuildContext context,
-    SalesScreenController controller, {
-    EdgeInsets padding = const EdgeInsets.all(12),
-  }) {
+      BuildContext context,
+      SalesScreenController controller, {
+        EdgeInsets padding = const EdgeInsets.all(12),
+      }) {
     return Padding(
       padding: Responsive.getPadding(context, basePadding: padding),
       child: TextField(
@@ -214,19 +213,18 @@ class SalesScreen extends StatelessWidget {
           color: Colors.white,
           fontSize: Responsive.getFontSize(context, baseSize: 16),
         ),
-        onChanged:
-            (value) => controller.searchQuery.value = value.toLowerCase(),
+        onChanged: (value) => controller.searchQuery.value = value.toLowerCase(),
       ),
     );
   }
 
   Widget _buildCategoryList(
-    BuildContext context,
-    SalesScreenController controller, {
-    double width = 160,
-    bool isHorizontal = false,
-    double height = 400,
-  }) {
+      BuildContext context,
+      SalesScreenController controller, {
+        double width = 160,
+        bool isHorizontal = false,
+        double height = 400,
+      }) {
     return Container(
       width: isHorizontal ? double.infinity : width,
       height: height,
@@ -234,69 +232,64 @@ class SalesScreen extends StatelessWidget {
         color: Colors.black.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Obx(() =>
-            isHorizontal
-                ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildCategoryItem(context, controller, null, "Barchasi"),
-                      ...controller.appController.categories.map(
-                        (category) => _buildCategoryItem(
-                          context,
-                          controller,
-                          category['id'].toString(),
-                          category['name'],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-                : ListView.builder(
-                  scrollDirection:
-                      isHorizontal ? Axis.horizontal : Axis.vertical,
-                  itemCount: controller.appController.categories.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return _buildCategoryItem(
-                        context,
-                        controller,
-                        null,
-                        "Barchasi",
-                      );
-                    }
-                    final category =
-                        controller.appController.categories[index - 1];
-                    return _buildCategoryItem(
-                      context,
-                      controller,
-                      category['id'].toString(),
-                      category['name'],
-                    );
-                  },
-                ),
-      ),
+      child: Obx(() => isHorizontal
+          ? SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildCategoryItem(context, controller, null, "Barchasi"),
+            ...controller.appController.categories.map(
+                  (category) => _buildCategoryItem(
+                context,
+                controller,
+                category['id'].toString(),
+                category['name'],
+              ),
+            ),
+          ],
+        ),
+      )
+          : ListView.builder(
+        scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
+        itemCount: controller.appController.categories.length + 1,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _buildCategoryItem(
+              context,
+              controller,
+              null,
+              "Barchasi",
+            );
+          }
+          final category = controller.appController.categories[index - 1];
+          return _buildCategoryItem(
+            context,
+            controller,
+            category['id'].toString(),
+            category['name'],
+          );
+        },
+      )),
     );
   }
 
   Widget _buildCategoryItem(
-    BuildContext context,
-    SalesScreenController controller,
-    String? id,
-    String name,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      String? id,
+      String name,
+      ) {
     return GestureDetector(
       onTap: () => controller.selectCategory(id),
       child: Obx(
-        () => AnimatedContainer(
+            () => AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color:
-                controller.selectedCategoryId.value == id
-                    ? primaryColor.withOpacity(0.9)
-                    : Colors.white.withOpacity(0.1),
+            color: controller.selectedCategoryId.value == id
+                ? primaryColor.withOpacity(0.9)
+                : Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -309,10 +302,9 @@ class SalesScreen extends StatelessWidget {
           child: Text(
             name,
             style: TextStyle(
-              color:
-                  controller.selectedCategoryId.value == id
-                      ? Colors.white
-                      : Colors.white70,
+              color: controller.selectedCategoryId.value == id
+                  ? Colors.white
+                  : Colors.white70,
               fontWeight: FontWeight.w600,
               fontSize: Responsive.getFontSize(context, baseSize: 15),
             ),
@@ -323,19 +315,22 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildProductGrid(
-    BuildContext context,
-    SalesScreenController controller, {
-    double maxCrossAxisExtent = 180,
-    double childAspectRatio = 1.5,
-    double height = 400,
-  }) {
+      BuildContext context,
+      SalesScreenController controller, {
+        double maxCrossAxisExtent = 180,
+        double childAspectRatio = 1.5,
+        double height = 400,
+      }) {
     return Obx(() {
-      final filteredProducts =
-          controller.selectedCategoryId.value == null
-              ? controller.appController.products
-              : controller.appController.products.where((p) => p['category_id'].toString() == controller.selectedCategoryId.value).toList();
+      final filteredProducts = controller.selectedCategoryId.value == null
+          ? controller.appController.products
+          : controller.appController.products
+          .where((p) => p['category_id'].toString() == controller.selectedCategoryId.value)
+          .toList();
 
-      final searchedProducts = filteredProducts.where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value)).toList();
+      final searchedProducts = filteredProducts
+          .where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value))
+          .toList();
 
       if (controller.isStockLoading.value) {
         return const Center(
@@ -345,150 +340,135 @@ class SalesScreen extends StatelessWidget {
 
       return searchedProducts.isEmpty
           ? Center(
-            child: Text(
-              "Mahsulot topilmadi",
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: Responsive.getFontSize(context, baseSize: 16),
-              ),
-            ),
-          )
+        child: Text(
+          "Mahsulot topilmadi",
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: Responsive.getFontSize(context, baseSize: 16),
+          ),
+        ),
+      )
           : SizedBox(
-            height: height,
-            child: GridView.builder(
-              padding: Responsive.getPadding(
-                context,
-                basePadding: const EdgeInsets.all(12),
+        height: height,
+        child: GridView.builder(
+          padding: Responsive.getPadding(
+            context,
+            basePadding: const EdgeInsets.all(12),
+          ),
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: maxCrossAxisExtent,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemCount: searchedProducts.length,
+          itemBuilder: (context, index) {
+            final product = searchedProducts[index];
+            String? batchId;
+            double stockQuantity = 0.0;
+            double sellingPrice = 0.0;
+            double costPrice = 0.0;
+
+            for (var entry in controller.batchCache.entries) {
+              if (entry.value['product_id'] == product['id'].toString()) {
+                batchId = entry.key;
+                stockQuantity = entry.value['quantity'] ?? 0.0;
+                sellingPrice = entry.value['selling_price'] ?? 0.0;
+                costPrice = entry.value['cost_price'] ?? 0.0;
+                break;
+              }
+            }
+
+            Color borderColor = Colors.transparent;
+            if (stockQuantity == 0) {
+              borderColor = Colors.red;
+            } else if (stockQuantity <= 10) {
+              borderColor = Colors.yellow;
+            }
+
+            return GestureDetector(
+              onTap: () => controller.selectProduct(
+                product['id'].toString(),
+                batchId,
+                stockQuantity,
+                costPrice,
+                sellingPrice,
               ),
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: maxCrossAxisExtent,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: childAspectRatio,
-              ),
-              itemCount: searchedProducts.length,
-              itemBuilder: (context, index) {
-                final product = searchedProducts[index];
-                String? batchId;
-                double stockQuantity = 0.0;
-                double sellingPrice = 0.0;
-                double costPrice = 0.0;
-
-                for (var entry in controller.batchCache.entries) {
-                  if (entry.value['product_id'] == product['id'].toString()) {
-                    batchId = entry.key;
-                    stockQuantity = entry.value['quantity'];
-                    sellingPrice = entry.value['selling_price'];
-                    costPrice = entry.value['cost_price'];
-                    break;
-                  }
-                }
-
-                Color borderColor = Colors.transparent;
-                if (stockQuantity == 0) {
-                  borderColor = Colors.red;
-                } else if (stockQuantity <= 10) {
-                  borderColor = Colors.yellow;
-                }
-
-                return GestureDetector(
-                  onTap:
-                      () => controller.selectProduct(
-                        product['id'].toString(),
-                        batchId,
-                        stockQuantity,
-                        costPrice,
-                        sellingPrice,
-                      ),
-                  child: Obx(
+              child: Obx(
                     () => AnimatedScale(
-                      duration: const Duration(milliseconds: 200),
-                      scale:
-                          controller.selectedProductId.value ==
-                                  product['id'].toString()
-                              ? 0.95
-                              : 1.0,
-                      child: Card(
-                        elevation: 3,
-                        color:
-                            controller.selectedProductId.value ==
-                                    product['id'].toString()
-                                ? primaryColor.withOpacity(0.9)
-                                : Colors.white.withOpacity(0.1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: borderColor, width: 2),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  product['name'],
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: Responsive.getFontSize(
-                                      context,
-                                      baseSize: 14,
-                                    ),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                  duration: const Duration(milliseconds: 200),
+                  scale: controller.selectedProductId.value == product['id'].toString()
+                      ? 0.95
+                      : 1.0,
+                  child: Card(
+                    elevation: 3,
+                    color: controller.selectedProductId.value == product['id'].toString()
+                        ? primaryColor.withOpacity(0.9)
+                        : Colors.white.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(color: borderColor, width: 2),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              product['name'] ?? 'Noma’lum',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: Responsive.getFontSize(context, baseSize: 14),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Narx: $costPrice + $sellingPrice = ${costPrice + sellingPrice}",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 11,
-                                  ),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
-                                style: TextStyle(
-                                  color:
-                                      borderColor == Colors.transparent
-                                          ? Colors.white70
-                                          : borderColor,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 11,
-                                  ),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Narx: $costPrice + $sellingPrice = ${costPrice + sellingPrice}",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 11),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
+                            style: TextStyle(
+                              color: borderColor == Colors.transparent
+                                  ? Colors.white70
+                                  : borderColor,
+                              fontSize: Responsive.getFontSize(context, baseSize: 11),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                );
-              },
-            ),
-          );
+                ),
+              ),
+            );
+          },
+        ),
+      );
     });
   }
 
   Widget _buildSalePanel(
-    BuildContext context,
-    SalesScreenController controller, {
-    double width = 320,
-    EdgeInsets padding = const EdgeInsets.all(12),
-    double? height,
-  }) {
+      BuildContext context,
+      SalesScreenController controller, {
+        double width = 320,
+        EdgeInsets padding = const EdgeInsets.all(12),
+        double? height,
+      }) {
     return Container(
       width: width,
       height: height,
@@ -506,7 +486,7 @@ class SalesScreen extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         child: Obx(
-          () => Column(
+              () => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -522,7 +502,10 @@ class SalesScreen extends StatelessWidget {
               if (controller.selectedProductId.value != null &&
                   controller.selectedBatchId.value != null) ...[
                 Text(
-                  "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value)['name']}",
+                  "Tanlangan: ${controller.appController.products.firstWhere(
+                        (p) => p['id'].toString() == controller.selectedProductId.value,
+                    orElse: () => {'name': 'Noma’lum'},
+                  )['name']}",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: Responsive.getFontSize(context, baseSize: 15),
@@ -532,14 +515,12 @@ class SalesScreen extends StatelessWidget {
                 if (controller.cachedStockQuantity.value != null) ...[
                   Builder(
                     builder: (context) {
-                      final stockQuantity =
-                          controller.cachedStockQuantity.value ?? 0.0;
-                      Color quantityColor =
-                          stockQuantity == 0
-                              ? Colors.red
-                              : stockQuantity <= 10
-                              ? Colors.yellow
-                              : Colors.white70;
+                      final stockQuantity = controller.cachedStockQuantity.value ?? 0.0;
+                      Color quantityColor = stockQuantity == 0
+                          ? Colors.red
+                          : stockQuantity <= 10
+                          ? Colors.yellow
+                          : Colors.white70;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -547,10 +528,7 @@ class SalesScreen extends StatelessWidget {
                             "Omborda qoldiq: ${stockQuantity.toStringAsFixed(0)}",
                             style: TextStyle(
                               color: quantityColor,
-                              fontSize: Responsive.getFontSize(
-                                context,
-                                baseSize: 13,
-                              ),
+                              fontSize: Responsive.getFontSize(context, baseSize: 13),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -559,10 +537,7 @@ class SalesScreen extends StatelessWidget {
                               "Mahsulot omborda mavjud emas",
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: Responsive.getFontSize(
-                                  context,
-                                  baseSize: 12,
-                                ),
+                                fontSize: Responsive.getFontSize(context, baseSize: 12),
                               ),
                             ),
                         ],
@@ -579,8 +554,7 @@ class SalesScreen extends StatelessWidget {
               _buildPriceSummary(context, controller),
               const SizedBox(height: 12),
               _buildAdvancedOptionsToggle(context, controller),
-              if (controller.showCreditOptions.value ||
-                  controller.showDiscountOption.value) ...[
+              if (controller.showCreditOptions.value || controller.showDiscountOption.value) ...[
                 const SizedBox(height: 12),
                 if (controller.showCreditOptions.value)
                   _buildCreditOptions(context, controller),
@@ -589,19 +563,18 @@ class SalesScreen extends StatelessWidget {
               ],
               const SizedBox(height: 16),
               Obx(
-                () => AnimatedScale(
+                    () => AnimatedScale(
                   duration: const Duration(milliseconds: 150),
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
-                    onPressed:
-                        (controller.selectedProductId.value == null ||
-                                controller.selectedBatchId.value == null ||
-                                controller.quantity.value <= 0 ||
-                                controller.isSelling.value ||
-                                controller.cachedStockQuantity.value == null ||
-                                controller.cachedStockQuantity.value == 0)
-                            ? null
-                            : () => controller.sellProduct(context),
+                    onPressed: (controller.selectedProductId.value == null ||
+                        controller.selectedBatchId.value == null ||
+                        controller.quantity.value <= 0 ||
+                        controller.isSelling.value ||
+                        controller.cachedStockQuantity.value == null ||
+                        controller.cachedStockQuantity.value == 0)
+                        ? null
+                        : () => controller.sellProduct(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(
@@ -615,27 +588,23 @@ class SalesScreen extends StatelessWidget {
                       shadowColor: Colors.black.withOpacity(0.2),
                       minimumSize: const Size(double.infinity, 50),
                     ),
-                    child:
-                        controller.isSelling.value
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                            : Text(
-                              "Sotish",
-                              style: TextStyle(
-                                fontSize: Responsive.getFontSize(
-                                  context,
-                                  baseSize: 16,
-                                ),
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                    child: controller.isSelling.value
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Text(
+                      "Sotish",
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 16),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -647,9 +616,9 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildRecentSales(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      ) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 16),
@@ -699,25 +668,20 @@ class SalesScreen extends StatelessWidget {
                 children: [
                   ...recentSales.map((sale) {
                     bool hasMarkup = false;
-                    if (sale['sale_items'] != null &&
-                        sale['sale_items'].isNotEmpty &&
-                        sale['sale_items'][0]['unit_price'] != null &&
-                        sale['sale_items'][0]['batches'] != null) {
-                      final unitPrice =
-                          (sale['sale_items'][0]['unit_price'] as num?)
-                              ?.toDouble() ??
-                          0.0;
-                      final costPrice =
-                          (sale['sale_items'][0]['batches']['cost_price']
-                                  as num?)
-                              ?.toDouble() ??
-                          0.0;
-                      final sellingPrice =
-                          (sale['sale_items'][0]['batches']['selling_price']
-                                  as num?)
-                              ?.toDouble() ??
-                          0.0;
-                      hasMarkup = unitPrice > (costPrice + sellingPrice);
+                    bool hasDebt = ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0) <
+                        ((sale['total_amount'] as num?)?.toDouble() ?? 0.0);
+                    bool hasDiscount = ((sale['discount_amount'] as num?)?.toDouble() ?? 0.0) > 0;
+
+                    if (sale['sale_items'] != null && sale['sale_items'].isNotEmpty) {
+                      for (var item in sale['sale_items']) {
+                        final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0.0;
+                        final costPrice = (item['batches']?['cost_price'] as num?)?.toDouble() ?? 0.0;
+                        final sellingPrice = (item['batches']?['selling_price'] as num?)?.toDouble() ?? 0.0;
+                        if (unitPrice > (costPrice + sellingPrice)) {
+                          hasMarkup = true;
+                          break;
+                        }
+                      }
                     }
 
                     return Container(
@@ -742,25 +706,18 @@ class SalesScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         sale['sale_items'] != null &&
-                                                sale['sale_items'].isNotEmpty &&
-                                                sale['sale_items'][0]['batches'] !=
-                                                    null &&
-                                                sale['sale_items'][0]['batches']['products'] !=
-                                                    null
-                                            ? sale['sale_items'][0]['batches']['products']['name'] ??
-                                                'Noma’lum mahsulot'
+                                            sale['sale_items'].isNotEmpty &&
+                                            sale['sale_items'][0]['batches'] != null &&
+                                            sale['sale_items'][0]['batches']['products'] != null
+                                            ? sale['sale_items'][0]['batches']['products']['name'] ?? 'Noma’lum mahsulot'
                                             : 'Noma’lum mahsulot',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: Responsive.getFontSize(
-                                            context,
-                                            baseSize: 13,
-                                          ),
+                                          fontSize: Responsive.getFontSize(context, baseSize: 13),
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -769,10 +726,7 @@ class SalesScreen extends StatelessWidget {
                                           "Qaytarildi",
                                           style: TextStyle(
                                             color: Colors.red,
-                                            fontSize: Responsive.getFontSize(
-                                              context,
-                                              baseSize: 11,
-                                            ),
+                                            fontSize: Responsive.getFontSize(context, baseSize: 11),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -787,14 +741,13 @@ class SalesScreen extends StatelessWidget {
                                     size: 16,
                                   ),
                                 const SizedBox(width: 6),
-                                if ((sale['paid_amount'] as num) <
-                                    (sale['total_amount'] as num))
+                                if (hasDebt)
                                   const Icon(
                                     Icons.credit_card,
                                     color: Colors.red,
                                     size: 16,
                                   ),
-                                if ((sale['discount_amount'] as num) > 0)
+                                if (hasDiscount)
                                   const Icon(
                                     Icons.discount,
                                     color: Colors.green,
@@ -806,13 +759,10 @@ class SalesScreen extends StatelessWidget {
                           Row(
                             children: [
                               Text(
-                                "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
+                                "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
                                 style: TextStyle(
                                   color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(
-                                    context,
-                                    baseSize: 13,
-                                  ),
+                                  fontSize: Responsive.getFontSize(context, baseSize: 13),
                                 ),
                               ),
                               const SizedBox(width: 6),
@@ -824,13 +774,9 @@ class SalesScreen extends StatelessWidget {
                                     size: 16,
                                   ),
                                   tooltip: 'Qaytarish',
-                                  onPressed:
-                                      controller.isSelling.value
-                                          ? null
-                                          : () => controller.returnProduct(
-                                            context,
-                                            sale['id'],
-                                          ),
+                                  onPressed: controller.isSelling.value
+                                      ? null
+                                      : () => controller.returnProduct(context, sale['id']),
                                 ),
                             ],
                           ),
@@ -858,6 +804,7 @@ class SalesScreen extends StatelessWidget {
       ),
     );
   }
+
   void _showAllSalesDialog(BuildContext context, SalesScreenController controller) {
     final TextEditingController searchController = TextEditingController();
     final RxString searchQuery = ''.obs;
@@ -900,585 +847,645 @@ class SalesScreen extends StatelessWidget {
             ],
           ),
           child: Column(
+              children: [
+          Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Sarlavha va yopish tugmasi
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Barcha sotuvlar",
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 18),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+              Text(
+                "Barcha sotuvlar",
+                style: TextStyle(
+                  fontSize: Responsive.getFontSize(context, baseSize: 18),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-              // Qidiruv maydoni
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  controller: searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Mahsulot bo‘yicha qidirish',
-                    hintStyle: TextStyle(
-                      color: Colors.white70,
-                      fontSize: Responsive.getFontSize(context, baseSize: 14),
-                    ),
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.3),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: primaryColor,
-                        width: 2,
-                      ),
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.search,
-                      color: Colors.white70,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                  ),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: Responsive.getFontSize(context, baseSize: 14),
-                  ),
-                  onChanged: (value) => searchQuery.value = value.toLowerCase(),
-                ),
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white70),
+                onPressed: () => Navigator.pop(context),
               ),
-              // Status va vaqt saralash
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Obx(
-                            () => DropdownButtonFormField<String>(
-                          decoration: InputDecoration(
-                            labelText: 'Status',
-                            labelStyle: TextStyle(
-                              color: Colors.white70,
-                              fontSize: Responsive.getFontSize(context, baseSize: 12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withOpacity(0.3),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                          ),
-                          value: selectedStatus.value,
-                          dropdownColor: Colors.black.withOpacity(0.9),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: Responsive.getFontSize(context, baseSize: 12),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'all',
-                              child: Text('Barchasi'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'returned',
-                              child: Text('Qaytarilgan'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'debt',
-                              child: Text('Qarzga sotilgan'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'discount',
-                              child: Text('Chegirmali'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'cash',
-                              child: Text('Naqd'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) selectedStatus.value = value;
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Obx(
-                            () => DropdownButtonFormField<String>(
-                          decoration: InputDecoration(
-                            labelText: 'Saralash',
-                            labelStyle: TextStyle(
-                              color: Colors.white70,
-                              fontSize: Responsive.getFontSize(context, baseSize: 12),
-                            ),
-                            filled: true,
-                            fillColor: Colors.black.withOpacity(0.3),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 16,
-                            ),
-                          ),
-                          value: sortOrder.value,
-                          dropdownColor: Colors.black.withOpacity(0.9),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: Responsive.getFontSize(context, baseSize: 12),
-                          ),
-                          items: [
-                            DropdownMenuItem(
-                              value: 'newest',
-                              child: Text('Eng yangi'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'oldest',
-                              child: Text('Eng eski'),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) sortOrder.value = value;
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: TextField(
+            controller: searchController,
+            decoration: InputDecoration(
+              hintText: 'Mahsulot bo‘yicha qidirish',
+              hintStyle: TextStyle(
+                color: Colors.white70,
+                fontSize: Responsive.getFontSize(context, baseSize: 14),
               ),
-              // Sana tanlash
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Obx(
-                            () => ElevatedButton(
-                          onPressed: () async {
-                            final selectedDate = await showDatePicker(
-                              context: context,
-                              initialDate: startDate.value ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now(),
-                              builder: (context, child) {
-                                return Theme(
-                                  data: ThemeData.dark().copyWith(
-                                    colorScheme: const ColorScheme.dark(
-                                      primary: primaryColor,
-                                      onPrimary: Colors.white,
-                                      surface: Colors.black,
-                                      onSurface: Colors.white70,
-                                    ),
-                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
-                                  ),
-                                  child: child!,
-                                );
-                              },
-                            );
-                            if (selectedDate != null) {
-                              startDate.value = selectedDate;
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            startDate.value == null
-                                ? 'Boshlang‘ich sana'
-                                : 'Boshlang‘ich: ${startDate.value!.toString().substring(0, 10)}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Responsive.getFontSize(context, baseSize: 12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Obx(
-                            () => ElevatedButton(
-                          onPressed: () async {
-                            final selectedDate = await showDatePicker(
-                              context: context,
-                              initialDate: endDate.value ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime.now(),
-                              builder: (context, child) {
-                                return Theme(
-                                  data: ThemeData.dark().copyWith(
-                                    colorScheme: const ColorScheme.dark(
-                                      primary: primaryColor,
-                                      onPrimary: Colors.white,
-                                      surface: Colors.black,
-                                      onSurface: Colors.white70,
-                                    ),
-                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
-                                  ),
-                                  child: child!,
-                                );
-                              },
-                            );
-                            if (selectedDate != null) {
-                              endDate.value = selectedDate;
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            endDate.value == null
-                                ? 'Oxirgi sana'
-                                : 'Oxirgi: ${endDate.value!.toString().substring(0, 10)}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: Responsive.getFontSize(context, baseSize: 12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              filled: true,
+              fillColor: Colors.black.withOpacity(0.3),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
               ),
-              // Sotuvlar ro‘yxati
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: primaryColor, width: 2),
+              ),
+              prefixIcon: const Icon(Icons.search, color: Colors.white70),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            ),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: Responsive.getFontSize(context, baseSize: 14),
+            ),
+            onChanged: (value) => searchQuery.value = value,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
               Expanded(
-                child: FutureBuilder<List<dynamic>>(
-                  future: controller.apiService.getSales(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: primaryColor),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          "Xato: ${snapshot.error}",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: Responsive.getFontSize(context, baseSize: 14),
-                          ),
-                        ),
-                      );
-                    }
-                    final allSales = snapshot.data ?? [];
-                    if (allSales.isEmpty) {
-                      return Center(
-                        child: Text(
-                          "Sotuvlar mavjud emas",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: Responsive.getFontSize(context, baseSize: 14),
-                          ),
-                        ),
-                      );
-                    }
-                    return Obx(() {
-                      // Qidiruv, status va sana bo‘yicha filtr
-                      List<dynamic> filteredSales = allSales.where((sale) {
-                        final productName = sale['sale_items'] != null &&
-                            sale['sale_items'].isNotEmpty &&
-                            sale['sale_items'][0]['batches'] != null &&
-                            sale['sale_items'][0]['batches']['products'] != null
-                            ? sale['sale_items'][0]['batches']['products']['name']
-                            ?.toString()
-                            .toLowerCase() ??
-                            ''
-                            : '';
-                        final matchesSearch =
-                            searchQuery.value.isEmpty || productName.contains(searchQuery.value);
-                        final matchesStatus = selectedStatus.value == 'all' ||
-                            (selectedStatus.value == 'returned' &&
-                                sale['sale_type'] == 'returned') ||
-                            (selectedStatus.value == 'debt' &&
-                                (sale['sale_type'] == 'debt' ||
-                                    sale['sale_type'] == 'debt_with_discount')) ||
-                            (selectedStatus.value == 'discount' &&
-                                (sale['sale_type'] == 'discount' ||
-                                    sale['sale_type'] == 'debt_with_discount')) ||
-                            (selectedStatus.value == 'cash' && sale['sale_type'] == 'cash');
-                        final saleDate = DateTime.parse(sale['sale_date']);
-                        final matchesDate = (startDate.value == null ||
-                            saleDate.isAfter(startDate.value!)) &&
-                            (endDate.value == null ||
-                                saleDate.isBefore(endDate.value!.add(const Duration(days: 1))));
-                        return matchesSearch && matchesStatus && matchesDate;
-                      }).toList();
-
-                      // Vaqt bo‘yicha saralash
-                      filteredSales.sort((a, b) {
-                        final dateA = DateTime.parse(a['sale_date']);
-                        final dateB = DateTime.parse(b['sale_date']);
-                        return sortOrder.value == 'newest'
-                            ? dateB.compareTo(dateA)
-                            : dateA.compareTo(dateB);
-                      });
-
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        itemCount: filteredSales.length,
-                        itemBuilder: (context, index) {
-                          final sale = filteredSales[index];
-                          bool hasMarkup = false;
-                          if (sale['sale_items'] != null &&
-                              sale['sale_items'].isNotEmpty &&
-                              sale['sale_items'][0]['unit_price'] != null &&
-                              sale['sale_items'][0]['batches'] != null) {
-                            final unitPrice =
-                                (sale['sale_items'][0]['unit_price'] as num?)?.toDouble() ?? 0.0;
-                            final costPrice =
-                                (sale['sale_items'][0]['batches']['cost_price'] as num?)
-                                    ?.toDouble() ??
-                                    0.0;
-                            final sellingPrice =
-                                (sale['sale_items'][0]['batches']['selling_price'] as num?)
-                                    ?.toDouble() ??
-                                    0.0;
-                            hasMarkup = unitPrice > (costPrice + sellingPrice);
-                          }
-
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              sale['sale_items'] != null &&
-                                                  sale['sale_items'].isNotEmpty &&
-                                                  sale['sale_items'][0]['batches'] !=
-                                                      null &&
-                                                  sale['sale_items'][0]['batches']
-                                                  ['products'] !=
-                                                      null
-                                                  ? sale['sale_items'][0]['batches']
-                                              ['products']['name'] ??
-                                                  'Noma’lum mahsulot'
-                                                  : 'Noma’lum mahsulot',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize:
-                                                Responsive.getFontSize(context, baseSize: 14),
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            Text(
-                                              sale['sale_date'] != null
-                                                  ? sale['sale_date'].substring(0, 16)
-                                                  : 'Noma’lum vaqt',
-                                              style: TextStyle(
-                                                color: Colors.white70,
-                                                fontSize:
-                                                Responsive.getFontSize(context, baseSize: 12),
-                                              ),
-                                            ),
-                                            if (sale['sale_type'] == 'returned')
-                                              Text(
-                                                "Qaytarildi",
-                                                style: TextStyle(
-                                                  color: Colors.redAccent,
-                                                  fontSize: Responsive.getFontSize(
-                                                      context, baseSize: 12),
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      if (hasMarkup)
-                                        const Icon(
-                                          Icons.attach_money,
-                                          color: Colors.yellow,
-                                          size: 18,
-                                        ),
-                                      const SizedBox(width: 8),
-                                      if ((sale['paid_amount'] as num) <
-                                          (sale['total_amount'] as num))
-                                        const Icon(
-                                          Icons.credit_card,
-                                          color: Colors.redAccent,
-                                          size: 18,
-                                        ),
-                                      if ((sale['discount_amount'] as num) > 0)
-                                        const Icon(
-                                          Icons.discount,
-                                          color: Colors.greenAccent,
-                                          size: 18,
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      "${(sale['total_amount'] as num).toStringAsFixed(0)} so‘m",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize:
-                                        Responsive.getFontSize(context, baseSize: 14),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    if (sale['sale_type'] == 'debt' ||
-                                        sale['sale_type'] == 'debt_with_discount')
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.payment,
-                                          color: Colors.blueAccent,
-                                          size: 18,
-                                        ),
-                                        tooltip: 'To‘lash',
-                                        onPressed: controller.isSelling.value
-                                            ? null
-                                            : () => _showPaymentDialog(
-                                          context,
-                                          controller,
-                                          sale,
-                                        ),
-                                      ),
-                                    if (sale['sale_type'] != 'returned')
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.undo,
-                                          color: Colors.orangeAccent,
-                                          size: 18,
-                                        ),
-                                        tooltip: 'Qaytarish',
-                                        onPressed: controller.isSelling.value
-                                            ? null
-                                            : () async {
-                                          await controller.returnProduct(
-                                            context,
-                                            sale['id'],
-                                          );
-                                          Navigator.pop(context); // Dialogni yopish
-                                          controller.recentSalesFuture.value =
-                                              controller.apiService
-                                                  .getRecentSales(limit: 2);
-                                        },
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      );
-                    });
-                  },
+                child: Obx(
+                      () => DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      labelStyle: TextStyle(
+                        color: Colors.white70,
+                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.black.withOpacity(0.3),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
+                    value: selectedStatus.value,
+                    dropdownColor: Colors.black.withOpacity(0.9),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: Responsive.getFontSize(context, baseSize: 12),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'all', child: Text('Barchasi')),
+                      DropdownMenuItem(value: 'returned', child: Text('Qaytarilgan')),
+                      DropdownMenuItem(value: 'debt', child: Text('Qarzga sotilgan')),
+                      DropdownMenuItem(value: 'discount', child: Text('Chegirmali')),
+                      DropdownMenuItem(value: 'cash', child: Text('Naqd')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) selectedStatus.value = value;
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Obx(
+                      () => DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Saralash',
+                      labelStyle: TextStyle(
+                        color: Colors.white70,
+                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                      ),
+                      filled: true,
+                      fillColor: Colors.black.withOpacity(0.3),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    ),
+                    value: sortOrder.value,
+                    dropdownColor: Colors.black.withOpacity(0.9),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: Responsive.getFontSize(context, baseSize: 12),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'newest', child: Text('Eng yangi')),
+                      DropdownMenuItem(value: 'oldest', child: Text('Eng eski')),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) sortOrder.value = value;
+                    },
+                  ),
                 ),
               ),
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Obx(
+                      () => ElevatedButton(
+                    onPressed: () async {
+                      final selectedDate = await showDatePicker(
+                        context: context,
+                        initialDate: startDate.value ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                        builder: (context, child) {
+                          return Theme(
+                            data: ThemeData.dark().copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: primaryColor,
+                                onPrimary: Colors.white,
+                                surface: Colors.black,
+                                onSurface: Colors.white70,
+                              ),
+                              dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (selectedDate != null) {
+                        startDate.value = selectedDate;
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      startDate.value == null
+                          ? 'Boshlang‘ich sana'
+                          : 'Boshlang‘ich: ${startDate.value!.toString().substring(0, 10)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Obx(
+                      () => ElevatedButton(
+                    onPressed: () async {
+                      final selectedDate = await showDatePicker(
+                        context: context,
+                        initialDate: endDate.value ?? DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                        builder: (context, child) {
+                          return Theme(
+                            data: ThemeData.dark().copyWith(
+                              colorScheme: const ColorScheme.dark(
+                                primary: primaryColor,
+                                onPrimary: Colors.white,
+                                surface: Colors.black,
+                                onSurface: Colors.white70,
+                              ),
+                              dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (selectedDate != null) {
+                        endDate.value = selectedDate;
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      endDate.value == null
+                          ? 'Oxirgi sana'
+                          : 'Oxirgi: ${endDate.value!.toString().substring(0, 10)}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Obx(() => FutureBuilder<List<dynamic>>(
+              future: controller.apiService.getAllSalesDetails(
+                searchQuery: searchQuery.value,
+                status: selectedStatus.value,
+                startDate: startDate.value,
+                endDate: endDate.value,
+                sortOrder: sortOrder.value,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      "Xato: ${snapshot.error}",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                      ),
+                    ),
+                  );
+                }
+                final allSales = snapshot.data ?? [];
+                if (allSales.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "Sotuvlar mavjud emas",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  itemCount: allSales.length,
+                  itemBuilder: (context, index) {
+                    final sale = allSales[index];
+                    bool hasMarkup = false;
+                    bool hasDebt = ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0) <
+                        ((sale['total_amount'] as num?)?.toDouble() ?? 0.0);
+                    bool hasDiscount = ((sale['discount_amount'] as num?)?.toDouble() ?? 0.0) > 0;
+                    final items = sale['items'] as List<dynamic>? ?? [];
+
+                    for (var item in items) {
+                      final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0.0;
+                      final quantity = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+                      final totalPrice = (item['total_price'] as num?)?.toDouble() ?? 0.0;
+                      if (totalPrice > unitPrice * quantity) {
+                        hasMarkup = true;
+                        break;
+                      }
+                    }
+
+                    return ExpansionTile(
+                      title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  items.isNotEmpty
+                                      ? items[0]['product_name'] ?? 'Noma’lum mahsulot'
+                                      : 'Noma’lum mahsulot',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  sale['sale_date'] != null
+                                      ? sale['sale_date'].substring(0, 16)
+                                      : 'Noma’lum vaqt',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  ),
+                                ),
+                                if (sale['sale_type'] == 'returned')
+                                  Text(
+                                    "Qaytarildi",
+                                    style: TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (hasMarkup)
+                                const Icon(Icons.attach_money, color: Colors.yellow, size: 18),
+                              if (hasDebt)
+                                const Icon(Icons.credit_card, color: Colors.redAccent, size: 18),
+                              if (hasDiscount)
+                                const Icon(Icons.discount, color: Colors.greenAccent, size: 18),
+                            ],
+                          ),
+                        ],
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Mijoz: ${sale['customer_name'] ?? 'Noma’lum'}",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Umumiy narx: ${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                ),
+                              ),
+                              Text(
+                                "Chegirma: ${(sale['discount_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                ),
+                              ),
+                              Text(
+                                "To‘langan: ${(sale['paid_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                ),
+                              ),
+                              Text(
+                                "Qoldiq qarz: ${((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0)} so‘m",
+                                style: TextStyle(
+                                  color: hasDebt ? Colors.redAccent : Colors.greenAccent,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Mahsulotlar:",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (items.isEmpty)
+                                Text(
+                                  "Mahsulotlar haqida ma‘lumot yo‘q",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  ),
+                                ),
+                              ...items.map((item) => Padding(
+                                padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                                child: Text(
+                                  "${item['product_name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  ),
+                                ),
+                              )),
+                              const SizedBox(height: 8),
+                              if (sale['comments'] != null && sale['comments'].isNotEmpty)
+                                Text(
+                                  "Izoh: ${sale['comments']}",
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                  ),
+                                ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  if (sale['sale_type'] == 'debt' || sale['sale_type'] == 'debt_with_discount')
+                                    IconButton(
+                                      icon: const Icon(Icons.payment, color: Colors.blueAccent, size: 18),
+                                      tooltip: 'To‘lash',
+                                      onPressed: controller.isSelling.value
+                                          ? null
+                                          : () => _showPaymentDialog(context, controller, sale),
+                                    ),
+                                  if (sale['sale_type'] != 'returned')
+                                    IconButton(
+                                      icon: const Icon(Icons.undo, color: Colors.orangeAccent, size: 18),
+                                      tooltip: 'Qaytarish',
+                                      onPressed: controller.isSelling.value
+                                          ? null
+                                          : () async {
+                                        await controller.returnProduct(context, sale['sale_id']);
+                                        Navigator.pop(context);
+                                        controller.recentSalesFuture.value =
+                                            controller.apiService.getRecentSales(limit: 2);
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }),
+          ),
+        ),
+        ]
       ),
+    ))
     );
   }
 
   void _showPaymentDialog(
-    BuildContext context,
-    SalesScreenController controller,
-    Map<String, dynamic> sale,
-  ) {
+      BuildContext context,
+      SalesScreenController controller,
+      Map<String, dynamic> sale,
+      ) {
     final TextEditingController paymentController = TextEditingController();
-    final remainingDebt = ((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0);
+    final remainingDebt =
+        ((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0);
+    final items = sale['items'] as List<dynamic>? ?? [];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-            title: const Text('Qarzni to‘lash'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Jami qarz: ${remainingDebt.toStringAsFixed(0)} so‘m'),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: paymentController,
-                  decoration: InputDecoration(
-                    labelText: 'To‘lov miqdori (so‘m)',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryColor, width: 2)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16)
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
-                  ],
+        backgroundColor: secondaryColor,
+        title: Text(
+          'Qarzni to‘lash (Sotuv ID: ${sale['sale_id']})',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: Responsive.getFontSize(context, baseSize: 18),
+          ),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Mijoz: ${sale['customer_name'] ?? 'Noma’lum'}',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
                 ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Bekor qilish', style: TextStyle(color: Colors.red))
               ),
-              Obx(() => ElevatedButton(onPressed: controller.isSelling.value ? null : () {
+              const SizedBox(height: 8),
+              Text(
+                'Jami qarz: ${remainingDebt.toStringAsFixed(0)} so‘m',
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Mahsulotlar:',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (items.isEmpty)
+                Text(
+                  'Mahsulotlar haqida ma‘lumot yo‘q',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                ),
+              ...items.map((item) => Padding(
+                padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                child: Text(
+                  "${item['product_name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                ),
+              )),
+              const SizedBox(height: 16),
+              TextField(
+                controller: paymentController,
+                decoration: InputDecoration(
+                  labelText: 'To‘lov miqdori (so‘m)',
+                  labelStyle: TextStyle(
+                    color: Colors.white70,
+                    fontSize: Responsive.getFontSize(context, baseSize: 12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.black.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: primaryColor, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                ),
+                keyboardType: TextInputType.number,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+                ],
+                onChanged: (value) {
+                  final parsedValue = double.tryParse(value) ?? 0.0;
+                  if (parsedValue > remainingDebt) {
+                    paymentController.text = remainingDebt.toStringAsFixed(0);
+                    paymentController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: paymentController.text.length),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: Responsive.getFontSize(context, baseSize: 12),
+              ),
+            ),
+          ),
+          Obx(
+                () => ElevatedButton(
+              onPressed: controller.isSelling.value
+                  ? null
+                  : () {
                 final paymentAmount = double.tryParse(paymentController.text) ?? 0.0;
                 if (paymentAmount <= 0 || paymentAmount > remainingDebt) {
-                  //paymentController maximal miqdori
-                  paymentController.text = remainingDebt.toStringAsFixed(0);
-                  CustomToast.show(context: context, title: 'Xatolik', message: 'Noto‘g‘ri to‘lov miqdori', type: CustomToast.error);
+                  CustomToast.show(
+                    context: context,
+                    title: 'Xatolik',
+                    message: 'Noto‘g‘ri to‘lov miqdori',
+                    type: CustomToast.error,
+                  );
                   return;
                 }
-                controller.payDebt(context, sale['id'], paymentAmount).then((_) {Navigator.pop(context,);Navigator.pop(context,);});
-                },
-                  style: ElevatedButton.styleFrom(backgroundColor: primaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                  child: controller.isSelling.value ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('To‘lash', style: TextStyle(color: Colors.white)))
+                controller
+                    .payDebt(context, sale['sale_id'], paymentAmount)
+                    .then((_) {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                  controller.recentSalesFuture.value =
+                      controller.apiService.getRecentSales(limit: 2);
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: controller.isSelling.value
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
               )
-            ]
-          )
+                  : Text(
+                'To‘lash',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1536,10 +1543,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceInput(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+  Widget _buildPriceInput(BuildContext context, SalesScreenController controller) {
     return TextField(
       controller: controller.priceController,
       decoration: InputDecoration(
@@ -1569,10 +1573,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceSummary(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+  Widget _buildPriceSummary(BuildContext context, SalesScreenController controller) {
     return GetBuilder<SalesScreenController>(
       id: 'totalPrice',
       builder: (controller) {
@@ -1604,10 +1605,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAdvancedOptionsToggle(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+  Widget _buildAdvancedOptionsToggle(BuildContext context, SalesScreenController controller) {
     return Column(
       children: [
         _buildSwitchTile(
@@ -1627,13 +1625,13 @@ class SalesScreen extends StatelessWidget {
   }
 
   Widget _buildSwitchTile(
-    BuildContext context, {
-    required String title,
-    required RxBool value,
-    required ValueChanged<bool> onChanged,
-  }) {
+      BuildContext context, {
+        required String title,
+        required RxBool value,
+        required ValueChanged<bool> onChanged,
+      }) {
     return Obx(
-      () => Container(
+          () => Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -1663,10 +1661,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCreditOptions(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+  Widget _buildCreditOptions(BuildContext context, SalesScreenController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1680,7 +1675,7 @@ class SalesScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Obx(
-          () => DropdownButtonFormField<String>(
+              () => DropdownButtonFormField<String>(
             decoration: InputDecoration(
               labelText: 'Mavjud mijozni tanlang',
               labelStyle: const TextStyle(color: Colors.white70),
@@ -1701,19 +1696,18 @@ class SalesScreen extends StatelessWidget {
             ),
             dropdownColor: secondaryColor.withOpacity(0.9),
             value: controller.selectedCustomerId.value,
-            items:
-                controller.appController.customers.map((customer) {
-                  return DropdownMenuItem<String>(
-                    value: customer['id'].toString(),
-                    child: Text(
-                      customer['full_name'],
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: Responsive.getFontSize(context, baseSize: 15),
-                      ),
-                    ),
-                  );
-                }).toList(),
+            items: controller.appController.customers.map((customer) {
+              return DropdownMenuItem<String>(
+                value: customer['id'].toString(),
+                child: Text(
+                  customer['full_name'] ?? 'Noma’lum',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Responsive.getFontSize(context, baseSize: 15),
+                  ),
+                ),
+              );
+            }).toList(),
             onChanged: controller.updateCustomerSelection,
           ),
         ),
@@ -1838,14 +1832,12 @@ class SalesScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Obx(
-          () => ElevatedButton(
+              () => ElevatedButton(
             onPressed: () => controller.selectCreditDueDate(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 2,
             ),
             child: Text(
@@ -1864,10 +1856,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDiscountInput(
-    BuildContext context,
-    SalesScreenController controller,
-  ) {
+  Widget _buildDiscountInput(BuildContext context, SalesScreenController controller) {
     return TextField(
       controller: controller.discountController,
       decoration: InputDecoration(
@@ -1897,10 +1886,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onPressed,
-  }) {
+  Widget _buildIconButton({required IconData icon, required VoidCallback onPressed}) {
     return InkWell(
       onTap: onPressed,
       borderRadius: BorderRadius.circular(12),

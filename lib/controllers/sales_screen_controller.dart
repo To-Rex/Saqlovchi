@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:sklad/controllers/api_service.dart';
-import 'package:sklad/controllers/get_controller.dart';
+import 'package:sklad/companents/custom_toast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../companents/custom_toast.dart';
+import 'api_service.dart';
+import 'get_controller.dart';
 
 class SalesScreenController extends GetxController {
   final ApiService apiService = ApiService();
   final GetController appController = Get.find<GetController>();
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  // Observables
   var selectedCategoryId = Rxn<String>();
   var selectedProductId = Rxn<String>();
   var selectedBatchId = Rxn<String>();
@@ -34,10 +31,8 @@ class SalesScreenController extends GetxController {
   var isStockLoading = true.obs;
   var recentSalesFuture = Rxn<Future<List<dynamic>>>();
 
-  // Kesh
   final Map<String, Map<String, dynamic>> batchCache = {};
 
-  // TextEditingController’lar
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   final TextEditingController newCustomerNameController = TextEditingController();
@@ -66,8 +61,7 @@ class SalesScreenController extends GetxController {
   }
 
   double getTotalPrice() {
-    print(
-        'getTotalPrice: selectedBatchId: $selectedBatchId, quantity: $quantity, basePrice: $basePrice, unitPrice: $unitPrice, discount: $discount');
+    print('getTotalPrice: selectedBatchId: $selectedBatchId, quantity: $quantity, basePrice: $basePrice, unitPrice: $unitPrice, discount: $discount');
     final totalWithoutDiscount = quantity.value * (basePrice.value + unitPrice.value);
     return totalWithoutDiscount - discount.value;
   }
@@ -80,9 +74,9 @@ class SalesScreenController extends GetxController {
       if (!batchCache.containsKey(batchId)) {
         batchCache[batchId] = {
           'product_id': batch['product_id'].toString(),
-          'quantity': (batch['quantity'] as num).toDouble(),
-          'cost_price': (batch['cost_price'] as num).toDouble(),
-          'selling_price': (batch['selling_price'] as num).toDouble(),
+          'quantity': (batch['quantity'] as num?)?.toDouble() ?? 0.0,
+          'cost_price': (batch['cost_price'] as num?)?.toDouble() ?? 0.0,
+          'selling_price': (batch['selling_price'] as num?)?.toDouble() ?? 0.0,
         };
       }
     }
@@ -106,8 +100,7 @@ class SalesScreenController extends GetxController {
     quantity.value = 1.0;
     quantityController.text = '1';
     priceController.text = '0';
-    print(
-        'selectProduct: productId: $productId, batchId: $batchId, stockQuantity: $stockQuantity, basePrice: $basePrice, unitPrice: $unitPrice');
+    print('selectProduct: productId: $productId, batchId: $batchId, stockQuantity: $stockQuantity, basePrice: $basePrice, unitPrice: $unitPrice');
     showCreditOptions.value = false;
     showDiscountOption.value = false;
     selectedCustomerId.value = null;
@@ -440,12 +433,10 @@ class SalesScreenController extends GetxController {
     }
   }
 
-  // Tovar qaytarish funksiyasi
   Future<void> returnProduct(BuildContext context, int saleId) async {
     isSelling.value = true;
 
     try {
-      // Tasdiqlash dialogi
       final bool? confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -469,25 +460,22 @@ class SalesScreenController extends GetxController {
         return;
       }
 
-      // PostgreSQL funksiyasini chaqirish
       print('return_sale chaqirilmoqda: saleId=$saleId');
       await _supabase.rpc('return_sale', params: {'p_sale_id': saleId});
       print('Sotuv qaytarildi: saleId=$saleId');
 
-      // Keshni yangilash
       final saleItems = await apiService.getSaleItems(saleId: saleId);
       print('Sale items for saleId=$saleId: $saleItems');
       for (var item in saleItems) {
-        final itemBatchId = item['batch_id'].toString();
-        final itemQuantity = (item['quantity'] as num).toDouble();
-        if (batchCache.containsKey(itemBatchId)) {
+        final itemBatchId = item['batch_id']?.toString();
+        final itemQuantity = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+        if (itemBatchId != null && batchCache.containsKey(itemBatchId)) {
           batchCache[itemBatchId]!['quantity'] =
               (batchCache[itemBatchId]!['quantity'] ?? 0.0) + itemQuantity;
           print('batchCache updated: $itemBatchId, new quantity=${batchCache[itemBatchId]!['quantity']}');
         }
       }
 
-      // Oxirgi sotuvlarni yangilash
       recentSalesFuture.value = apiService.getRecentSales(limit: 2);
 
       CustomToast.show(
@@ -512,16 +500,74 @@ class SalesScreenController extends GetxController {
   Future<void> payDebt(BuildContext context, int saleId, double paymentAmount) async {
     isSelling.value = true;
     try {
-      // Supabase funksiyasini chaqirish
-      await apiService.payDebt(saleId, paymentAmount);
+      final sale = await _supabase
+          .from('sales')
+          .select('customer_id, total_amount, paid_amount')
+          .eq('id', saleId)
+          .single();
 
-      // Ro‘yxatni yangilash
+      final customerId = sale['customer_id'] as int?;
+      final totalAmount = (sale['total_amount'] as num?)?.toDouble() ?? 0.0;
+      final currentPaidAmount = (sale['paid_amount'] as num?)?.toDouble() ?? 0.0;
+
+      if (customerId == null) {
+        CustomToast.show(
+          context: context,
+          title: 'Xatolik',
+          message: 'Mijoz ID topilmadi',
+          type: CustomToast.error,
+        );
+        return;
+      }
+
+      if (paymentAmount <= 0) {
+        CustomToast.show(
+          context: context,
+          title: 'Xatolik',
+          message: 'To‘lov miqdori musbat bo‘lishi kerak',
+          type: CustomToast.error,
+        );
+        return;
+      }
+
+      if (paymentAmount > (totalAmount - currentPaidAmount)) {
+        CustomToast.show(
+          context: context,
+          title: 'Xatolik',
+          message: 'To‘lov miqdori qoldiq qarzdan ($totalAmount - $currentPaidAmount) ko‘p bo‘lmasligi kerak',
+          type: CustomToast.error,
+        );
+        return;
+      }
+
+      print('debt_payment qo‘shilmoqda: Sale ID: $saleId, Miqdor: $paymentAmount, Mijoz ID: $customerId');
+      await apiService.addTransaction(
+        transactionType: 'debt_payment',
+        amount: paymentAmount,
+        customerId: customerId,
+        saleId: saleId,
+        comments: 'Qarz to‘lovi (Sale ID: $saleId)',
+        createdBy: _supabase.auth.currentUser!.id,
+      );
+
+      await apiService.updateSalePaidAmount(saleId, paymentAmount);
+
       recentSalesFuture.value = apiService.getRecentSales(limit: 2);
 
-      CustomToast.show(context: context, title: 'Muvaffaqiyat', message: 'To‘lov qabul qilindi', type: CustomToast.success);
+      CustomToast.show(
+        context: context,
+        title: 'Muvaffaqiyat',
+        message: 'To‘lov qabul qilindi',
+        type: CustomToast.success,
+      );
     } catch (e) {
       print('To‘lov xatosi: $e');
-      CustomToast.show(context: context, title: 'Xatolik', message: 'To‘lovni amalga oshirishda xato: $e', type: CustomToast.error,);
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'To‘lovni amalga oshirishda xato: $e',
+        type: CustomToast.error,
+      );
     } finally {
       isSelling.value = false;
     }
