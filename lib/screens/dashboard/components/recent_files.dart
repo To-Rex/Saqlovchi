@@ -32,10 +32,17 @@ class RecentFiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(defaultPadding),
-      decoration: const BoxDecoration(
+      padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(defaultPadding / 2)),
+      decoration: BoxDecoration(
         color: secondaryColor,
         borderRadius: BorderRadius.all(Radius.circular(10)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Obx(() {
         final filteredProducts = _filterProducts(
@@ -45,24 +52,35 @@ class RecentFiles extends StatelessWidget {
           controller.filterCategory.value,
         );
         return filteredProducts.isEmpty
-            ? const Center(
-            child: Text('Mahsulot topilmadi',
-                style: TextStyle(fontSize: 14, color: Color(0xFF6B7280))))
+            ? Center(
+          child: Text(
+            'Mahsulot topilmadi',
+            style: TextStyle(
+              fontSize: Responsive.getFontSize(context, baseSize: 12),
+              color: Colors.white70,
+            ),
+          ),
+        )
             : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Barcha mahsulotlar",
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  "Barcha mahsulotlar",
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontSize: Responsive.getFontSize(context, baseSize: 16),
+                    color: Colors.white,
+                  ),
+                ),
                 IconButton(
-                  icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
+                  icon: Icon(Icons.filter_alt_outlined, color: Colors.white, size: 14),
                   onPressed: () => DialogFunction().showFilterDialog(context),
                 ),
               ],
             ),
-            const SizedBox(height: defaultPadding),
+            SizedBox(height: defaultPadding / 4),
             Responsive(
               mobile: _buildCardView(context, filteredProducts),
               tablet: _buildTableView(context, filteredProducts),
@@ -85,10 +103,13 @@ class RecentFiles extends StatelessWidget {
               constraints: BoxConstraints(minWidth: constraints.maxWidth),
               child: DataTable(
                 columnSpacing: defaultPadding / 2,
-                columns: _buildTableColumns(),
+                columns: _buildTableColumns(context),
                 rows: filteredProducts.map((product) => _buildTableRow(context, product)).toList(),
-                dataRowHeight: 50,
-                headingRowHeight: 56,
+                dataRowHeight: 36,
+                headingRowHeight: 36,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           );
@@ -97,31 +118,35 @@ class RecentFiles extends StatelessWidget {
     );
   }
 
-  List<DataColumn> _buildTableColumns() {
-    const columnStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: darkGreyColor);
-    return const [
-      DataColumn(label: Text('Nomi', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Kategoriya', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Narxi', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Sotish Narxi', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Birligi', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Partiya', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Miqdor', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Sotuv Holati', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Yaratilgan', style: columnStyle, textAlign: TextAlign.center)),
-      DataColumn(label: Text('Amallar', style: columnStyle, textAlign: TextAlign.center)),
+  List<DataColumn> _buildTableColumns(BuildContext context) {
+    final columnStyle = TextStyle(
+      fontSize: Responsive.getFontSize(context, baseSize: 11),
+      fontWeight: FontWeight.bold,
+      color: Colors.white,
+    );
+    return [
+      DataColumn(label: Text('Nomi', style: columnStyle)),
+      DataColumn(label: Text('Kategoriya', style: columnStyle)),
+      DataColumn(label: Text('Narxi', style: columnStyle)),
+      DataColumn(label: Text('Sotish Narxi', style: columnStyle)),
+      DataColumn(label: Text('Birligi', style: columnStyle)),
+      DataColumn(label: Text('Partiya', style: columnStyle)),
+      DataColumn(label: Text('Miqdor', style: columnStyle)),
+      DataColumn(label: Text('Sotuv Holati', style: columnStyle)),
+      DataColumn(label: Text('Yaratilgan', style: columnStyle)),
+      DataColumn(label: Text('Amallar', style: columnStyle)),
     ];
   }
 
   DataRow _buildTableRow(BuildContext context, ProductDisplayData product) {
     final isOutOfStock = product.quantity == '0';
     final textStyle = TextStyle(
-      fontSize: 14,
+      fontSize: Responsive.getFontSize(context, baseSize: 10),
       color: isOutOfStock
           ? outOfStockColor
           : product.isLowStock
           ? lowStockColor
-          : whiteColor,
+          : Colors.white,
     );
     return DataRow(
       color: isOutOfStock
@@ -132,11 +157,11 @@ class RecentFiles extends StatelessWidget {
       cells: [
         DataCell(Text(product.name, style: textStyle)),
         DataCell(Text(product.categoryName, style: textStyle)),
-        DataCell(Text(product.costPrice, style: textStyle)),
-        DataCell(Text(product.sellingPrice, style: textStyle)),
+        DataCell(Text('${product.costPrice} UZS', style: textStyle)),
+        DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
         DataCell(Text(product.unit, style: textStyle)),
         DataCell(Text(product.batchNumber, style: textStyle)),
-        DataCell(Text(product.quantity, style: textStyle)),
+        DataCell(Text('${product.quantity} kg', style: textStyle)),
         DataCell(Text(product.saleStatus, style: textStyle)),
         DataCell(Text(product.createdAt, style: textStyle)),
         DataCell(_buildActionButtons(context, product)),
@@ -144,112 +169,167 @@ class RecentFiles extends StatelessWidget {
     );
   }
 
-  Widget _buildCardView(BuildContext context, List<ProductDisplayData> filteredProducts) =>
-      ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: filteredProducts.length,
-        itemBuilder: (context, index) {
-          final product = filteredProducts[index];
-          final isOutOfStock = product.quantity == '0';
-          return Column(
+  Widget _buildCardView(BuildContext context, List<ProductDisplayData> filteredProducts) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredProducts.length,
+      itemBuilder: (context, index) {
+        final product = filteredProducts[index];
+        final isOutOfStock = product.quantity == '0';
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          margin: EdgeInsets.symmetric(vertical: defaultPadding / 4),
+          padding: EdgeInsets.all(defaultPadding / 2),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                isOutOfStock
+                    ? outOfStockColor.withOpacity(0.3)
+                    : product.isLowStock
+                    ? lowStockColor.withOpacity(0.3)
+                    : secondaryColor.withOpacity(0.8),
+                secondaryColor.withOpacity(0.9),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Row(
             children: [
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: defaultPadding / 2),
-                padding: const EdgeInsets.all(defaultPadding),
-                decoration: BoxDecoration(
-                  color: isOutOfStock
-                      ? outOfStockColor.withOpacity(0.2)
-                      : product.isLowStock
-                      ? lowStockColor.withOpacity(0.1)
-                      : null,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          product.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isOutOfStock
-                                ? outOfStockColor
-                                : product.isLowStock
-                                ? lowStockColor
-                                : whiteColor,
-                          ),
-                        ),
-                        _buildActionButtons(context, product),
-                      ],
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                        fontWeight: FontWeight.bold,
+                        color: isOutOfStock
+                            ? outOfStockColor
+                            : product.isLowStock
+                            ? lowStockColor
+                            : Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow('Kategoriya', product.categoryName, isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Narxi', '${product.costPrice} UZS', isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Sotish Narxi', '${product.sellingPrice} UZS', isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Birligi', product.unit, isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Partiya', product.batchNumber, isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Miqdor', product.quantity, isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Sotuv Holati', product.saleStatus, isOutOfStock, product.isLowStock),
-                    _buildInfoRow('Yaratilgan Sana', product.createdAt, isOutOfStock, product.isLowStock),
+                    SizedBox(height: 2),
+                    Text(
+                      'Kategoriya: ${product.categoryName}',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Narxi: ${product.costPrice} UZS',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Sotish Narxi: ${product.sellingPrice} UZS',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Birligi: ${product.unit}',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Partiya: ${product.batchNumber}',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Miqdor: ${product.quantity} kg',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: isOutOfStock
+                            ? outOfStockColor
+                            : product.isLowStock
+                            ? lowStockColor
+                            : Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Sotuv Holati: ${product.saleStatus}',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      'Yaratilgan: ${product.createdAt}',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 10),
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (index != filteredProducts.length - 1) Divider(color: greyColor, thickness: 1),
+              _buildActionButtons(context, product),
             ],
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
+  }
 
-  Widget _buildActionButtons(BuildContext context, ProductDisplayData product) => Row(
-    children: [
-      Container(
-        decoration: BoxDecoration(color: Colors.blue.withAlpha(20), shape: BoxShape.circle),
-        child: IconButton(
-          icon: Icon(Icons.edit, size: 18, color: Colors.blue[600]),
-          onPressed: () {
-            final productMap = product.toMap();
-            DialogFunction().showEditProductDialog(context, controller, productMap);
-          },
-          padding: const EdgeInsets.all(4),
+  Widget _buildActionButtons(BuildContext context, ProductDisplayData product) {
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, size: 10, color: Colors.white),
+      onSelected: (value) {
+        final productMap = product.toMap();
+        if (value == 'edit') {
+          DialogFunction().showEditProductDialog(context, controller, productMap);
+        } else if (value == 'delete') {
+          DialogFunction().showDeleteProductDialog(context, controller, productMap);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 8, color: Colors.blue),
+              SizedBox(width: 4),
+              Text('Tahrirlash', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 8))),
+            ],
+          ),
         ),
-      ),
-      const SizedBox(width: 8),
-      Container(
-        decoration: BoxDecoration(color: Colors.red.withAlpha(20), shape: BoxShape.circle),
-        child: IconButton(
-          icon: Icon(Icons.delete, size: 18, color: Colors.red[600]),
-          onPressed: () {
-            final productMap = product.toMap();
-            DialogFunction().showDeleteProductDialog(context, controller, productMap);
-          },
-          padding: const EdgeInsets.all(4),
-        ),
-      ),
-    ],
-  );
-
-  Widget _buildInfoRow(String label, String value, bool isOutOfStock, bool isLowStock) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280))),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            color: isOutOfStock
-                ? outOfStockColor
-                : isLowStock
-                ? lowStockColor
-                : whiteColor,
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(Icons.delete, size: 8, color: Colors.red),
+              SizedBox(width: 4),
+              Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 8))),
+            ],
           ),
         ),
       ],
-    ),
-  );
+      color: secondaryColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    );
+  }
 }

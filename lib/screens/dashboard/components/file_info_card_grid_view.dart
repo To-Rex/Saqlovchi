@@ -4,88 +4,8 @@ import '../../../companents/custom_loading_widget.dart';
 import '../../../constants.dart';
 import '../../../controllers/api_service.dart';
 import '../../../controllers/get_controller.dart';
-import '../../../function/dialog_function.dart';
 import '../../../responsive.dart';
 import 'file_info_card.dart';
-
-class MyFiles extends StatelessWidget {
-  final GetController controller;
-  const MyFiles({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(defaultPadding)),
-        decoration: BoxDecoration(
-          color: secondaryColor.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-          Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-          Text(
-          "Kategoriyalar",
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontSize: Responsive.getFontSize(context, baseSize: 20),
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Row(
-            children: [
-              _buildActionButton(context, label: "Yangi kategoriya", icon: Icons.add, onPressed: () => DialogFunction().showAddCategoryDialog(context, controller)),
-              SizedBox(width: defaultPadding / 2),
-              _buildActionButton(context, label: "Yangi mahsulot", icon: Icons.add, onPressed: () => DialogFunction().showAddProductDialog(context, controller)),
-            ],
-        ),
-          ],
-          ),
-            SizedBox(height: defaultPadding),
-            FileInfoCardGridView(controller: controller),
-          ],
-        ),
-    );
-  }
-
-  Widget _buildActionButton(BuildContext context, {required String label, required IconData icon, required VoidCallback onPressed}) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 200),
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          padding: EdgeInsets.symmetric(
-            horizontal: defaultPadding * 0.8,
-            vertical: defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          elevation: 2,
-        ),
-        onPressed: onPressed,
-        icon: Icon(icon, size: 18, color: Colors.white),
-        label: Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: Responsive.getFontSize(context, baseSize: 14),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 
 class FileInfoCardGridView extends StatelessWidget {
   const FileInfoCardGridView({
@@ -136,10 +56,10 @@ class FileInfoCardGridView extends StatelessWidget {
             crossAxisSpacing: defaultPadding / 2,
             mainAxisSpacing: defaultPadding / 2,
             childAspectRatio: size.width < 700
-                ? 1.5
+                ? 2.5
                 : size.width < 1100
-                ? 1.7
-                : 2.0, // Balandlikni yanada oshirdik
+                ? 2.7
+                : 3.0, // Balandlikni yanada ko‘paytirish uchun kamaytirdik
           ),
           itemBuilder: (context, index) {
             final category = controller.categories[index];

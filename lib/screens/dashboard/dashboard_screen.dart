@@ -21,13 +21,13 @@ class DashboardScreen extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,
-        padding: const EdgeInsets.all(defaultPadding),
+        padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(defaultPadding)),
         child: Column(
           children: [
             const Header(),
-            const SizedBox(height: defaultPadding),
+            SizedBox(height: defaultPadding),
             Obx(() => controller.isLoading.value
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(child: CircularProgressIndicator())
                 : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -36,15 +36,15 @@ class DashboardScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       MyFiles(controller: controller),
-                      const SizedBox(height: defaultPadding),
+                      SizedBox(height: defaultPadding),
                       RecentFiles(),
-                      if (Responsive.isMobile(context)) const SizedBox(height: defaultPadding),
+                      if (Responsive.isMobile(context)) SizedBox(height: defaultPadding),
                       if (Responsive.isMobile(context))
                         FutureBuilder<Map<String, dynamic>>(
                           future: apiService.getWarehouseStats(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const CustomLoadingWidget();
+                              return CustomLoadingWidget();
                             }
                             return WarehouseStats(stats: snapshot.data ?? {});
                           },
@@ -52,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!Responsive.isMobile(context)) const SizedBox(width: defaultPadding),
+                if (!Responsive.isMobile(context)) SizedBox(width: defaultPadding),
                 if (!Responsive.isMobile(context))
                   Expanded(
                     flex: 2,
@@ -60,7 +60,7 @@ class DashboardScreen extends StatelessWidget {
                       future: apiService.getWarehouseStats(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CustomLoadingWidget();
+                          return CustomLoadingWidget();
                         }
                         return WarehouseStats(stats: snapshot.data ?? {});
                       },

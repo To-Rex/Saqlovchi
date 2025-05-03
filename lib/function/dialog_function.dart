@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../constants.dart';
 import '../../controllers/get_controller.dart';
+import '../controllers/api_service.dart';
+import '../responsive.dart';
 
 class DialogFunction {
   final GetController controller = Get.find<GetController>();
@@ -40,7 +42,6 @@ class DialogFunction {
       child: child,
     );
   }
-
 
   void showAddProductDialog(BuildContext context, GetController controller) {
     final TextEditingController productNameController = TextEditingController();
@@ -195,7 +196,6 @@ class DialogFunction {
       ),
     ));
   }
-
 
   void showEditProductDialog(BuildContext context, GetController controller, Map<String, dynamic> product) {
     final batch = product['batches']?.isNotEmpty == true ? product['batches'][0] : {};
@@ -359,29 +359,68 @@ class DialogFunction {
   void showDeleteProductDialog(BuildContext context, GetController controller, Map<String, dynamic> product) {
     showDialog(
       context: context,
-      builder: (context) => _applyDarkTheme(
-        context,
-        AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text('Mahsulotni o‘chirish',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          content: Text('“${product['name']}” ni o‘chirishni xohlaysizmi?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Bekor qilish', style: TextStyle(color: Colors.white70)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await controller.deleteProduct(product['id'].toString());
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[600]),
-              child: const Text('O‘chirish',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-            ),
-          ],
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: secondaryColor,
+        title: Text(
+          'Mahsulotni o‘chirish',
+          style: TextStyle(
+            fontSize: Responsive.getFontSize(context, baseSize: 18),
+            color: Colors.white,
+          ),
         ),
+        content: Text(
+          'Haqiqatan ham "${product['name']}" mahsulotini o‘chirmoqchimisiz?',
+          style: TextStyle(
+            fontSize: Responsive.getFontSize(context, baseSize: 16),
+            color: Colors.white70,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Bekor qilish',
+              style: TextStyle(
+                fontSize: Responsive.getFontSize(context, baseSize: 14),
+                color: Colors.white,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await ApiService().deleteProduct(product['id']);
+                await controller.fetchInitialData();
+                Navigator.pop(context);
+                Get.snackbar(
+                  'Muvaffaqiyat',
+                  'Mahsulot o‘chirildi',
+                  backgroundColor: Colors.green,
+                  colorText: Colors.white,
+                );
+              } catch (e) {
+                Get.snackbar(
+                  'Xatolik',
+                  'Mahsulotni o‘chirishda xato: $e',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(
+              'O‘chirish',
+              style: TextStyle(
+                fontSize: Responsive.getFontSize(context, baseSize: 14),
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -544,6 +583,308 @@ class DialogFunction {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void showCategoryDetailsDialog(BuildContext context, GetController controller, int categoryId) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: secondaryColor,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: Responsive.isMobile(context) ? double.infinity : 700,
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(defaultPadding)),
+          child: FutureBuilder<Map<String, dynamic>>(
+            future: ApiService().getCategoryDetails(categoryId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                print('Snapshot xatosi: ${snapshot.error}');
+                return Center(
+                  child: Text(
+                    'Ma\'lumotlarni yuklashda xato',
+                    style: TextStyle(
+                      fontSize: Responsive.getFontSize(context, baseSize: 16),
+                      color: Colors.white70,
+                    ),
+                  ),
+                );
+              }
+              final data = snapshot.data ?? {'category': null, 'products': []};
+              final category = data['category'] ?? {
+                'name': 'Noma’lum',
+                'created_by': 'Noma’lum',
+                'created_at': 'Noma’lum',
+                'product_count': 0,
+                'total_quantity': 0.0,
+              };
+              final products = data['products'] ?? [];
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Kategoriya ma'lumotlari
+                    Container(
+                      padding: EdgeInsets.all(defaultPadding),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            category['name'],
+                            style: TextStyle(
+                              fontSize: Responsive.getFontSize(context, baseSize: 20),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          SizedBox(height: defaultPadding / 2),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(child: _buildInfoRow(context, 'Yaratuvchi', category['created_by'])),
+                              Expanded(child: _buildInfoRow(context, 'Yaratilgan', category['created_at'])),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(child: _buildInfoRow(context, 'Mahsulotlar soni', category['product_count'].toString())),
+                              Expanded(child: _buildInfoRow(context, 'Umumiy miqdor', '${category['total_quantity'].toStringAsFixed(2)} kg')),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: defaultPadding),
+                    // Mahsulotlar ro‘yxati
+                    Text(
+                      'Mahsulotlar',
+                      style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 18),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: defaultPadding / 2),
+                    products.isEmpty
+                        ? Center(
+                      child: Text(
+                        'Bu kategoriyada mahsulotlar yo‘q',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 16),
+                          color: Colors.white70,
+                        ),
+                      ),
+                    )
+                        : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          margin: EdgeInsets.symmetric(vertical: defaultPadding / 2),
+                          padding: EdgeInsets.all(defaultPadding),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [secondaryColor.withOpacity(0.9), secondaryColor.withOpacity(0.8)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product['name'],
+                                      style: TextStyle(
+                                        fontSize: Responsive.getFontSize(context, baseSize: 16),
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: defaultPadding / 4),
+                                    Text(
+                                      'Miqdor: ${product['quantity'].toStringAsFixed(2)} kg',
+                                      style: TextStyle(
+                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Narxi: ${product['cost_price'].toStringAsFixed(2)} UZS',
+                                      style: TextStyle(
+                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Sotish narxi: ${product['selling_price'].toStringAsFixed(2)} UZS',
+                                      style: TextStyle(
+                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Yaratilgan: ${product['created_at']}',
+                                      style: TextStyle(
+                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, size: 16, color: Colors.white),
+                                onSelected: (value) {
+                                  if (value == 'edit') {
+                                    showAddProductDialog(context, controller);
+                                  } else if (value == 'delete') {
+                                    showDeleteProductDialog(context, controller, product);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit, size: 12, color: Colors.blue),
+                                        SizedBox(width: 8),
+                                        Text('Tahrirlash', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, size: 12, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                color: secondaryColor,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    SizedBox(height: defaultPadding),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            'Yopish',
+                            style: TextStyle(
+                              fontSize: Responsive.getFontSize(context, baseSize: 14),
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: defaultPadding / 2),
+                        ElevatedButton(
+                          onPressed: () {
+                            showAddProductDialog(context, controller);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            padding: EdgeInsets.symmetric(horizontal: defaultPadding, vertical: defaultPadding / 2),
+                          ),
+                          child: Text(
+                            'Yangi mahsulot',
+                            style: TextStyle(
+                              fontSize: Responsive.getFontSize(context, baseSize: 14),
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: defaultPadding / 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: Responsive.getFontSize(context, baseSize: 14),
+              color: Colors.white70,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: Responsive.getFontSize(context, baseSize: 14),
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
