@@ -56,7 +56,7 @@ class RecentFiles extends StatelessWidget {
           child: Text(
             'Mahsulot topilmadi',
             style: TextStyle(
-              fontSize: Responsive.getFontSize(context, baseSize: 12),
+              fontSize: Responsive.getFontSize(context, baseSize: 14),
               color: Colors.white70,
             ),
           ),
@@ -70,17 +70,17 @@ class RecentFiles extends StatelessWidget {
                 Text(
                   "Barcha mahsulotlar",
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: Responsive.getFontSize(context, baseSize: 16),
+                    fontSize: Responsive.getFontSize(context, baseSize: 18),
                     color: Colors.white,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.filter_alt_outlined, color: Colors.white, size: 14),
+                  icon: Icon(Icons.filter_alt_outlined, color: Colors.white, size: 16),
                   onPressed: () => DialogFunction().showFilterDialog(context),
                 ),
               ],
             ),
-            SizedBox(height: defaultPadding / 4),
+            SizedBox(height: defaultPadding / 2),
             Responsive(
               mobile: _buildCardView(context, filteredProducts),
               tablet: _buildTableView(context, filteredProducts),
@@ -105,8 +105,8 @@ class RecentFiles extends StatelessWidget {
                 columnSpacing: defaultPadding / 2,
                 columns: _buildTableColumns(context),
                 rows: filteredProducts.map((product) => _buildTableRow(context, product)).toList(),
-                dataRowHeight: 36,
-                headingRowHeight: 36,
+                dataRowHeight: 40,
+                headingRowHeight: 40,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -120,18 +120,18 @@ class RecentFiles extends StatelessWidget {
 
   List<DataColumn> _buildTableColumns(BuildContext context) {
     final columnStyle = TextStyle(
-      fontSize: Responsive.getFontSize(context, baseSize: 11),
+      fontSize: Responsive.getFontSize(context, baseSize: 12),
       fontWeight: FontWeight.bold,
       color: Colors.white,
     );
     return [
       DataColumn(label: Text('Nomi', style: columnStyle)),
       DataColumn(label: Text('Kategoriya', style: columnStyle)),
+      DataColumn(label: Text('Miqdor', style: columnStyle)),
       DataColumn(label: Text('Narxi', style: columnStyle)),
       DataColumn(label: Text('Sotish Narxi', style: columnStyle)),
       DataColumn(label: Text('Birligi', style: columnStyle)),
       DataColumn(label: Text('Partiya', style: columnStyle)),
-      DataColumn(label: Text('Miqdor', style: columnStyle)),
       DataColumn(label: Text('Sotuv Holati', style: columnStyle)),
       DataColumn(label: Text('Yaratilgan', style: columnStyle)),
       DataColumn(label: Text('Amallar', style: columnStyle)),
@@ -141,7 +141,7 @@ class RecentFiles extends StatelessWidget {
   DataRow _buildTableRow(BuildContext context, ProductDisplayData product) {
     final isOutOfStock = product.quantity == '0';
     final textStyle = TextStyle(
-      fontSize: Responsive.getFontSize(context, baseSize: 10),
+      fontSize: Responsive.getFontSize(context, baseSize: 11),
       color: isOutOfStock
           ? outOfStockColor
           : product.isLowStock
@@ -157,11 +157,11 @@ class RecentFiles extends StatelessWidget {
       cells: [
         DataCell(Text(product.name, style: textStyle)),
         DataCell(Text(product.categoryName, style: textStyle)),
+        DataCell(Text('${product.quantity} kg', style: textStyle)),
         DataCell(Text('${product.costPrice} UZS', style: textStyle)),
         DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
         DataCell(Text(product.unit, style: textStyle)),
         DataCell(Text(product.batchNumber, style: textStyle)),
-        DataCell(Text('${product.quantity} kg', style: textStyle)),
         DataCell(Text(product.saleStatus, style: textStyle)),
         DataCell(Text(product.createdAt, style: textStyle)),
         DataCell(_buildActionButtons(context, product)),
@@ -179,8 +179,8 @@ class RecentFiles extends StatelessWidget {
         final isOutOfStock = product.quantity == '0';
         return AnimatedContainer(
           duration: Duration(milliseconds: 200),
-          margin: EdgeInsets.symmetric(vertical: defaultPadding / 4),
-          padding: EdgeInsets.all(defaultPadding / 2),
+          margin: EdgeInsets.symmetric(vertical: defaultPadding / 2),
+          padding: EdgeInsets.all(defaultPadding),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -194,101 +194,103 @@ class RecentFiles extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: Offset(0, 1),
+                blurRadius: 6,
+                offset: Offset(0, 2),
               ),
             ],
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      product.name,
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 12),
-                        fontWeight: FontWeight.bold,
-                        color: isOutOfStock
-                            ? outOfStockColor
-                            : product.isLowStock
-                            ? lowStockColor
-                            : Colors.white,
+          child: SingleChildScrollView(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 14),
+                          fontWeight: FontWeight.bold,
+                          color: isOutOfStock
+                              ? outOfStockColor
+                              : product.isLowStock
+                              ? lowStockColor
+                              : Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Kategoriya: ${product.categoryName}',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      SizedBox(height: 4),
+                      Text(
+                        'Kategoriya: ${product.categoryName}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      'Narxi: ${product.costPrice} UZS',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Miqdor: ${product.quantity} kg',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: isOutOfStock
+                              ? outOfStockColor
+                              : product.isLowStock
+                              ? lowStockColor
+                              : Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Sotish Narxi: ${product.sellingPrice} UZS',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Narxi: ${product.costPrice} UZS',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Birligi: ${product.unit}',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Sotish Narxi: ${product.sellingPrice} UZS',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Partiya: ${product.batchNumber}',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Birligi: ${product.unit}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Miqdor: ${product.quantity} kg',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: isOutOfStock
-                            ? outOfStockColor
-                            : product.isLowStock
-                            ? lowStockColor
-                            : Colors.white70,
+                      Text(
+                        'Partiya: ${product.batchNumber}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Sotuv Holati: ${product.saleStatus}',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Sotuv Holati: ${product.saleStatus}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Yaratilgan: ${product.createdAt}',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 10),
-                        color: Colors.white70,
+                      Text(
+                        'Yaratilgan: ${product.createdAt}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              _buildActionButtons(context, product),
-            ],
+                _buildActionButtons(context, product),
+              ],
+            ),
           ),
         );
       },
@@ -297,7 +299,7 @@ class RecentFiles extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context, ProductDisplayData product) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, size: 10, color: Colors.white),
+      icon: Icon(Icons.more_vert, size: 14, color: Colors.white),
       onSelected: (value) {
         final productMap = product.toMap();
         if (value == 'edit') {
@@ -311,9 +313,9 @@ class RecentFiles extends StatelessWidget {
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, size: 8, color: Colors.blue),
-              SizedBox(width: 4),
-              Text('Tahrirlash', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 8))),
+              Icon(Icons.edit, size: 12, color: Colors.blue),
+              SizedBox(width: 6),
+              Text('Tahrirlash', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
             ],
           ),
         ),
@@ -321,15 +323,15 @@ class RecentFiles extends StatelessWidget {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete, size: 8, color: Colors.red),
-              SizedBox(width: 4),
-              Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 8))),
+              Icon(Icons.delete, size: 12, color: Colors.red),
+              SizedBox(width: 6),
+              Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
             ],
           ),
         ),
       ],
       color: secondaryColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     );
   }
 }

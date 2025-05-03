@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../controllers/api_service.dart';
 
 class ProductDisplayData {
   final String id;
@@ -28,6 +29,7 @@ class ProductDisplayData {
   });
 
   factory ProductDisplayData.fromProduct(Map<String, dynamic> product, List<dynamic> categories) {
+    final apiService = ApiService();
     final batches = product['batches'] as List<dynamic>? ?? [];
     final firstBatch = batches.isNotEmpty ? batches[0] : {};
     final quantity = batches.fold<double>(
@@ -47,7 +49,7 @@ class ProductDisplayData {
       batchNumber: firstBatch['batch_number']?.toString() ?? 'Noma’lum',
       quantity: quantity.toStringAsFixed(2),
       saleStatus: product['sales']?['sale_type']?.toString() ?? 'Noma’lum',
-      createdAt: product['created_at']?.toString() ?? 'Noma’lum',
+      createdAt: apiService.formatDate(product['created_at']?.toString()),
       isLowStock: quantity > 0 && quantity < 10.0,
     );
   }
