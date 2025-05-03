@@ -14,19 +14,32 @@ class RecentFiles extends StatelessWidget {
   static const Color outOfStockColor = Colors.red;
   static const double lowStockThreshold = 10.0;
 
+//-----------------------------------------------------------------------------
   List<ProductDisplayData> _filterProducts(
       List<dynamic> products, String searchQuery, String filterUnit, String filterCategory) {
-    var filtered = products.where((p) => (p['name'] ?? '').toString().toLowerCase().contains(searchQuery.toLowerCase())).map((p) => ProductDisplayData.fromProduct(p, controller.categories));
+    final trimmedQuery = searchQuery.trim().toLowerCase();
+    var filtered = products
+        .where((p) {
+      final name = (p['name'] ?? '').toString().toLowerCase();
+      final code = (p['code'] ?? '').toString().toLowerCase();
+      final matchesName = name.contains(trimmedQuery);
+      final matchesCode = code.contains(trimmedQuery);
+      print('Mahsulot: ${p['name']}, code: ${p['code']}, matchesName: $matchesName, matchesCode: $matchesCode, query: $trimmedQuery');
+      return matchesName || matchesCode;
+    })
+        .map((p) => ProductDisplayData.fromProduct(p, controller.categories))
+        .toList();
 
     if (filterUnit.isNotEmpty && controller.units.any((u) => u['name'] == filterUnit)) {
-      filtered = filtered.where((p) => p.unit == filterUnit);
+      filtered = filtered.where((p) => p.unit == filterUnit).toList();
     }
     if (filterCategory.isNotEmpty &&
         controller.categories.any((c) => c['name'] == filterCategory)) {
-      filtered = filtered.where((p) => p.categoryName == filterCategory);
+      filtered = filtered.where((p) => p.categoryName == filterCategory).toList();
     }
 
-    return filtered.toList();
+    print('Qidirish natijalari: ${filtered.length} ta mahsulot topildi (query: $trimmedQuery), mahsulotlar: ${filtered.map((p) => {'name': p.name, 'code': p.code}).toList()}');
+    return filtered;
   }
 
   @override
@@ -127,13 +140,14 @@ class RecentFiles extends StatelessWidget {
     return [
       DataColumn(label: Text('Nomi', style: columnStyle)),
       DataColumn(label: Text('Kategoriya', style: columnStyle)),
-      DataColumn(label: Text('Miqdor', style: columnStyle)),
       DataColumn(label: Text('Narxi', style: columnStyle)),
       DataColumn(label: Text('Sotish Narxi', style: columnStyle)),
+      DataColumn(label: Text('Miqdor', style: columnStyle)),
       DataColumn(label: Text('Birligi', style: columnStyle)),
       DataColumn(label: Text('Partiya', style: columnStyle)),
       DataColumn(label: Text('Sotuv Holati', style: columnStyle)),
       DataColumn(label: Text('Yaratilgan', style: columnStyle)),
+      DataColumn(label: Text('Kod', style: columnStyle)),
       DataColumn(label: Text('Amallar', style: columnStyle)),
     ];
   }
@@ -157,13 +171,14 @@ class RecentFiles extends StatelessWidget {
       cells: [
         DataCell(Text(product.name, style: textStyle)),
         DataCell(Text(product.categoryName, style: textStyle)),
-        DataCell(Text('${product.quantity} kg', style: textStyle)),
         DataCell(Text('${product.costPrice} UZS', style: textStyle)),
         DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
+        DataCell(Text(product.quantity, style: textStyle)),
         DataCell(Text(product.unit, style: textStyle)),
         DataCell(Text(product.batchNumber, style: textStyle)),
         DataCell(Text(product.saleStatus, style: textStyle)),
         DataCell(Text(product.createdAt, style: textStyle)),
+        DataCell(Text(product.code != '' ? product.code : 'Yo‘q', style: textStyle)),
         DataCell(_buildActionButtons(context, product)),
       ],
     );
@@ -233,17 +248,6 @@ class RecentFiles extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Miqdor: ${product.quantity} kg',
-                        style: TextStyle(
-                          fontSize: Responsive.getFontSize(context, baseSize: 12),
-                          color: isOutOfStock
-                              ? outOfStockColor
-                              : product.isLowStock
-                              ? lowStockColor
-                              : Colors.white70,
-                        ),
-                      ),
-                      Text(
                         'Narxi: ${product.costPrice} UZS',
                         style: TextStyle(
                           fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -255,6 +259,17 @@ class RecentFiles extends StatelessWidget {
                         style: TextStyle(
                           fontSize: Responsive.getFontSize(context, baseSize: 12),
                           color: Colors.white70,
+                        ),
+                      ),
+                      Text(
+                        'Miqdor: ${product.quantity} kg',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: isOutOfStock
+                              ? outOfStockColor
+                              : product.isLowStock
+                              ? lowStockColor
+                              : Colors.white70,
                         ),
                       ),
                       Text(
@@ -280,6 +295,13 @@ class RecentFiles extends StatelessWidget {
                       ),
                       Text(
                         'Yaratilgan: ${product.createdAt}',
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          color: Colors.white70,
+                        ),
+                      ),
+                      Text(
+                        'Kod: ${product.code != '' ? product.code : 'Yo‘q'}',
                         style: TextStyle(
                           fontSize: Responsive.getFontSize(context, baseSize: 12),
                           color: Colors.white70,

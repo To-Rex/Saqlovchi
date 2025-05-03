@@ -450,7 +450,7 @@ class ApiService {
           'stock_quantity': stockQuantity,
         });
       }
-      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta');
+      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta, mahsulotlar: ${productsWithStock.map((p) => {'id': p['id'], 'name': p['name'], 'code': p['code']}).toList()}');
       return productsWithStock;
     } catch (e) {
       final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();

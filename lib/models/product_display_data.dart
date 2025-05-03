@@ -1,71 +1,65 @@
-import 'package:get/get.dart';
-import '../controllers/api_service.dart';
-
 class ProductDisplayData {
-  final String id;
   final String name;
   final String categoryName;
-  final String unit;
-  final String costPrice;
-  final String sellingPrice;
-  final String batchNumber;
   final String quantity;
+  final double costPrice;
+  final double sellingPrice;
+  final String unit;
+  final String batchNumber;
   final String saleStatus;
   final String createdAt;
   final bool isLowStock;
+  final String code;
 
   ProductDisplayData({
-    required this.id,
     required this.name,
     required this.categoryName,
-    required this.unit,
+    required this.quantity,
     required this.costPrice,
     required this.sellingPrice,
+    required this.unit,
     required this.batchNumber,
-    required this.quantity,
     required this.saleStatus,
     required this.createdAt,
     required this.isLowStock,
+    required this.code,
   });
 
-  factory ProductDisplayData.fromProduct(Map<String, dynamic> product, List<dynamic> categories) {
-    final apiService = ApiService();
-    final batches = product['batches'] as List<dynamic>? ?? [];
-    final firstBatch = batches.isNotEmpty ? batches[0] : {};
-    final quantity = batches.fold<double>(
-      0.0,
-          (sum, batch) => sum + ((batch['quantity'] as num?)?.toDouble() ?? 0.0),
+  factory ProductDisplayData.fromProduct(dynamic product, List<dynamic> categories) {
+    final batch = product['batches']?.isNotEmpty == true ? product['batches'][0] : null;
+    final category = categories.firstWhere(
+          (c) => c['id'] == product['category_id'],
+      orElse: () => null,
     );
-    final categoryId = product['category_id']?.toString() ?? '';
-    final category = categories.firstWhereOrNull((c) => c['id'].toString() == categoryId) ?? {'name': 'Noma’lum'};
+    final stockQuantity = product['stock_quantity']?.toDouble() ?? 0.0;
 
     return ProductDisplayData(
-      id: product['id'].toString(),
       name: product['name']?.toString() ?? 'Noma’lum',
-      categoryName: category['name']?.toString() ?? 'Noma’lum',
+      categoryName: category != null ? category['name']?.toString() ?? 'Noma’lum' : 'Noma’lum',
+      quantity: stockQuantity.toStringAsFixed(2),
+      costPrice: batch != null ? (batch['cost_price']?.toDouble() ?? 0.0) : 0.0,
+      sellingPrice: batch != null ? (batch['selling_price']?.toDouble() ?? 0.0) : 0.0,
       unit: product['units']?['name']?.toString() ?? 'Noma’lum',
-      costPrice: firstBatch['cost_price']?.toString() ?? '0',
-      sellingPrice: firstBatch['selling_price']?.toString() ?? '0',
-      batchNumber: firstBatch['batch_number']?.toString() ?? 'Noma’lum',
-      quantity: quantity.toStringAsFixed(2),
-      saleStatus: product['sales']?['sale_type']?.toString() ?? 'Noma’lum',
-      createdAt: apiService.formatDate(product['created_at']?.toString()),
-      isLowStock: quantity > 0 && quantity < 10.0,
+      batchNumber: batch != null ? (batch['batch_number']?.toString() ?? 'Noma’lum') : 'Noma’lum',
+      saleStatus: stockQuantity == 0 ? 'Tugagan' : stockQuantity <= 10 ? 'Kam qoldi' : 'Yetarli',
+      createdAt: product['created_at']?.toString().split('T').first ?? 'Noma’lum',
+      isLowStock: stockQuantity > 0 && stockQuantity <= 10,
+      code: product['code']?.toString() ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'category_name': categoryName,
-      'unit': unit,
+      'quantity': quantity,
       'cost_price': costPrice,
       'selling_price': sellingPrice,
+      'unit': unit,
       'batch_number': batchNumber,
-      'quantity': quantity,
       'sale_status': saleStatus,
       'created_at': createdAt,
+      'code': code,
     };
   }
 }

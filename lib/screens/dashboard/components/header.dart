@@ -74,9 +74,13 @@ class SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
-      onChanged: (value) => controller.search.value = value,
+      onChanged: (value) {
+        controller.search.value = value.trim(); // Bo‘sh joylarni olib tashlash
+        print('SearchField: Yangi qidirish qiymati: ${controller.search.value}');
+      },
       decoration: InputDecoration(
-        hintText: "Search",
+        hintText: "Nomi yoki kodi bo‘yicha qidiring", // Hint matnini yaxshilash
+        hintStyle: TextStyle(color: Colors.white54),
         fillColor: secondaryColor,
         filled: true,
         border: OutlineInputBorder(
@@ -84,7 +88,9 @@ class SearchField extends StatelessWidget {
           borderRadius: const BorderRadius.all(Radius.circular(10)),
         ),
         suffixIcon: InkWell(
-          onTap: () {},
+          onTap: () {
+            print('Qidirish tugmasi bosildi: ${controller.search.value}');
+          },
           child: Container(
             padding: EdgeInsets.all(defaultPadding * 0.75),
             margin: EdgeInsets.symmetric(horizontal: defaultPadding / 2),
@@ -96,6 +102,7 @@ class SearchField extends StatelessWidget {
           ),
         ),
       ),
+      style: TextStyle(color: Colors.white),
     );
   }
 }
