@@ -11,6 +11,7 @@ class ApiService {
     throw Exception('Xato: $error');
   }
 
+  // Foydalanuvchi kirishi
   Future<void> signIn(context, String email, String password) async {
     try {
       final AuthResponse responses = await _supabase.auth.signInWithPassword(email: email, password: password);
@@ -30,10 +31,12 @@ class ApiService {
     }
   }
 
+  // Foydalanuvchi chiqishi
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
 
+  // Foydalanuvchi rolini tekshirish
   Future<String> checkUserRole(String userId) async {
     try {
       final response = await _supabase
@@ -53,6 +56,7 @@ class ApiService {
     }
   }
 
+  // Barcha foydalanuvchilarni olish
   Future<List<dynamic>> getAllUsers({String? searchQuery, String? sortOrder = 'newest'}) async {
     try {
       var query = _supabase.from('users').select('id, full_name, email, role, is_blocked, created_at');
@@ -69,6 +73,7 @@ class ApiService {
     }
   }
 
+  // Barcha mijozlarni olish
   Future<List<dynamic>> getAllCustomers({String? searchQuery, String? sortOrder = 'newest'}) async {
     try {
       var query = _supabase.from('customers').select('id, full_name, address, created_by, created_at, phone_number');
@@ -93,6 +98,7 @@ class ApiService {
     }
   }
 
+  // Mijoz qarzini hisoblash
   Future<double> _calculateCustomerDebt(int customerId) async {
     try {
       final transactions = await _supabase
@@ -118,6 +124,7 @@ class ApiService {
     }
   }
 
+  // Mijozning qarz sotuvlarini olish
   Future<List<dynamic>> getCustomerDebtSales(int customerId) async {
     try {
       final debtSales = await _supabase
@@ -130,6 +137,7 @@ class ApiService {
     }
   }
 
+  // Barcha sotuvlar detallarini olish
   Future<List<dynamic>> getAllSalesDetails({
     String searchQuery = '',
     String status = 'all',
@@ -154,6 +162,7 @@ class ApiService {
     }
   }
 
+  // Tranzaksiya qo‘shish
   Future<Map<String, dynamic>> addTransaction({
     required String transactionType,
     required double amount,
@@ -180,6 +189,7 @@ class ApiService {
     }
   }
 
+  // Sotuvdagi to‘langan summarni yangilash
   Future<void> updateSalePaidAmount(int saleId, double paymentAmount) async {
     try {
       final sale = await _supabase
@@ -200,6 +210,7 @@ class ApiService {
     }
   }
 
+  // Mijoz qo‘shish
   Future<Map<String, dynamic>> addCustomer({
     required String fullName,
     String? phoneNumber,
@@ -220,6 +231,7 @@ class ApiService {
     }
   }
 
+  // Mijozni yangilash
   Future<Map<String, dynamic>> updateCustomer({
     required int id,
     required String fullName,
@@ -239,6 +251,7 @@ class ApiService {
     }
   }
 
+  // Mijozni o‘chirish
   Future<void> deleteCustomer(int id) async {
     try {
       await _supabase.from('customers').delete().eq('id', id);
@@ -247,6 +260,7 @@ class ApiService {
     }
   }
 
+  // Foydalanuvchi blok holatini o‘zgartirish
   Future<void> toggleUserBlock(String userId, bool isBlocked) async {
     try {
       await _supabase.from('users').update({'is_blocked': isBlocked}).eq('id', userId);
@@ -258,6 +272,7 @@ class ApiService {
     }
   }
 
+  // Admin rolini tekshirish
   Future<bool> isAdmin(String userId) async {
     try {
       final response = await _supabase
@@ -273,6 +288,7 @@ class ApiService {
     }
   }
 
+  // Birliklarni olish
   Future<List<dynamic>> getUnits() async {
     try {
       final response = await _supabase.from('units').select('id, name, description, created_at, created_by');
@@ -283,6 +299,70 @@ class ApiService {
     }
   }
 
+
+  // Yangi mahsulot va partiya qo‘shish
+  Future<Map<String, dynamic>> addProductAndBatch({
+    required String name,
+    required int categoryId,
+    required int unitId,
+    required double batchQuantity,
+    required double batchCostPrice,
+    required double batchSellingPrice,
+    required String createdBy,
+  }) async {
+    try {
+      final response = await _supabase.rpc('add_product_and_batch', params: {
+        'p_name': name,
+        'p_category_id': categoryId,
+        'p_unit_id': unitId,
+        'p_quantity': batchQuantity,
+        'p_cost_price': batchCostPrice,
+        'p_selling_price': batchSellingPrice,
+        'p_batch_number': null,
+        'p_received_date': DateTime.now().toIso8601String(),
+        'p_user_id': createdBy,
+      }).select().single();
+
+      print('Mahsulot va partiya qo‘shildi: product_id=${response['product_id']}, batch_id=${response['batch_id']}');
+      await _preloadStockQuantities();
+      return response;
+    } catch (e) {
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Mahsulot/partiya qo‘shishda xato: $errorMessage');
+      throw Exception(errorMessage);
+    }
+  }
+
+// Mavjud mahsulotga partiya qo‘shish
+  Future<Map<String, dynamic>> addBatchToExistingProduct({
+    required int productId,
+    required double batchQuantity,
+    required double batchCostPrice,
+    required double batchSellingPrice,
+    required String createdBy,
+  }) async {
+    try {
+      final response = await _supabase.rpc('add_batch_to_existing_product', params: {
+        'p_product_id': productId,
+        'p_quantity': batchQuantity,
+        'p_cost_price': batchCostPrice,
+        'p_selling_price': batchSellingPrice,
+        'p_batch_number': null,
+        'p_received_date': DateTime.now().toIso8601String(),
+        'p_user_id': createdBy,
+      }).select().single();
+
+      print('Partiya qo‘shildi: batch_id=${response['batch_id']}, product_id=$productId, quantity=$batchQuantity');
+      await _preloadStockQuantities();
+      return response;
+    } catch (e) {
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Partiya qo‘shishda xato: $errorMessage');
+      throw Exception(errorMessage);
+    }
+  }
+
+  // Kategoriyalarni olish
   Future<List<dynamic>> getCategories() async {
     try {
       final response = await _supabase.from('categories').select();
@@ -293,6 +373,7 @@ class ApiService {
     }
   }
 
+  // Mahsulotlarni olish
   Future<List<dynamic>> getProduct() async {
     try {
       final response = await _supabase.from('products').select('*, categories(name), units(name)');
@@ -304,26 +385,32 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getProducts() async {
+  Future<List<dynamic>> getProductsWithStock() async {
     try {
       final response = await _supabase.from('products').select('''
-        id, name, category_id, unit_id, description, created_by, created_at,
-        categories!inner(name),
-        units!inner(name),
-        batches(id, batch_number, quantity, cost_price, selling_price)
-      ''');
-      print('Olingan mahsulotlar: ${response.length} ta');
+      id::integer, name, category_id::integer, unit_id::integer, description, created_by, created_at,
+      categories!inner(name),
+      units!inner(name),
+      batches!batches_product_id_fkey(id, batch_number, quantity, cost_price, selling_price, received_date)
+    ''');
+      final productsWithStock = [];
       for (var product in response) {
-        print('Mahsulot: id=${product['id']}, name=${product['name']}, '
-            'batches=${product['batches']?.toString() ?? 'bo‘sh'}');
+        final stockQuantity = await getStockQuantity(product['id'].toString());
+        productsWithStock.add({
+          ...product,
+          'stock_quantity': stockQuantity,
+        });
       }
-      return response as List<dynamic>;
+      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta');
+      return productsWithStock;
     } catch (e) {
-      print('Mahsulotlarni olishda xato: $e');
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Mahsulotlarni olishda xato: $errorMessage');
       return [];
     }
   }
 
+  // Partiyalarni olish
   Future<List<dynamic>> getBatches() async {
     try {
       final response = await _supabase.from('batches').select('*, products(name)');
@@ -334,22 +421,25 @@ class ApiService {
     }
   }
 
+  // Mahsulot uchun partiyalarni olish
   Future<List<dynamic>> getBatchesForProduct(int productId) async {
     try {
       final response = await _supabase
           .from('batches')
-          .select('id, batch_number, quantity, cost_price, selling_price')
+          .select('id, batch_number, quantity, cost_price, selling_price, received_date')
           .eq('product_id', productId)
           .gt('quantity', 0)
-          .order('received_date', ascending: false);
+          .order('received_date', ascending: true); // FIFO uchun eng eski birinchi
       print('Mahsulot uchun partiyalar (product_id=$productId): ${response.length} ta');
       return response as List<dynamic>;
     } catch (e) {
       print('Mahsulot uchun partiyalarni olishda xato: $e');
+      Get.snackbar('Xatolik', 'Partiyalarni olishda xato: $e');
       return [];
     }
   }
 
+  // Mijozlarni olish
   Future<List<dynamic>> getCustomers() async {
     try {
       final response = await _supabase.from('customers').select();
@@ -360,6 +450,7 @@ class ApiService {
     }
   }
 
+  // Sotuvlarni olish
   Future<List<dynamic>> getSales() async {
     try {
       final response = await _supabase
@@ -378,30 +469,29 @@ class ApiService {
     }
   }
 
+  // Oxirgi sotuvlarni olish
   Future<List<dynamic>> getRecentSales({required int limit}) async {
     try {
-      final response = await _supabase
-          .from('sales')
-          .select('''
-      id, total_amount, discount_amount, paid_amount, sale_date, comments, sale_type,
+      final response = await _supabase.from('sales').select('''
+      id, sale_type, total_amount, discount_amount, paid_amount, sale_date, customer_id,
       customers(full_name),
-      sale_items(id, quantity, unit_price, batches(id, batch_number, product_id, products(name)))
-    ''')
-          .order('sale_date', ascending: false)
-          .limit(limit);
+      sale_items(*, batches(batch_number, products!batches_product_id_fkey(name)))
+    ''').order('sale_date', ascending: false).limit(limit);
       print('Oxirgi sotuvlar: ${response.length} ta');
-      return response as List<dynamic>;
+      return response;
     } catch (e) {
-      print('Oxirgi sotuvlarni olishda xato: $e');
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Oxirgi sotuvlarni olishda xato: $errorMessage');
       return [];
     }
   }
 
+  // Sotuv elementlarini olish
   Future<List<dynamic>> getSaleItems({int? saleId}) async {
     try {
       var query = _supabase
           .from('sale_items')
-          .select('*, batches(batch_number, product_id, products(name))');
+          .select('*, batches(batch_number, product_id, products!batches_product_id_fkey(name))');
       if (saleId != null) {
         query = query.eq('sale_id', saleId);
       }
@@ -410,10 +500,85 @@ class ApiService {
       return response as List<dynamic>;
     } catch (e) {
       print('Sotuv elementlarini olishda xato: $e');
+      //Get.snackbar('Xatolik', 'Sotuv elementlarini olishda xato: $e');
       return [];
     }
   }
 
+  // Ombor statistikasini olish
+  Future<Map<String, dynamic>> getWarehouseStats() async {
+    try {
+      final products = await _supabase.from('products').select('id').count();
+      final outOfStock = await _supabase
+          .from('stock')
+          .select('product_id')
+          .eq('quantity', 0)
+          .count();
+      final debtSales = await _supabase
+          .from('sales')
+          .select('id')
+          .eq('sale_type', 'debt')
+          .count();
+      final discountSales = await _supabase
+          .from('sales')
+          .select('id')
+          .eq('sale_type', 'discount')
+          .count();
+      final debtWithDiscountSales = await _supabase
+          .from('sales')
+          .select('id')
+          .eq('sale_type', 'debt_with_discount')
+          .count();
+
+      return {
+        'total_products': products.count,
+        'out_of_stock': outOfStock.count,
+        'debt_sales': debtSales.count,
+        'discount_sales': discountSales.count,
+        'debt_with_discount_sales': debtWithDiscountSales.count,
+      };
+    } catch (e) {
+      print('Statistikani olishda xato: $e');
+      Get.snackbar('Xatolik', 'Statistikani olishda xato: $e');
+      return {
+        'total_products': 0,
+        'out_of_stock': 0,
+        'debt_sales': 0,
+        'discount_sales': 0,
+        'debt_with_discount_sales': 0,
+      };
+    }
+  }
+
+  Future<Map<String, Map<String, dynamic>>> getCategoryStats() async {
+    try {
+      final response = await _supabase.from('products').select('''
+      id::text, category_id, batches!batches_product_id_fkey(quantity)
+    ''');
+      final Map<String, Map<String, dynamic>> categoryStats = {};
+      for (var product in response) {
+        final categoryId = product['category_id'].toString();
+        final quantity = (product['batches'] as List<dynamic>?)?.fold<double>(
+          0.0,
+              (double sum, dynamic batch) => sum + ((batch['quantity'] as num?)?.toDouble() ?? 0.0),
+        ) ??
+            0.0;
+        if (!categoryStats.containsKey(categoryId)) {
+          categoryStats[categoryId] = {'product_count': 0, 'total_quantity': 0.0};
+        }
+        categoryStats[categoryId]!['product_count'] += 1;
+        categoryStats[categoryId]!['total_quantity'] += quantity;
+      }
+      print('Kategoriya statistikasi: $categoryStats');
+      return categoryStats;
+    } catch (e) {
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Kategoriya statistikasini olishda xato: $errorMessage');
+      return {};
+    }
+  }
+
+  // Tranzaksiyalarni olish
   Future<List<dynamic>> getTransactions() async {
     try {
       final response = await _supabase.from('transactions').select('*, sales(id), customers(full_name), users(full_name)');
@@ -424,6 +589,7 @@ class ApiService {
     }
   }
 
+  // Foydalanuvchilarni olish
   Future<List<dynamic>> getUsers() async {
     try {
       final response = await _supabase.from('users').select();
@@ -434,6 +600,21 @@ class ApiService {
     }
   }
 
+  // Qarz hisoboti
+  Future<List<dynamic>> getDebtReport() async {
+    try {
+      final response = await _supabase
+          .from('sales')
+          .select('*, customers(full_name)')
+          .eq('sale_type', 'debt');
+      return response as List<dynamic>;
+    } catch (e) {
+      _handleError(e);
+      return [];
+    }
+  }
+
+  // Chegirmali qarz hisoboti
   Future<List<dynamic>> getDebtWithDiscountReport() async {
     try {
       final response = await _supabase
@@ -447,6 +628,7 @@ class ApiService {
     }
   }
 
+  // Premium sotuvlarni olish
   Future<List<dynamic>> getPremiumSales() async {
     try {
       final response = await _supabase.rpc('get_premium_sales').select();
@@ -459,6 +641,22 @@ class ApiService {
     }
   }
 
+  // Eng ko‘p sotilgan mahsulotlar
+  Future<List<dynamic>> getTopProducts() async {
+    try {
+      final response = await _supabase
+          .from('sale_items')
+          .select('batches(product_id, products(name)), quantity')
+          .order('quantity', ascending: false)
+          .limit(10);
+      return response as List<dynamic>;
+    } catch (e) {
+      _handleError(e);
+      return [];
+    }
+  }
+
+  // Barcha tranzaksiyalarni olish
   Future<List<dynamic>> getAllTransactions({String? searchQuery, String? transactionType, DateTime? startDate, DateTime? endDate}) async {
     try {
       var query = _supabase.from('transactions').select('''
@@ -491,6 +689,7 @@ class ApiService {
     }
   }
 
+  // Tranzaksiya statistikasi
   Future<Map<String, dynamic>> getTransactionStats({DateTime? startDate, DateTime? endDate}) async {
     try {
       var query = _supabase.from('transactions').select('transaction_type, amount');
@@ -525,6 +724,7 @@ class ApiService {
     }
   }
 
+  // Tranzaksiya turlari statistikasi
   Future<Map<String, Map<String, dynamic>>> getTransactionTypeStats({DateTime? startDate, DateTime? endDate}) async {
     try {
       var query = _supabase.from('transactions').select('transaction_type, amount');
@@ -566,6 +766,7 @@ class ApiService {
     }
   }
 
+  // Birlik qo‘shish
   Future<Map<String, dynamic>> addUnit({required String name, String? description, required String createdBy}) async {
     try {
       final response = await _supabase.from('units').insert({
@@ -580,6 +781,7 @@ class ApiService {
     }
   }
 
+  // Kategoriya qo‘shish
   Future<Map<String, dynamic>> addCategory({required String name, String? description, required String createdBy}) async {
     try {
       final response = await _supabase.from('categories').insert({
@@ -594,61 +796,114 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addProduct({required String name, required int categoryId, required int unitId, String? description, required String createdBy}) async {
+  // Mahsulot va partiyani bir vaqtda qo‘shish
+  Future<Map<String, dynamic>> addProductWithBatch({
+    required String name,
+    String? categoryId,
+    double? costPrice,
+    String? unit,
+    required double batchQuantity,
+    required double batchCostPrice,
+    required double batchSellingPrice,
+    String? supplier,
+    String? userId,
+  }) async {
+    try {
+      final response = await _supabase.rpc('add_product_with_batch', params: {
+        'p_name': name,
+        'p_category_id': categoryId,
+        'p_cost_price': costPrice ?? batchCostPrice,
+        'p_unit': unit,
+        'p_batch_number': null, // SQL avtomatik generatsiya qiladi
+        'p_batch_quantity': batchQuantity,
+        'p_batch_cost_price': batchCostPrice,
+        'p_batch_selling_price': batchSellingPrice,
+        'p_received_date': DateTime.now().toIso8601String(),
+        'p_expiry_date': null,
+        'p_supplier': supplier,
+        'p_user_id': userId ?? _supabase.auth.currentUser?.id,
+      }).select().single();
+
+      print('Mahsulot va partiya qo‘shildi: product_id=${response['product_id']}, batch_id=${response['batch_id']}');
+      await _preloadStockQuantities();
+      return response;
+    } catch (e) {
+      print('Mahsulot/partiya qo‘shishda xato: $e');
+      rethrow;
+    }
+  }
+
+
+  // Mahsulot qo‘shish (avtomatik partiya bilan)
+  Future<Map<String, dynamic>> addProduct({
+    required String name,
+    required int categoryId,
+    required int unitId,
+    String? description,
+    required String createdBy,
+    required String batchNumber,
+    required double batchQuantity,
+    required double batchCostPrice,
+    required double batchSellingPrice,
+    String? supplier,
+  }) async {
     print('Mahsulot qo‘shish boshlandi: name=$name, category_id=$categoryId, '
-        'unit_id=$unitId, description=$description, created_by=$createdBy');
+        'unit_id=$unitId, batch_number=$batchNumber, batch_quantity=$batchQuantity');
     try {
       if (name.isEmpty) {
         print('Xato: Mahsulot nomi bo‘sh');
-        return {};
+        throw Exception('Mahsulot nomi bo‘sh bo‘lishi mumkin emas');
       }
       if (categoryId <= 0) {
         print('Xato: Noto‘g‘ri category_id: $categoryId');
-        return {};
+        throw Exception('Noto‘g‘ri category_id');
       }
       if (unitId <= 0) {
         print('Xato: Noto‘g‘ri unit_id: $unitId');
-        return {};
+        throw Exception('Noto‘g‘ri unit_id');
       }
       if (!RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false)
           .hasMatch(createdBy)) {
         print('Xato: Noto‘g‘ri UUID formati created_by: $createdBy');
-        return {};
+        throw Exception('Noto‘g‘ri UUID formati created_by');
       }
+
       final categoryCheck = await _supabase.from('categories').select('id').eq('id', categoryId).maybeSingle();
       if (categoryCheck == null) {
         print('Xato: Kategoriya topilmadi: id=$categoryId');
-        return {};
+        throw Exception('Kategoriya topilmadi');
       }
       final unitCheck = await _supabase.from('units').select('id').eq('id', unitId).maybeSingle();
       if (unitCheck == null) {
         print('Xato: Birlik topilmadi: id=$unitId');
-        return {};
+        throw Exception('Birlik topilmadi');
       }
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId != createdBy) {
-        print('Xato: created_by ($createdBy) joriy foydalanuvchi ID’siga ($currentUserId) mos kelmaydi');
-        return {};
-      }
-      final response = await _supabase.from('products').insert({
-        'name': name,
-        'category_id': categoryId,
-        'unit_id': unitId,
-        'description': description,
-        'created_by': createdBy,
-      }).select('id, name, category_id, unit_id, description, created_by, created_at').single();
+
+      final response = await addProductWithBatch(
+        name: name,
+        categoryId: categoryId.toString(),
+        costPrice: batchCostPrice,
+        unit: null,
+        batchQuantity: batchQuantity,
+        batchCostPrice: batchCostPrice,
+        batchSellingPrice: batchSellingPrice,
+        supplier: supplier,
+        userId: createdBy,
+      );
+
       print('Mahsulot muvaffaqiyatli qo‘shildi: $response');
       return response;
     } catch (e) {
       print('Mahsulot qo‘shishda xato yuz berdi: $e');
-      return {};
+      rethrow;
     }
   }
 
+  // Partiya qo‘shish
   Future<Map<String, dynamic>> addBatch({
     required int productId,
     required String batchNumber,
-    required int quantity,
+    required double quantity,
     required double costPrice,
     required double sellingPrice,
     String? comments,
@@ -661,16 +916,28 @@ class ApiService {
         'quantity': quantity,
         'cost_price': costPrice,
         'selling_price': sellingPrice,
+        'received_date': DateTime.now().toIso8601String(),
         'comments': comments,
         'created_by': createdBy,
       }).select().single();
+
+      await _supabase.from('stock').insert({
+        'product_id': productId,
+        'batch_id': response['id'],
+        'quantity': quantity,
+      });
+
+      print('Partiya qo‘shildi: batch_id=${response['id']}, product_id=$productId, quantity=$quantity');
+      await _preloadStockQuantities();
       return response;
     } catch (e) {
-      _handleError(e);
-      return {};
+      print('Partiya qo‘shishda xato: $e');
+      Get.snackbar('Xatolik', 'Partiya qo‘shishda xato: $e');
+      rethrow;
     }
   }
 
+  // Sotuv qo‘shish (FIFO bilan)
   Future<Map<String, dynamic>> addSale({
     required String saleType,
     int? customerId,
@@ -679,9 +946,10 @@ class ApiService {
     double? paidAmount,
     String? comments,
     required String createdBy,
+    required List<Map<String, dynamic>> items, // Mahsulotlar va miqdorlar
   }) async {
     try {
-      final response = await _supabase.from('sales').insert({
+      final saleResponse = await _supabase.from('sales').insert({
         'sale_type': saleType,
         'customer_id': customerId,
         'total_amount': totalAmount,
@@ -690,18 +958,65 @@ class ApiService {
         'comments': comments,
         'created_by': createdBy,
       }).select().single();
-      return response;
+
+      final saleId = saleResponse['id'];
+      print('Yangi sotuv qo‘shildi: sale_id=$saleId');
+
+      for (var item in items) {
+        final productId = item['product_id'] as int;
+        final quantity = item['quantity'] as double;
+        final unitPrice = item['unit_price'] as double;
+
+        final batches = await _supabase
+            .from('batches')
+            .select('id, selling_price, quantity')
+            .eq('product_id', productId)
+            .gt('quantity', 0)
+            .order('received_date', ascending: true);
+
+        double remainingQuantity = quantity;
+        for (var batch in batches) {
+          if (remainingQuantity <= 0) break;
+
+          final batchId = batch['id'];
+          final batchQuantity = (batch['quantity'] as num).toDouble();
+          final sellQuantity = remainingQuantity > batchQuantity ? batchQuantity : remainingQuantity;
+
+          await _supabase.from('sale_items').insert({
+            'sale_id': saleId,
+            'batch_id': batchId,
+            'quantity': sellQuantity,
+            'unit_price': unitPrice,
+            'total_price': sellQuantity * unitPrice,
+            'product_id': productId,
+            'seller_id': createdBy,
+          });
+
+          remainingQuantity -= sellQuantity;
+        }
+
+        if (remainingQuantity > 0) {
+          throw Exception('Omborda yetarli mahsulot yo‘q: product_id=$productId');
+        }
+      }
+
+      print('Sotuv elementlari qo‘shildi: sale_id=$saleId');
+      return saleResponse;
     } catch (e) {
-      _handleError(e);
-      return {};
+      print('Sotuv qo‘shishda xato: $e');
+      Get.snackbar('Xatolik', 'Sotuv qo‘shishda xato: $e');
+      rethrow;
     }
   }
 
+  // Sotuv elementi qo‘shish
   Future<Map<String, dynamic>> addSaleItem({
     required int saleId,
     required int batchId,
     required int quantity,
     required double unitPrice,
+    required int productId,
+    required String sellerId,
   }) async {
     try {
       final response = await _supabase.from('sale_items').insert({
@@ -709,6 +1024,9 @@ class ApiService {
         'batch_id': batchId,
         'quantity': quantity,
         'unit_price': unitPrice,
+        'total_price': quantity * unitPrice,
+        'product_id': productId,
+        'seller_id': sellerId,
       }).select().single();
       return response;
     } catch (e) {
@@ -717,6 +1035,7 @@ class ApiService {
     }
   }
 
+  // Birlikni yangilash
   Future<Map<String, dynamic>> updateUnit({
     required int id,
     required String name,
@@ -734,6 +1053,7 @@ class ApiService {
     }
   }
 
+  // Kategoriyani yangilash
   Future<Map<String, dynamic>> updateCategory({
     required int id,
     required String name,
@@ -751,6 +1071,7 @@ class ApiService {
     }
   }
 
+  // Mahsulotni yangilash
   Future<Map<String, dynamic>> updateProduct({
     required int id,
     required String name,
@@ -772,9 +1093,10 @@ class ApiService {
     }
   }
 
+  // Partiyani yangilash
   Future<Map<String, dynamic>> updateBatch({
     required int id,
-    required int quantity,
+    required double quantity,
     required double costPrice,
     required double sellingPrice,
     String? comments,
@@ -786,13 +1108,23 @@ class ApiService {
         'selling_price': sellingPrice,
         'comments': comments,
       }).eq('id', id).select().single();
+
+      await _supabase
+          .from('stock')
+          .update({'quantity': quantity})
+          .eq('batch_id', id);
+
+      print('Partiya yangilandi: batch_id=$id, quantity=$quantity');
+      await _preloadStockQuantities();
       return response;
     } catch (e) {
+      print('Partiya yangilashda xato: $e');
       _handleError(e);
       return {};
     }
   }
 
+  // Birlikni o‘chirish
   Future<void> deleteUnit(int id) async {
     try {
       await _supabase.from('units').delete().eq('id', id);
@@ -801,6 +1133,7 @@ class ApiService {
     }
   }
 
+  // Kategoriyani o‘chirish
   Future<void> deleteCategory(int id) async {
     try {
       await _supabase.from('categories').delete().eq('id', id);
@@ -809,6 +1142,7 @@ class ApiService {
     }
   }
 
+  // Mahsulotni o‘chirish
   Future<void> deleteProduct(int id) async {
     try {
       await _supabase.from('products').delete().eq('id', id);
@@ -817,14 +1151,17 @@ class ApiService {
     }
   }
 
+  // Partiyani o‘chirish
   Future<void> deleteBatch(int id) async {
     try {
       await _supabase.from('batches').delete().eq('id', id);
+      await _supabase.from('stock').delete().eq('batch_id', id);
     } catch (e) {
       _handleError(e);
     }
   }
 
+  // Sotuvni o‘chirish
   Future<void> deleteSale(int id) async {
     try {
       await _supabase.from('sales').delete().eq('id', id);
@@ -833,6 +1170,7 @@ class ApiService {
     }
   }
 
+  // Sotuv elementini o‘chirish
   Future<void> deleteSaleItem(int id) async {
     try {
       await _supabase.from('sale_items').delete().eq('id', id);
@@ -841,6 +1179,7 @@ class ApiService {
     }
   }
 
+  // Tranzaksiyani o‘chirish
   Future<void> deleteTransaction(int id) async {
     try {
       await _supabase.from('transactions').delete().eq('id', id);
@@ -849,6 +1188,7 @@ class ApiService {
     }
   }
 
+  // Partiya raqamini tekshirish
   Future<bool> checkBatchNumber(int productId, String batchNumber) async {
     try {
       final response = await _supabase
@@ -863,33 +1203,26 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> getDebtReport() async {
+  // Qoldiqni olish
+  Future<double> getStockQuantity(String productId) async {
     try {
       final response = await _supabase
-          .from('sales')
-          .select('*, customers(full_name)')
-          .eq('sale_type', 'debt');
-      return response as List<dynamic>;
+          .from('stock')
+          .select('quantity')
+          .eq('product_id', productId);
+      print('Qoldiq so‘rovi: product_id=$productId, response=$response');
+      if (response.isEmpty) return 0.0;
+      return response.fold<double>(
+        0.0,
+            (sum, item) => sum + ((item['quantity'] as num?)?.toDouble() ?? 0.0),
+      );
     } catch (e) {
-      _handleError(e);
-      return [];
+      print('Qoldiq olishda xato: product_id=$productId, error=$e');
+      return 0.0;
     }
   }
 
-  Future<List<dynamic>> getTopProducts() async {
-    try {
-      final response = await _supabase
-          .from('sale_items')
-          .select('batches(product_id, products(name)), quantity')
-          .order('quantity', ascending: false)
-          .limit(10);
-      return response as List<dynamic>;
-    } catch (e) {
-      _handleError(e);
-      return [];
-    }
-  }
-
+  // Barcha ma'lumotlarni tozalash (users va units’dan tashqari)
   Future<void> clearAllDataExceptUsersAndUnits() async {
     try {
       final response = await _supabase.rpc('clear_all_data_except_users_and_units');
@@ -900,6 +1233,16 @@ class ApiService {
     } catch (e) {
       print('Ma\'lumotlarni tozalashda xato: $e');
       _handleError(e);
+    }
+  }
+
+  // Qoldiqlarni qayta yuklash (GetController uchun)
+  Future<void> _preloadStockQuantities() async {
+    try {
+      final products = await getProductsWithStock();
+      controller.updateStockQuantities(products);
+    } catch (e) {
+      print('Qoldiqlarni qayta yuklashda xato: $e');
     }
   }
 }

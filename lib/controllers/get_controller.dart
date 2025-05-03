@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/main/main_screen.dart';
 import 'api_service.dart';
@@ -43,6 +42,7 @@ class GetController extends GetxController {
   final newProductCostPrice = 0.0.obs;
   final newProductSellingPrice = 0.0.obs;
   final newProductBatchNumber = ''.obs;
+  final newProductSupplier = ''.obs;
 
   // Kirish uchun o‘zgaruvchilar
   final email = ''.obs;
@@ -78,11 +78,11 @@ class GetController extends GetxController {
     try {
       await _apiService.checkUserRole(_supabase.auth.currentUser!.id);
       categories.value = await _apiService.getCategories();
-      products.value = await _apiService.getProducts();
+      products.value = await _apiService.getProductsWithStock(); // Qoldiqlarni olish
       units.value = await _apiService.getUnits();
       customers.value = await _apiService.getCustomers();
-      soldItems.value = await _apiService.getSaleItems(); // saleId kiritilmaydi
-      stats.value = await _apiService.getSaleItems(); // saleId kiritilmaydi
+      soldItems.value = await _apiService.getSaleItems();
+      stats.value = await _apiService.getSaleItems();
       if (units.isEmpty) {
         print('Warning: No units fetched');
       } else {
@@ -91,6 +91,9 @@ class GetController extends GetxController {
       error.value = '';
     } catch (e) {
       error.value = 'Ma’lumotlarni olishda xato: $e';
+      print('fetchInitialData xatosi: $e');
+      Get.snackbar('Xatolik', 'Ma’lumotlarni olishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -101,11 +104,10 @@ class GetController extends GetxController {
     isLoading.value = true;
     try {
       var query = _supabase.from('products').select('''
-        *,
-        categories(name),
-        units(name),
-        batches(id, quantity, batch_number, cost_price, selling_price),
-        sales(id, sale_type, discount_amount, paid_amount)
+        id, name, category_id, unit_id, description, created_by, created_at,
+        categories!inner(name),
+        units!inner(name),
+        batches(id, quantity, batch_number, cost_price, selling_price, received_date)
       ''');
 
       // Kategoriya filtri
@@ -124,38 +126,38 @@ class GetController extends GetxController {
         }
       }
 
-      // Sotuv holati filtri
+      // Sotuv holati filtri (sales jadvalidan)
       if (filterSaleStatus.value.isNotEmpty) {
-        query = query.eq('sales.sale_type', filterSaleStatus.value);
+        query = query.filter('sales.sale_type', 'eq', filterSaleStatus.value);
       }
 
       // Tugagan mahsulotlar filtri
       if (filterOutOfStock.value) {
-        query = query.eq('batches.quantity', 0);
+        query = query.filter('batches.quantity', 'eq', 0);
       }
 
       // Miqdor filtri
       if (filterMinQuantity.value != null) {
-        query = query.gte('batches.quantity', filterMinQuantity.value!);
+        query = query.filter('batches.quantity', 'gte', filterMinQuantity.value!);
       }
       if (filterMaxQuantity.value != null) {
-        query = query.lte('batches.quantity', filterMaxQuantity.value!);
+        query = query.filter('batches.quantity', 'lte', filterMaxQuantity.value!);
       }
 
       // Tannarx filtri
       if (filterMinCostPrice.value != null) {
-        query = query.gte('batches.cost_price', filterMinCostPrice.value!);
+        query = query.filter('batches.cost_price', 'gte', filterMinCostPrice.value!);
       }
       if (filterMaxCostPrice.value != null) {
-        query = query.lte('batches.cost_price', filterMaxCostPrice.value!);
+        query = query.filter('batches.cost_price', 'lte', filterMaxCostPrice.value!);
       }
 
       // Sotish narxi filtri
       if (filterMinSellingPrice.value != null) {
-        query = query.gte('batches.selling_price', filterMinSellingPrice.value!);
+        query = query.filter('batches.selling_price', 'gte', filterMinSellingPrice.value!);
       }
       if (filterMaxSellingPrice.value != null) {
-        query = query.lte('batches.selling_price', filterMaxSellingPrice.value!);
+        query = query.filter('batches.selling_price', 'lte', filterMaxSellingPrice.value!);
       }
 
       // Sana filtri
@@ -169,19 +171,40 @@ class GetController extends GetxController {
       // Tartiblash va so‘rovni bajarish
       final response = await query.order(sortColumn.value, ascending: sortAscending.value);
 
-      products.value = response;
+      products.value = response.map((product) {
+        final stockQuantity = _calculateStockQuantity(product['batches']);
+        return {
+          ...product,
+          'stock_quantity': stockQuantity,
+        };
+      }).toList();
       error.value = '';
     } catch (e) {
       error.value = 'Ma’lumotlarni olishda xato: $e';
+      print('fetchFilteredAndSortedData xatosi: $e');
+      Get.snackbar('Xatolik', 'Ma’lumotlarni olishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Qoldiqni hisoblash
+  double _calculateStockQuantity(List<dynamic>? batches) {
+    if (batches == null || batches.isEmpty) return 0.0;
+    return batches.fold<double>(
+      0.0,
+          (sum, batch) => sum + ((batch['quantity'] as num?)?.toDouble() ?? 0.0),
+    );
   }
 
   // Yangi kategoriya qo‘shish
   Future<void> addCategory() async {
     isLoading.value = true;
     try {
+      if (newCategoryName.value.isEmpty) {
+        throw Exception('Kategoriya nomi kiritilishi shart');
+      }
       await _apiService.addCategory(
         name: newCategoryName.value,
         description: null,
@@ -192,6 +215,8 @@ class GetController extends GetxController {
           backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Kategoriya qo‘shishda xato: $e';
+      print('addCategory xatosi: $e');
+      Get.snackbar('Xatolik', 'Kategoriya qo‘shishda xato: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -201,14 +226,22 @@ class GetController extends GetxController {
   Future<void> editCategory(String id, String name) async {
     isLoading.value = true;
     try {
+      if (name.isEmpty) {
+        throw Exception('Kategoriya nomi kiritilishi shart');
+      }
       await _apiService.updateCategory(
         id: int.parse(id),
         name: name,
         description: null,
       );
       await fetchInitialData();
+      Get.snackbar('Muvaffaqiyat', 'Kategoriya tahrirlandi',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Kategoriya tahrirlashda xato: $e';
+      print('editCategory xatosi: $e');
+      Get.snackbar('Xatolik', 'Kategoriya tahrirlashda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -220,83 +253,133 @@ class GetController extends GetxController {
     try {
       await _apiService.deleteCategory(int.parse(id));
       await fetchInitialData();
+      Get.snackbar('Muvaffaqiyat', 'Kategoriya o‘chirildi',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Kategoriya o‘chirishda xato: $e';
+      print('deleteCategory xatosi: $e');
+      Get.snackbar('Xatolik', 'Kategoriya o‘chirishda xato: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // Yangi mahsulot qo‘shish
-  Future<void> addProduct() async {
+
+  Future<void> addProduct({int? existingProductId}) async {
     isLoading.value = true;
     try {
+      // Foydalanuvchi ID sini olish
+      final userId = _supabase.auth.currentUser?.id;
+      print('Foydalanuvchi ID: $userId'); // Log qilish uchun
+      if (userId == null) {
+        throw Exception('Foydalanuvchi autentifikatsiya qilinmagan');
+      }
+
+      // UUID formatini tekshirish
+      if (!RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false)
+          .hasMatch(userId)) {
+        throw Exception('Noto‘g‘ri foydalanuvchi ID formati: $userId');
+      }
+
+      // Validatsiya
       if (newProductName.value.isEmpty) {
-        print('Xato: Mahsulot nomi kiritilmadi');
-        return;
+        throw Exception('Mahsulot nomi kiritilishi shart');
       }
       if (newProductCategoryId.value == null) {
-        print('Xato: Kategoriya tanlanmadi');
-        return;
+        throw Exception('Kategoriya tanlanishi shart');
       }
       if (newProductUnitId.value == null) {
-        print('Xato: Birlik tanlanmadi');
-        return;
+        throw Exception('Birlik tanlanishi shart');
       }
       if (newProductQuantity.value <= 0) {
-        print('Xato: Miqdor ijobiy bo‘lishi kerak');
-        return;
+        throw Exception('Miqdor ijobiy bo‘lishi kerak');
       }
       if (newProductCostPrice.value <= 0) {
-        print('Xato: Tannarx ijobiy bo‘lishi kerak');
-        return;
+        throw Exception('Tannarx ijobiy bo‘lishi kerak');
       }
       if (newProductSellingPrice.value <= 0) {
-        print('Xato: Sotish narxi ijobiy bo‘lishi kerak');
-        return;
+        throw Exception('Sotish narxi ijobiy bo‘lishi kerak');
       }
 
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        print('Xato: Foydalanuvchi autentifikatsiya qilinmagan');
-        return;
-      }
+      Map<String, dynamic> response;
 
-      final productResponse = await _apiService.addProduct(
-        name: newProductName.value,
-        categoryId: newProductCategoryId.value!,
-        unitId: newProductUnitId.value!,
-        description: newProductDescription.value.isEmpty ? null : newProductDescription.value,
-        createdBy: userId,
-      );
-
-      if (productResponse.isNotEmpty) {
-        // Partiya qo‘shish
-        await _apiService.addBatch(
-          productId: productResponse['id'],
-          batchNumber: newProductBatchNumber.value.isEmpty
-              ? 'B${DateTime.now().millisecondsSinceEpoch}'
-              : newProductBatchNumber.value,
-          quantity: newProductQuantity.value.toInt(),
-          costPrice: newProductCostPrice.value,
-          sellingPrice: newProductSellingPrice.value,
-          createdBy: userId,
+      if (existingProductId != null) {
+        // Mavjud mahsulotga partiya qo‘shish
+        response = await _apiService.addBatchToExistingProduct(
+          productId: existingProductId,
+          batchQuantity: newProductQuantity.value,
+          batchCostPrice: newProductCostPrice.value,
+          batchSellingPrice: newProductSellingPrice.value,
+          createdBy: userId, // UUID sifatida
         );
-
-        await fetchInitialData();
-        print('Mahsulot va partiya muvaffaqiyatli qo‘shildi: ${productResponse['name']}');
+        // Snackbar ni mustahkam chaqirish
+        Get.snackbar(
+          'Muvaffaqiyat',
+          'Partiya qo‘shildi',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
       } else {
-        print('Xato: Mahsulot qo‘shilmadi, javob bo‘sh');
+        // Yangi mahsulot va partiya qo‘shish
+        response = await _apiService.addProductAndBatch(
+          name: newProductName.value,
+          categoryId: newProductCategoryId.value!,
+          unitId: newProductUnitId.value!,
+          batchQuantity: newProductQuantity.value,
+          batchCostPrice: newProductCostPrice.value,
+          batchSellingPrice: newProductSellingPrice.value,
+          createdBy: userId, // UUID sifatida
+        );
+        // Snackbar ni mustahkam chaqirish
+        Get.snackbar(
+          'Muvaffaqiyat',
+          'Mahsulot va partiya qo‘shildi',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
       }
+
+      // Javobni tekshirish
+      if (response.isEmpty || response['batch_id'] == null) {
+        throw Exception('Mahsulot yoki partiya qo‘shishda xato: Javob bo‘sh yoki noto‘g‘ri');
+      }
+
+      // Ma'lumotlarni qayta yuklash
+      await fetchInitialData();
     } catch (e) {
-      print('addProduct xatosi: $e');
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      error.value = 'Mahsulot qo‘shishda xato: $errorMessage';
+      print('addProduct xatosi: $errorMessage');
+      print('Xato yuz berdi: $e, toString: ${e.toString()}');
+      // Snackbar ni mustahkam chaqirish
+      Get.snackbar(
+        'Xatolik',
+        errorMessage.isEmpty ? 'Noma’lum xato yuz berdi' : errorMessage,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 5),
+      );
     } finally {
       isLoading.value = false;
     }
   }
 
   // Mahsulotni tahrirlash
-  Future<void> editProduct(String id, String name, String categoryId, double costPrice, String unitId, {double? sellingPrice, double? quantity}) async {
+  Future<void> editProduct(
+      String id,
+      String name,
+      String categoryId,
+      double costPrice,
+      String unitId, {
+        double? sellingPrice,
+        double? quantity,
+        String? batchNumber,
+      }) async {
     isLoading.value = true;
     try {
       if (name.isEmpty) {
@@ -305,9 +388,16 @@ class GetController extends GetxController {
       if (costPrice <= 0 || (sellingPrice != null && sellingPrice <= 0) || (quantity != null && quantity <= 0)) {
         throw Exception('Miqdor va narxlar ijobiy bo‘lishi kerak');
       }
-      await _apiService.updateProduct(id: int.parse(id), name: name, categoryId: int.parse(categoryId), unitId: int.parse(unitId), description: null);
-      // Partiyani yangilash
-      if (quantity != null || sellingPrice != null || costPrice != 0) {
+
+      await _apiService.updateProduct(
+        id: int.parse(id),
+        name: name,
+        categoryId: int.parse(categoryId),
+        unitId: int.parse(unitId),
+        description: null,
+      );
+
+      if (quantity != null || sellingPrice != null || costPrice != 0 || batchNumber != null) {
         final product = products.firstWhere((p) => p['id'].toString() == id);
         final batch = product['batches']?.isNotEmpty == true ? product['batches'][0] : null;
         if (batch != null) {
@@ -318,12 +408,27 @@ class GetController extends GetxController {
             sellingPrice: sellingPrice ?? batch['selling_price'],
             comments: 'Tahrirlangan',
           );
+        } else if (quantity != null && batchNumber != null) {
+          await _apiService.addBatch(
+            productId: int.parse(id),
+            batchNumber: batchNumber,
+            quantity: quantity,
+            costPrice: costPrice,
+            sellingPrice: sellingPrice ?? costPrice,
+            comments: 'Tahrirlangan partiya',
+            createdBy: _supabase.auth.currentUser?.id ?? '',
+          );
         }
       }
+
       await fetchInitialData();
-      Get.snackbar('Muvaffaqiyat', 'Mahsulot tahrirlandi', backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Muvaffaqiyat', 'Mahsulot tahrirlandi',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Mahsulot tahrirlashda xato: $e';
+      print('editProduct xatosi: $e');
+      Get.snackbar('Xatolik', 'Mahsulot tahrirlashda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -335,8 +440,13 @@ class GetController extends GetxController {
     try {
       await _apiService.deleteProduct(int.parse(id));
       await fetchInitialData();
+      Get.snackbar('Muvaffaqiyat', 'Mahsulot o‘chirildi',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Mahsulot o‘chirishda xato: $e';
+      print('deleteProduct xatosi: $e');
+      Get.snackbar('Xatolik', 'Mahsulot o‘chirishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -356,9 +466,13 @@ class GetController extends GetxController {
         createdBy: _supabase.auth.currentUser?.id ?? '',
       );
       await fetchInitialData();
-      Get.snackbar('Muvaffaqiyat', 'Mijoz qo‘shildi', backgroundColor: Colors.green, colorText: Colors.white);
+      Get.snackbar('Muvaffaqiyat', 'Mijoz qo‘shildi',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Mijoz qo‘shishda xato: $e';
+      print('addCustomer xatosi: $e');
+      Get.snackbar('Xatolik', 'Mijoz qo‘shishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -383,6 +497,7 @@ class GetController extends GetxController {
     fetchInitialData();
   }
 
+  // Kirish
   Future<void> handleSubmit(BuildContext context) async {
     error.value = '';
     isLoading.value = true;
@@ -395,11 +510,15 @@ class GetController extends GetxController {
         fullName.value = _supabase.auth.currentUser?.userMetadata?['full_name'] ?? 'Noma’lum';
         print('Foydalanuvchi ma’lumatlari yuklandi: full_name=${fullName.value}, role=$userRole');
       } else {
-        print('Foydalanuvchi ID topilmadi');
+        throw Exception('Foydalanuvchi ID topilmadi');
       }
+      Get.snackbar('Muvaffaqiyat', 'Tizimga kirdingiz',
+          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Kirishda xato: $e';
       print('Kirish xatosi: $e');
+      Get.snackbar('Xatolik', 'Kirishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -419,6 +538,9 @@ class GetController extends GetxController {
           backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
       error.value = 'Chiqishda xato: $e';
+      print('signOut xatosi: $e');
+      Get.snackbar('Xatolik', 'Chiqishda xato: $e',
+          backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }
@@ -427,5 +549,10 @@ class GetController extends GetxController {
   // Parolni ko‘rsatish/yashirish
   void toggleShowPassword() {
     showPassword.value = !showPassword.value;
+  }
+
+  // Qoldiqlarni yangilash
+  void updateStockQuantities(List<dynamic> newProducts) {
+    products.value = newProducts;
   }
 }

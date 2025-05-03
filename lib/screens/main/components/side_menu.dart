@@ -48,7 +48,7 @@ class SideMenu extends StatelessWidget {
             press: () => GoRouter.of(context).go('/tasks'),
           ),
           DrawerListTile(
-            title: "Hujjatlar",
+            title: "Mijozlar",
             svgSrc: "assets/icons/menu_doc.svg",
             press: () => GoRouter.of(context).go('/documents'),
           ),

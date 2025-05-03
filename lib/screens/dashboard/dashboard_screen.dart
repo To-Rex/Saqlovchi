@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../companents/custom_loading_widget.dart';
 import '../../companents/ware_house_stats.dart';
 import '../../constants.dart';
 import '../../controllers/api_service.dart';
@@ -25,7 +26,9 @@ class DashboardScreen extends StatelessWidget {
           children: [
             const Header(),
             const SizedBox(height: defaultPadding),
-            Row(
+            Obx(() => controller.isLoading.value
+                ? const Center(child: CircularProgressIndicator())
+                : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
@@ -36,7 +39,16 @@ class DashboardScreen extends StatelessWidget {
                       const SizedBox(height: defaultPadding),
                       RecentFiles(),
                       if (Responsive.isMobile(context)) const SizedBox(height: defaultPadding),
-                      if (Responsive.isMobile(context)) WarehouseStats(stats: {}),
+                      if (Responsive.isMobile(context))
+                        FutureBuilder<Map<String, dynamic>>(
+                          future: apiService.getWarehouseStats(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CustomLoadingWidget();
+                            }
+                            return WarehouseStats(stats: snapshot.data ?? {});
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -44,10 +56,18 @@ class DashboardScreen extends StatelessWidget {
                 if (!Responsive.isMobile(context))
                   Expanded(
                     flex: 2,
-                    child: WarehouseStats(stats: {}),
+                    child: FutureBuilder<Map<String, dynamic>>(
+                      future: apiService.getWarehouseStats(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CustomLoadingWidget();
+                        }
+                        return WarehouseStats(stats: snapshot.data ?? {});
+                      },
+                    ),
                   ),
               ],
-            ),
+            )),
           ],
         ),
       ),

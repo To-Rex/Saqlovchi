@@ -1,9 +1,12 @@
+import 'package:get/get.dart';
+
 class ProductDisplayData {
+  final String id;
   final String name;
   final String categoryName;
+  final String unit;
   final String costPrice;
   final String sellingPrice;
-  final String unit;
   final String batchNumber;
   final String quantity;
   final String saleStatus;
@@ -11,11 +14,12 @@ class ProductDisplayData {
   final bool isLowStock;
 
   ProductDisplayData({
+    required this.id,
     required this.name,
     required this.categoryName,
+    required this.unit,
     required this.costPrice,
     required this.sellingPrice,
-    required this.unit,
     required this.batchNumber,
     required this.quantity,
     required this.saleStatus,
@@ -24,43 +28,38 @@ class ProductDisplayData {
   });
 
   factory ProductDisplayData.fromProduct(Map<String, dynamic> product, List<dynamic> categories) {
-    final batches = product['batches'] as List<dynamic>?;
-    final latestBatch = batches != null && batches.isNotEmpty ? batches[0] : {};
-
-    final quantity = latestBatch['quantity']?.toString() ?? '0';
-    final costPrice = latestBatch['cost_price']?.toString() ?? '0';
-    final sellingPrice = latestBatch['selling_price']?.toString() ?? '0';
-    final batchNumber = latestBatch['batch_number']?.toString() ?? 'Noma’lum';
-    final isLowStock = double.tryParse(quantity) != null && double.parse(quantity) <= 10.0 && double.parse(quantity) > 0;
-
-    print('Mahsulot ma’lumatlari: name=${product['name']}, '
-        'quantity=$quantity, costPrice=$costPrice, sellingPrice=$sellingPrice');
+    final batches = product['batches'] as List<dynamic>? ?? [];
+    final firstBatch = batches.isNotEmpty ? batches[0] : {};
+    final quantity = batches.fold<double>(
+      0.0,
+          (sum, batch) => sum + ((batch['quantity'] as num?)?.toDouble() ?? 0.0),
+    );
+    final categoryId = product['category_id']?.toString() ?? '';
+    final category = categories.firstWhereOrNull((c) => c['id'].toString() == categoryId) ?? {'name': 'Noma’lum'};
 
     return ProductDisplayData(
+      id: product['id'].toString(),
       name: product['name']?.toString() ?? 'Noma’lum',
-      categoryName: product['categories']?['name']?.toString() ?? 'Noma’lum',
-      costPrice: costPrice,
-      sellingPrice: sellingPrice,
+      categoryName: category['name']?.toString() ?? 'Noma’lum',
       unit: product['units']?['name']?.toString() ?? 'Noma’lum',
-      batchNumber: batchNumber,
-      quantity: quantity,
-      saleStatus: product['sales'] != null && (product['sales'] as List).isNotEmpty
-          ? product['sales'][0]['sale_type']?.toString() ?? 'Noma’lum'
-          : 'Sotilmagan',
-      createdAt: product['created_at'] != null
-          ? DateTime.parse(product['created_at']).toLocal().toString().substring(0, 16)
-          : 'Noma’lum',
-      isLowStock: isLowStock,
+      costPrice: firstBatch['cost_price']?.toString() ?? '0',
+      sellingPrice: firstBatch['selling_price']?.toString() ?? '0',
+      batchNumber: firstBatch['batch_number']?.toString() ?? 'Noma’lum',
+      quantity: quantity.toStringAsFixed(2),
+      saleStatus: product['sales']?['sale_type']?.toString() ?? 'Noma’lum',
+      createdAt: product['created_at']?.toString() ?? 'Noma’lum',
+      isLowStock: quantity > 0 && quantity < 10.0,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'name': name,
       'category_name': categoryName,
+      'unit': unit,
       'cost_price': costPrice,
       'selling_price': sellingPrice,
-      'unit': unit,
       'batch_number': batchNumber,
       'quantity': quantity,
       'sale_status': saleStatus,

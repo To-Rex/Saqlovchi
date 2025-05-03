@@ -60,29 +60,37 @@ class SalesScreenController extends GetxController {
     super.onClose();
   }
 
+  // Jami narxni hisoblash
   double getTotalPrice() {
     print('getTotalPrice: selectedBatchId: $selectedBatchId, quantity: $quantity, basePrice: $basePrice, unitPrice: $unitPrice, discount: $discount');
     final totalWithoutDiscount = quantity.value * (basePrice.value + unitPrice.value);
     return totalWithoutDiscount - discount.value;
   }
 
+  // Partiya ma'lumotlarini oldindan yuklash
   Future<void> preloadBatchData() async {
     isStockLoading.value = true;
-    final batches = await apiService.getBatches();
-    for (var batch in batches) {
-      final batchId = batch['id'].toString();
-      if (!batchCache.containsKey(batchId)) {
+    try {
+      final batches = await apiService.getBatches();
+      batchCache.clear();
+      for (var batch in batches) {
+        final batchId = batch['id'].toString();
         batchCache[batchId] = {
           'product_id': batch['product_id'].toString(),
           'quantity': (batch['quantity'] as num?)?.toDouble() ?? 0.0,
           'cost_price': (batch['cost_price'] as num?)?.toDouble() ?? 0.0,
           'selling_price': (batch['selling_price'] as num?)?.toDouble() ?? 0.0,
+          'received_date': batch['received_date'],
         };
       }
+    } catch (e) {
+      print('preloadBatchData xatosi: $e');
+    } finally {
+      isStockLoading.value = false;
     }
-    isStockLoading.value = false;
   }
 
+  // Kategoriya tanlash
   void selectCategory(String? id) {
     selectedCategoryId.value = id;
     selectedProductId.value = null;
@@ -91,33 +99,22 @@ class SalesScreenController extends GetxController {
     resetSalePanel();
   }
 
+  // Mahsulot tanlash
   void selectProduct(String productId, String? batchId, double stockQuantity, double costPrice, double sellingPrice) {
     selectedProductId.value = productId;
     selectedBatchId.value = batchId;
     cachedStockQuantity.value = stockQuantity;
-    basePrice.value = costPrice + sellingPrice;
-    unitPrice.value = 0.0;
+    basePrice.value = costPrice;
+    unitPrice.value = sellingPrice - costPrice; // Qo‘shimcha narx
     quantity.value = 1.0;
     quantityController.text = '1';
-    priceController.text = '0';
+    priceController.text = unitPrice.value.toString();
     print('selectProduct: productId: $productId, batchId: $batchId, stockQuantity: $stockQuantity, basePrice: $basePrice, unitPrice: $unitPrice');
-    showCreditOptions.value = false;
-    showDiscountOption.value = false;
-    selectedCustomerId.value = null;
-    newCustomerName.value = '';
-    newCustomerPhone.value = '';
-    newCustomerAddress.value = '';
-    creditAmount.value = null;
-    creditDueDate.value = null;
-    discount.value = 0.0;
-    newCustomerNameController.clear();
-    newCustomerPhoneController.clear();
-    newCustomerAddressController.clear();
-    creditAmountController.clear();
-    discountController.clear();
+    resetSalePanel();
     update(['quantity', 'totalPrice']);
   }
 
+  // Miqdorni yangilash
   void updateQuantity(String value) {
     print('updateQuantity: input value: $value');
     if (value.isEmpty) {
@@ -152,6 +149,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Miqdorni oshirish
   void incrementQuantity() {
     if (cachedStockQuantity.value != null && quantity.value < cachedStockQuantity.value!) {
       quantity.value += 1.0;
@@ -165,6 +163,7 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  // Miqdorni kamaytirish
   void decrementQuantity() {
     if (quantity.value > 0) {
       quantity.value -= 1.0;
@@ -178,6 +177,7 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  // Narxni yangilash
   void updatePrice(String value) {
     unitPrice.value = double.tryParse(value) ?? 0.0;
     print('updatePrice: unitPrice set to: ${unitPrice.value}');
@@ -188,6 +188,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Qarz opsiyasini yoqish/o‘chirish
   void toggleCreditOptions(bool value) {
     showCreditOptions.value = value;
     if (value && selectedProductId.value != null && quantity.value > 0) {
@@ -208,6 +209,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Chegirma opsiyasini yoqish/o‘chirish
   void toggleDiscountOption(bool value) {
     showDiscountOption.value = value;
     if (!value) {
@@ -221,6 +223,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Mijoz tanlash
   void updateCustomerSelection(String? value) {
     selectedCustomerId.value = value;
     newCustomerName.value = '';
@@ -231,23 +234,28 @@ class SalesScreenController extends GetxController {
     newCustomerAddressController.clear();
   }
 
+  // Yangi mijoz nomini yangilash
   void updateNewCustomerName(String value) {
     newCustomerName.value = value;
     selectedCustomerId.value = null;
   }
 
+  // Yangi mijoz telefonini yangilash
   void updateNewCustomerPhone(String value) {
     newCustomerPhone.value = value;
   }
 
+  // Yangi mijoz manzilini yangilash
   void updateNewCustomerAddress(String value) {
     newCustomerAddress.value = value;
   }
 
+  // Qarz summasini yangilash
   void updateCreditAmount(String value) {
     creditAmount.value = double.tryParse(value) ?? getTotalPrice();
   }
 
+  // Chegirmani yangilash
   void updateDiscount(String value) {
     discount.value = double.tryParse(value) ?? 0.0;
     if (showCreditOptions.value) {
@@ -257,6 +265,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Qarz muddatini tanlash
   Future<void> selectCreditDueDate(BuildContext context) async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -269,9 +278,11 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  // Sotuv panelini tozalash
   void resetSalePanel() {
     quantity.value = 0.0;
     unitPrice.value = 0.0;
+    basePrice.value = 0.0;
     showCreditOptions.value = false;
     showDiscountOption.value = false;
     selectedCustomerId.value = null;
@@ -291,6 +302,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
+  // Mahsulot sotish
   Future<void> sellProduct(BuildContext context) async {
     final parsedQuantity = double.tryParse(quantityController.text) ?? quantity.value;
     if (cachedStockQuantity.value != null && parsedQuantity > cachedStockQuantity.value!) {
@@ -301,7 +313,7 @@ class SalesScreenController extends GetxController {
       quantity.value = parsedQuantity;
     }
 
-    if (selectedProductId.value == null || selectedBatchId.value == null || quantity.value <= 0) {
+    if (selectedProductId.value == null || quantity.value <= 0) {
       CustomToast.show(
         context: context,
         title: 'Xatolik',
@@ -376,13 +388,13 @@ class SalesScreenController extends GetxController {
         saleType = 'cash';
       }
 
+      final totalPrice = getTotalPrice();
       final saleResponse = await apiService.addSale(
         saleType: saleType,
         customerId: customerId != null ? int.parse(customerId) : null,
-        totalAmount: getTotalPrice(),
+        totalAmount: totalPrice,
         discountAmount: discount.value,
-        paidAmount: saleType == 'cash' || saleType == 'discount' ? getTotalPrice() : 0.0,
-        createdBy: _supabase.auth.currentUser!.id,
+        paidAmount: saleType == 'cash' || saleType == 'discount' ? totalPrice : 0.0,
         comments: saleType == 'debt_with_discount'
             ? 'Qarzga va chegirma bilan sotuv'
             : saleType == 'debt'
@@ -390,26 +402,34 @@ class SalesScreenController extends GetxController {
             : saleType == 'discount'
             ? 'Chegirma bilan sotuv'
             : 'Naqd sotuv',
+        createdBy: _supabase.auth.currentUser!.id,
+        items: [
+          {
+            'product_id': int.parse(selectedProductId.value!),
+            'quantity': quantity.value,
+            'unit_price': basePrice.value + unitPrice.value,
+          }
+        ],
       );
 
       if (saleResponse.isEmpty) {
         throw Exception('Sotuv qo‘shishda xato yuz berdi');
       }
 
-      await apiService.addSaleItem(
-        saleId: saleResponse['id'],
-        batchId: int.parse(selectedBatchId.value!),
-        quantity: quantity.value.toInt(),
-        unitPrice: basePrice.value + unitPrice.value,
-      );
+      // Qoldiqni yangilash
+      cachedStockQuantity.value = (cachedStockQuantity.value ?? 0.0) - quantity.value;
+      if (selectedBatchId.value != null && batchCache.containsKey(selectedBatchId.value!)) {
+        batchCache[selectedBatchId.value!]!['quantity'] =
+            (batchCache[selectedBatchId.value!]!['quantity'] ?? 0.0) - quantity.value;
+      }
 
-      batchCache[selectedBatchId.value!]!['quantity'] =
-          (batchCache[selectedBatchId.value!]!['quantity'] ?? 0.0) - quantity.value;
+      // Sotuv panelini tozalash
       selectedProductId.value = null;
       selectedBatchId.value = null;
       cachedStockQuantity.value = null;
       resetSalePanel();
       recentSalesFuture.value = apiService.getRecentSales(limit: 2);
+
       CustomToast.show(
         context: context,
         title: 'Muvaffaqiyat',
@@ -433,6 +453,7 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  // Mahsulotni qaytarish
   Future<void> returnProduct(BuildContext context, int saleId) async {
     isSelling.value = true;
 
@@ -497,6 +518,7 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  // Qarz to‘lash
   Future<void> payDebt(BuildContext context, int saleId, double paymentAmount) async {
     isSelling.value = true;
     try {

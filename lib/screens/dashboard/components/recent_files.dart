@@ -59,7 +59,6 @@ class RecentFiles extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
                   onPressed: () => DialogFunction().showFilterDialog(context),
-                  //onPressed: (){},
                 ),
               ],
             ),

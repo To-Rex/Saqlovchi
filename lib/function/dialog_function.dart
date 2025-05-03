@@ -41,210 +41,159 @@ class DialogFunction {
     );
   }
 
-  void showAddProductDialog(BuildContext context, GetController controller) {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController descriptionController = TextEditingController();
-    TextEditingController costPriceController = TextEditingController();
-    TextEditingController sellingPriceController = TextEditingController();
-    TextEditingController quantityController = TextEditingController();
-    TextEditingController batchNumberController = TextEditingController();
-    int? categoryId;
-    int? unitId;
 
-    print('Dialog ochilmoqda - Mavjud kategoriyalar: ${controller.categories.map((c) => c['name']).toList()}');
-    print('Dialog ochilmoqda - Mavjud birliklar: ${controller.units.map((u) => u['name']).toList()}');
+  void showAddProductDialog(BuildContext context, GetController controller) {
+    final TextEditingController productNameController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController();
+    final TextEditingController costPriceController = TextEditingController();
+    final TextEditingController sellingPriceController = TextEditingController();
+    int? selectedProductId;
+
+    // Mahsulot ID’larini log qilish
+    print('Mavjud mahsulotlar: ${controller.products.map((p) => {'id': p['id'], 'name': p['name']}).toList()}');
 
     showDialog(
-      context: context,
-      builder: (context) => _applyDarkTheme(
-        context,
-        Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 8,
-          child: Container(
-            width: 400,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Yangi Mahsulot Qo‘shish',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+        context: context,
+        builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        constraints: BoxConstraints(maxWidth: 500),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Yangi mahsulot yoki partiya qo‘shish",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => DropdownButtonFormField<int>(
+                decoration: InputDecoration(
+                  labelText: 'Mavjud mahsulot (ixtiyoriy)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Nomi'),
+                items: controller.products.map((product) {
+                  return DropdownMenuItem<int>(
+                    value: int.parse(product['id'].toString()),
+                    child: Text(product['name']),
+                  );
+                }).toList(),
+                value: selectedProductId,
+                onChanged: (value) {
+                  selectedProductId = value;
+                  if (value != null) {
+                    final product = controller.products.firstWhere((p) => p['id'] == value);
+                    productNameController.text = product['name'];
+                    controller.newProductName.value = product['name'];
+                  } else {
+                    productNameController.clear();
+                    controller.newProductName.value = '';
+                  }
+                },
+              )),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: productNameController,
+                decoration: InputDecoration(
+                  labelText: 'Mahsulot nomi',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Tavsif (ixtiyoriy)'),
+                onChanged: (value) => controller.newProductName.value = value,
+                enabled: selectedProductId == null,
+              ),
+              const SizedBox(height: 16),
+              Obx(() => DropdownButtonFormField<int>(
+                decoration: InputDecoration(
+                  labelText: 'Kategoriya',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                const SizedBox(height: 16),
-                Obx(
-                      () => DropdownButtonFormField<int>(
-                    value: categoryId,
-                    hint: controller.categories.isEmpty
-                        ? const Text('Kategoriyalar mavjud emas', style: TextStyle(color: Colors.red))
-                        : const Text('Kategoriyani tanlang', style: TextStyle(color: Colors.white70)),
-                    items: controller.categories.isNotEmpty
-                        ? controller.categories.map((cat) {
-                      return DropdownMenuItem<int>(
-                        value: cat['id'] as int,
-                        child: Text(cat['name'] as String),
-                      );
-                    }).toList()
-                        : [],
-                    onChanged: controller.categories.isNotEmpty ? (value) => categoryId = value : null,
-                    decoration: const InputDecoration(labelText: 'Kategoriya'),
-                    dropdownColor: bgColor,
+                items: controller.categories.map((category) {
+                  return DropdownMenuItem<int>(
+                    value: int.parse(category['id'].toString()),
+                    child: Text(category['name']),
+                  );
+                }).toList(),
+                value: controller.newProductCategoryId.value,
+                onChanged: selectedProductId == null
+                    ? (value) => controller.newProductCategoryId.value = value
+                    : null,
+              )),
+              const SizedBox(height: 16),
+              Obx(() => DropdownButtonFormField<int>(
+                decoration: InputDecoration(
+                  labelText: 'Birlik',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                items: controller.units.map((unit) {
+                  return DropdownMenuItem<int>(
+                    value: int.parse(unit['id'].toString()),
+                    child: Text(unit['name']),
+                  );
+                }).toList(),
+                value: controller.newProductUnitId.value,
+                onChanged: selectedProductId == null
+                    ? (value) => controller.newProductUnitId.value = value
+                    : null,
+              )),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: quantityController,
+                decoration: InputDecoration(
+                  labelText: 'Miqdor (kg)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => controller.newProductQuantity.value = double.tryParse(value) ?? 0.0,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: costPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Xarid narxi (so‘m)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => controller.newProductCostPrice.value = double.tryParse(value) ?? 0.0,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: sellingPriceController,
+                decoration: InputDecoration(
+                  labelText: 'Sotuv narxi (so‘m)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => controller.newProductSellingPrice.value = double.tryParse(value) ?? 0.0,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Bekor qilish"),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Obx(
-                      () => DropdownButtonFormField<int>(
-                    value: unitId,
-                    hint: controller.units.isEmpty
-                        ? const Text('Birliklar mavjud emas', style: TextStyle(color: Colors.red))
-                        : const Text('Birlikni tanlang', style: TextStyle(color: Colors.white70)),
-                    items: controller.units.isNotEmpty
-                        ? controller.units.map((unit) {
-                      return DropdownMenuItem<int>(
-                        value: unit['id'] as int,
-                        child: Text(unit['name'] as String),
-                      );
-                    }).toList()
-                        : [],
-                    onChanged: controller.units.isNotEmpty ? (value) => unitId = value : null,
-                    decoration: const InputDecoration(labelText: 'Birlik'),
-                    dropdownColor: bgColor,
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        await controller.addProduct(existingProductId: selectedProductId);
+                        Navigator.pop(context);
+                      } catch (e) {
+                        final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+                        Get.snackbar('Xatolik', 'Mahsulot/partiya qo‘shishda xato: $errorMessage',
+                            backgroundColor: Colors.red, colorText: Colors.white);
+                      }
+                    },
+                    child: const Text("Qo‘shish"),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: batchNumberController,
-                  decoration: const InputDecoration(
-                      labelText: 'Partiya Raqami (ixtiyoriy, bo‘sh qoldirilsa avtomatik)'),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: costPriceController,
-                        decoration: const InputDecoration(labelText: 'Tannarx'),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextField(
-                        controller: sellingPriceController,
-                        decoration: const InputDecoration(labelText: 'Sotish Narxi'),
-                        keyboardType: TextInputType.number,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: quantityController,
-                  decoration: const InputDecoration(labelText: 'Miqdor'),
-                  keyboardType: TextInputType.number,
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Bekor Qilish', style: TextStyle(color: Colors.white70)),
-                    ),
-                    const SizedBox(width: 16),
-                    Obx(
-                          () => controller.isLoading.value
-                          ? const CircularProgressIndicator()
-                          : ElevatedButton(
-                        onPressed: () async {
-                          print('Saqlash tugmasi bosildi: '
-                              'name=${nameController.text}, '
-                              'categoryId=$categoryId, '
-                              'unitId=$unitId, '
-                              'costPrice=${costPriceController.text}, '
-                              'sellingPrice=${sellingPriceController.text}, '
-                              'quantity=${quantityController.text}');
-
-                          // Validatsiya
-                          if (nameController.text.isEmpty) {
-                            print('Xato: Mahsulot nomi kiritilmadi');
-                            return;
-                          }
-                          if (categoryId == null) {
-                            print('Xato: Kategoriya tanlanmadi');
-                            return;
-                          }
-                          if (unitId == null) {
-                            print('Xato: Birlik tanlanmadi');
-                            return;
-                          }
-                          final costPrice = double.tryParse(costPriceController.text);
-                          if (costPrice == null || costPrice <= 0) {
-                            print('Xato: Tannarx noto‘g‘ri kiritildi');
-                            return;
-                          }
-                          final sellingPrice = double.tryParse(sellingPriceController.text);
-                          if (sellingPrice == null || sellingPrice <= 0) {
-                            print('Xato: Sotish narxi noto‘g‘ri kiritildi');
-                            return;
-                          }
-                          final quantity = double.tryParse(quantityController.text);
-                          if (quantity == null || quantity <= 0) {
-                            print('Xato: Miqdor noto‘g‘ri kiritildi');
-                            return;
-                          }
-
-                          // Controller qiymatlarini o‘rnatish
-                          controller.newProductName.value = nameController.text;
-                          controller.newProductDescription.value = descriptionController.text;
-                          controller.newProductCategoryId.value = categoryId;
-                          controller.newProductUnitId.value = unitId;
-                          controller.newProductBatchNumber.value = batchNumberController.text;
-                          controller.newProductCostPrice.value = costPrice;
-                          controller.newProductSellingPrice.value = sellingPrice;
-                          controller.newProductQuantity.value = quantity;
-
-                          print('Mahsulot saqlanmoqda: ${controller.newProductName.value}, '
-                              'categoryId=${controller.newProductCategoryId.value}, '
-                              'unitId=${controller.newProductUnitId.value}');
-
-                          await controller.addProduct();
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'Saqlash',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-    );
+    ));
   }
 
 

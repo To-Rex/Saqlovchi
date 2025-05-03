@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../constants.dart';
+import '../../../controllers/api_service.dart';
 import '../../../controllers/get_controller.dart';
 import '../../../function/dialog_function.dart';
 import '../../../responsive.dart';
@@ -78,21 +79,33 @@ class FileInfoCardGridView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => GridView.builder(
-      physics: NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: controller.categories.isNotEmpty ? controller.categories.length : 0,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: defaultPadding,
-        mainAxisSpacing: defaultPadding,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemBuilder: (context, index) => FileInfoCard(
-        title: controller.categories[index]['name'],
-        addedUser: controller.categories[index]['created_by'] ?? '',
-        controller: controller,
-      ),
-    ));
+    return FutureBuilder<Map<String, Map<String, dynamic>>>(
+      future: ApiService().getCategoryStats(),
+      builder: (context, snapshot) {
+        final categoryStats = snapshot.data ?? {};
+        return Obx(() => GridView.builder(
+          physics: NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: controller.categories.isNotEmpty ? controller.categories.length : 0,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: defaultPadding,
+            mainAxisSpacing: defaultPadding,
+            childAspectRatio: childAspectRatio,
+          ),
+          itemBuilder: (context, index) {
+            final category = controller.categories[index];
+            final stats = categoryStats[category['id'].toString()] ?? {'product_count': 0, 'total_quantity': 0.0};
+            return FileInfoCard(
+              title: category['name'],
+              addedUser: category['created_by'] ?? '',
+              productCount: stats['product_count'].toString(),
+              totalQuantity: stats['total_quantity'].toStringAsFixed(2),
+              controller: controller,
+            );
+          },
+        ));
+      },
+    );
   }
 }
