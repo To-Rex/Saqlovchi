@@ -353,9 +353,16 @@ class ApiService {
     }
   }
 
-
-  // Yangi mahsulot va partiya qo‘shish
-  Future<Map<String, dynamic>> addProductAndBatch({required String name, required int categoryId, required int unitId, required double batchQuantity, required double batchCostPrice, required double batchSellingPrice, required String createdBy}) async {
+  Future<Map<String, dynamic>> addProductAndBatch({
+    required String name,
+    required int categoryId,
+    required int unitId,
+    required double batchQuantity,
+    required double batchCostPrice,
+    required double batchSellingPrice,
+    required String createdBy,
+    String? code,
+  }) async {
     try {
       final response = await _supabase.rpc('add_product_and_batch', params: {
         'p_name': name,
@@ -366,7 +373,8 @@ class ApiService {
         'p_selling_price': batchSellingPrice,
         'p_batch_number': null,
         'p_received_date': DateTime.now().toIso8601String(),
-        'p_user_id': createdBy,
+        'p_user_id': createdBy, // TEXT sifatida yuboriladi, RPC da CAST qilinadi
+        'p_code': code,
       }).select().single();
 
       print('Mahsulot va partiya qo‘shildi: product_id=${response['product_id']}, batch_id=${response['batch_id']}');

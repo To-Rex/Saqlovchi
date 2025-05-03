@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../companents/custom_toast.dart';
 import '../screens/main/main_screen.dart';
 import 'api_service.dart';
 
@@ -265,7 +266,7 @@ class GetController extends GetxController {
   }
 
 
-  Future<void> addProduct({int? existingProductId}) async {
+  Future<void> addProduct({int? existingProductId, String? code}) async {
     isLoading.value = true;
     try {
       // Foydalanuvchi ID sini olish
@@ -276,13 +277,12 @@ class GetController extends GetxController {
       }
 
       // UUID formatini tekshirish
-      if (!RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false)
-          .hasMatch(userId)) {
+      if (!RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', caseSensitive: false).hasMatch(userId)) {
         throw Exception('Noto‘g‘ri foydalanuvchi ID formati: $userId');
       }
 
       // Validatsiya
-      if (newProductName.value.isEmpty) {
+      if (newProductName.value.isEmpty && existingProductId == null) {
         throw Exception('Mahsulot nomi kiritilishi shart');
       }
       if (newProductCategoryId.value == null) {
@@ -310,16 +310,7 @@ class GetController extends GetxController {
           batchQuantity: newProductQuantity.value,
           batchCostPrice: newProductCostPrice.value,
           batchSellingPrice: newProductSellingPrice.value,
-          createdBy: userId, // UUID sifatida
-        );
-        // Snackbar ni mustahkam chaqirish
-        Get.snackbar(
-          'Muvaffaqiyat',
-          'Partiya qo‘shildi',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: Duration(seconds: 3),
+          createdBy: userId,
         );
       } else {
         // Yangi mahsulot va partiya qo‘shish
@@ -330,16 +321,8 @@ class GetController extends GetxController {
           batchQuantity: newProductQuantity.value,
           batchCostPrice: newProductCostPrice.value,
           batchSellingPrice: newProductSellingPrice.value,
-          createdBy: userId, // UUID sifatida
-        );
-        // Snackbar ni mustahkam chaqirish
-        Get.snackbar(
-          'Muvaffaqiyat',
-          'Mahsulot va partiya qo‘shildi',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: Duration(seconds: 3),
+          createdBy: userId,
+          code: code,
         );
       }
 
@@ -350,20 +333,30 @@ class GetController extends GetxController {
 
       // Ma'lumotlarni qayta yuklash
       await fetchInitialData();
+
+      // CustomToast bilan xabar ko‘rsatish
+      CustomToast.show(
+        context: Get.context!,
+        title: 'Muvaffaqiyat',
+        message: existingProductId != null ? 'Partiya qo‘shildi' : 'Mahsulot va partiya qo‘shildi',
+        type: CustomToast.success,
+      );
     } catch (e) {
       final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
       error.value = 'Mahsulot qo‘shishda xato: $errorMessage';
       print('addProduct xatosi: $errorMessage');
       print('Xato yuz berdi: $e, toString: ${e.toString()}');
-      // Snackbar ni mustahkam chaqirish
-      Get.snackbar(
-        'Xatolik',
-        errorMessage.isEmpty ? 'Noma’lum xato yuz berdi' : errorMessage,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-        duration: Duration(seconds: 5),
-      );
+      // CustomToast bilan xato xabarini ko‘rsatish
+      if (Get.context != null) {
+        CustomToast.show(
+          context: Get.context!,
+          title: 'Xatolik',
+          message: errorMessage,
+          type: CustomToast.error,
+        );
+      } else {
+        print('Kontekst mavjud emas, xato xabari ko‘rsatilmadi');
+      }
     } finally {
       isLoading.value = false;
     }
