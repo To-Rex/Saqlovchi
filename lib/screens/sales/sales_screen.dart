@@ -364,20 +364,38 @@ class SalesScreen extends StatelessWidget {
           itemCount: searchedProducts.length,
           itemBuilder: (context, index) {
             final product = searchedProducts[index];
-            String? batchId;
             double stockQuantity = 0.0;
-            double sellingPrice = 0.0;
-            double costPrice = 0.0;
 
-            for (var entry in controller.batchCache.entries) {
-              if (entry.value['product_id'] == product['id'].toString()) {
-                batchId = entry.key;
-                stockQuantity = entry.value['quantity'] ?? 0.0;
-                sellingPrice = entry.value['selling_price'] ?? 0.0;
-                costPrice = entry.value['cost_price'] ?? 0.0;
-                break;
-              }
+            // Partiyalarni FIFO bo‘yicha tartiblash
+            final batches = controller.batchCache.entries
+                .where((entry) => entry.value['product_id'] == product['id'].toString())
+                .toList()
+              ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+            for (var batch in batches) {
+              final batchQuantity = batch.value['quantity'] as double;
+              stockQuantity += batchQuantity;
             }
+
+            // Eng eski partiya narxi
+            final firstBatchPrice = batches.isNotEmpty
+                ? (batches.first.value['cost_price'] as double) + (batches.first.value['selling_price'] as double)
+                : 0.0;
+
+            // Tooltip uchun partiyalar ro‘yxati
+            final batchDetails = batches.isNotEmpty
+                ? batches
+                .asMap()
+                .entries
+                .map((entry) {
+              final batch = entry.value.value;
+              final batchNumber = batch['batch_number'] as String;
+              final quantity = batch['quantity'] as double;
+              final price = (batch['cost_price'] as double) + (batch['selling_price'] as double);
+              return 'Partiya ${entry.key + 1} ($batchNumber): $quantity kg, ${price.toStringAsFixed(2)} so‘m/kg';
+            })
+                .join('\n')
+                : 'Partiyalar mavjud emas';
 
             Color borderColor = Colors.transparent;
             if (stockQuantity == 0) {
@@ -389,67 +407,77 @@ class SalesScreen extends StatelessWidget {
             return GestureDetector(
               onTap: () => controller.selectProduct(
                 product['id'].toString(),
-                batchId,
-                stockQuantity,
-                costPrice,
-                sellingPrice,
+                1.0, // Dastlabki miqdor sifatida 1.0
               ),
-              child: Obx(
-                    () => AnimatedScale(
-                  duration: const Duration(milliseconds: 200),
-                  scale: controller.selectedProductId.value == product['id'].toString()
-                      ? 0.95
-                      : 1.0,
-                  child: Card(
-                    elevation: 3,
-                    color: controller.selectedProductId.value == product['id'].toString()
-                        ? primaryColor.withOpacity(0.9)
-                        : Colors.white.withOpacity(0.1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      side: BorderSide(color: borderColor, width: 2),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              product['name'] ?? 'Noma’lum',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: Responsive.getFontSize(context, baseSize: 14),
+              child: Tooltip(
+                message: batchDetails,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: Responsive.getFontSize(context, baseSize: 12),
+                ),
+                padding: const EdgeInsets.all(8),
+                preferBelow: true,
+                child: Obx(
+                      () => AnimatedScale(
+                    duration: const Duration(milliseconds: 200),
+                    scale: controller.selectedProductId.value == product['id'].toString()
+                        ? 0.95
+                        : 1.0,
+                    child: Card(
+                      elevation: 3,
+                      color: controller.selectedProductId.value == product['id'].toString()
+                          ? primaryColor.withOpacity(0.9)
+                          : Colors.white.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(color: borderColor, width: 2),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                product['name'] ?? 'Noma’lum',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Narx: ${firstBatchPrice.toStringAsFixed(2)} so‘m",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: Responsive.getFontSize(context, baseSize: 11),
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Narx: $costPrice + $sellingPrice = ${costPrice + sellingPrice}",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: Responsive.getFontSize(context, baseSize: 11),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
+                              style: TextStyle(
+                                color: borderColor == Colors.transparent
+                                    ? Colors.white70
+                                    : borderColor,
+                                fontSize: Responsive.getFontSize(context, baseSize: 11),
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
-                            style: TextStyle(
-                              color: borderColor == Colors.transparent
-                                  ? Colors.white70
-                                  : borderColor,
-                              fontSize: Responsive.getFontSize(context, baseSize: 11),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -499,8 +527,7 @@ class SalesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              if (controller.selectedProductId.value != null &&
-                  controller.selectedBatchId.value != null) ...[
+              if (controller.selectedProductId.value != null && controller.selectedBatchIds.isNotEmpty) ...[
                 Text(
                   "Tanlangan: ${controller.appController.products.firstWhere(
                         (p) => p['id'].toString() == controller.selectedProductId.value,
@@ -556,10 +583,8 @@ class SalesScreen extends StatelessWidget {
               _buildAdvancedOptionsToggle(context, controller),
               if (controller.showCreditOptions.value || controller.showDiscountOption.value) ...[
                 const SizedBox(height: 12),
-                if (controller.showCreditOptions.value)
-                  _buildCreditOptions(context, controller),
-                if (controller.showDiscountOption.value)
-                  _buildDiscountInput(context, controller),
+                if (controller.showCreditOptions.value) _buildCreditOptions(context, controller),
+                if (controller.showDiscountOption.value) _buildDiscountInput(context, controller),
               ],
               const SizedBox(height: 16),
               Obx(
@@ -568,7 +593,7 @@ class SalesScreen extends StatelessWidget {
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
                     onPressed: (controller.selectedProductId.value == null ||
-                        controller.selectedBatchId.value == null ||
+                        controller.selectedBatchIds.isEmpty ||
                         controller.quantity.value <= 0 ||
                         controller.isSelling.value ||
                         controller.cachedStockQuantity.value == null ||
@@ -675,9 +700,9 @@ class SalesScreen extends StatelessWidget {
                     if (sale['sale_items'] != null && sale['sale_items'].isNotEmpty) {
                       for (var item in sale['sale_items']) {
                         final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0.0;
-                        final costPrice = (item['batches']?['cost_price'] as num?)?.toDouble() ?? 0.0;
-                        final sellingPrice = (item['batches']?['selling_price'] as num?)?.toDouble() ?? 0.0;
-                        if (unitPrice > (costPrice + sellingPrice)) {
+                        final quantity = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+                        final totalPrice = (item['total_price'] as num?)?.toDouble() ?? 0.0;
+                        if (totalPrice > unitPrice * quantity) {
                           hasMarkup = true;
                           break;
                         }
@@ -847,472 +872,473 @@ class SalesScreen extends StatelessWidget {
             ],
           ),
           child: Column(
-              children: [
-          Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Barcha sotuvlar",
-                style: TextStyle(
-                  fontSize: Responsive.getFontSize(context, baseSize: 18),
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white70),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: TextField(
-            controller: searchController,
-            decoration: InputDecoration(
-              hintText: 'Mahsulot bo‘yicha qidirish',
-              hintStyle: TextStyle(
-                color: Colors.white70,
-                fontSize: Responsive.getFontSize(context, baseSize: 14),
-              ),
-              filled: true,
-              fillColor: Colors.black.withOpacity(0.3),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: primaryColor, width: 2),
-              ),
-              prefixIcon: const Icon(Icons.search, color: Colors.white70),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            ),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: Responsive.getFontSize(context, baseSize: 14),
-            ),
-            onChanged: (value) => searchQuery.value = value,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Obx(
-                      () => DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Status',
-                      labelStyle: TextStyle(
-                        color: Colors.white70,
-                        fontSize: Responsive.getFontSize(context, baseSize: 12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.black.withOpacity(0.3),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    ),
-                    value: selectedStatus.value,
-                    dropdownColor: Colors.black.withOpacity(0.9),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: Responsive.getFontSize(context, baseSize: 12),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'all', child: Text('Barchasi')),
-                      DropdownMenuItem(value: 'returned', child: Text('Qaytarilgan')),
-                      DropdownMenuItem(value: 'debt', child: Text('Qarzga sotilgan')),
-                      DropdownMenuItem(value: 'discount', child: Text('Chegirmali')),
-                      DropdownMenuItem(value: 'cash', child: Text('Naqd')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) selectedStatus.value = value;
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Obx(
-                      () => DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Saralash',
-                      labelStyle: TextStyle(
-                        color: Colors.white70,
-                        fontSize: Responsive.getFontSize(context, baseSize: 12),
-                      ),
-                      filled: true,
-                      fillColor: Colors.black.withOpacity(0.3),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    ),
-                    value: sortOrder.value,
-                    dropdownColor: Colors.black.withOpacity(0.9),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: Responsive.getFontSize(context, baseSize: 12),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'newest', child: Text('Eng yangi')),
-                      DropdownMenuItem(value: 'oldest', child: Text('Eng eski')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) sortOrder.value = value;
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Obx(
-                      () => ElevatedButton(
-                    onPressed: () async {
-                      final selectedDate = await showDatePicker(
-                        context: context,
-                        initialDate: startDate.value ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now(),
-                        builder: (context, child) {
-                          return Theme(
-                            data: ThemeData.dark().copyWith(
-                              colorScheme: const ColorScheme.dark(
-                                primary: primaryColor,
-                                onPrimary: Colors.white,
-                                surface: Colors.black,
-                                onSurface: Colors.white70,
-                              ),
-                              dialogBackgroundColor: Colors.black.withOpacity(0.9),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (selectedDate != null) {
-                        startDate.value = selectedDate;
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text(
-                      startDate.value == null
-                          ? 'Boshlang‘ich sana'
-                          : 'Boshlang‘ich: ${startDate.value!.toString().substring(0, 10)}',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Barcha sotuvlar",
                       style: TextStyle(
+                        fontSize: Responsive.getFontSize(context, baseSize: 18),
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        fontSize: Responsive.getFontSize(context, baseSize: 12),
                       ),
                     ),
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Obx(
-                      () => ElevatedButton(
-                    onPressed: () async {
-                      final selectedDate = await showDatePicker(
-                        context: context,
-                        initialDate: endDate.value ?? DateTime.now(),
-                        firstDate: DateTime(2000),
-                        lastDate: DateTime.now(),
-                        builder: (context, child) {
-                          return Theme(
-                            data: ThemeData.dark().copyWith(
-                              colorScheme: const ColorScheme.dark(
-                                primary: primaryColor,
-                                onPrimary: Colors.white,
-                                surface: Colors.black,
-                                onSurface: Colors.white70,
-                              ),
-                              dialogBackgroundColor: Colors.black.withOpacity(0.9),
-                            ),
-                            child: child!,
-                          );
-                        },
-                      );
-                      if (selectedDate != null) {
-                        endDate.value = selectedDate;
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Mahsulot bo‘yicha qidirish',
+                    hintStyle: TextStyle(
+                      color: Colors.white70,
+                      fontSize: Responsive.getFontSize(context, baseSize: 14),
                     ),
-                    child: Text(
-                      endDate.value == null
-                          ? 'Oxirgi sana'
-                          : 'Oxirgi: ${endDate.value!.toString().substring(0, 10)}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: Responsive.getFontSize(context, baseSize: 12),
-                      ),
+                    filled: true,
+                    fillColor: Colors.black.withOpacity(0.3),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: primaryColor, width: 2),
+                    ),
+                    prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                  ),
+                  onChanged: (value) => searchQuery.value = value,
                 ),
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: Obx(() => FutureBuilder<List<dynamic>>(
-              future: controller.apiService.getAllSalesDetails(
-                searchQuery: searchQuery.value,
-                status: selectedStatus.value,
-                startDate: startDate.value,
-                endDate: endDate.value,
-                sortOrder: sortOrder.value,
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: primaryColor),
-                  );
-                }
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Text(
-                      "Xato: ${snapshot.error}",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: Responsive.getFontSize(context, baseSize: 14),
-                      ),
-                    ),
-                  );
-                }
-                final allSales = snapshot.data ?? [];
-                if (allSales.isEmpty) {
-                  return Center(
-                    child: Text(
-                      "Sotuvlar mavjud emas",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: Responsive.getFontSize(context, baseSize: 14),
-                      ),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  itemCount: allSales.length,
-                  itemBuilder: (context, index) {
-                    final sale = allSales[index];
-                    bool hasMarkup = false;
-                    bool hasDebt = ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0) <
-                        ((sale['total_amount'] as num?)?.toDouble() ?? 0.0);
-                    bool hasDiscount = ((sale['discount_amount'] as num?)?.toDouble() ?? 0.0) > 0;
-                    final items = sale['items'] as List<dynamic>? ?? [];
-
-                    for (var item in items) {
-                      final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0.0;
-                      final quantity = (item['quantity'] as num?)?.toDouble() ?? 0.0;
-                      final totalPrice = (item['total_price'] as num?)?.toDouble() ?? 0.0;
-                      if (totalPrice > unitPrice * quantity) {
-                        hasMarkup = true;
-                        break;
-                      }
-                    }
-
-                    return ExpansionTile(
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  items.isNotEmpty
-                                      ? items[0]['product_name'] ?? 'Noma’lum mahsulot'
-                                      : 'Noma’lum mahsulot',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: Responsive.getFontSize(context, baseSize: 14),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  sale['sale_date'] != null
-                                      ? sale['sale_date'].substring(0, 16)
-                                      : 'Noma’lum vaqt',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  ),
-                                ),
-                                if (sale['sale_type'] == 'returned')
-                                  Text(
-                                    "Qaytarildi",
-                                    style: TextStyle(
-                                      color: Colors.redAccent,
-                                      fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                              ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Obx(
+                            () => DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Status',
+                            labelStyle: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
                             ),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                           ),
-                          Row(
-                            children: [
-                              Text(
-                                "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 14),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (hasMarkup)
-                                const Icon(Icons.attach_money, color: Colors.yellow, size: 18),
-                              if (hasDebt)
-                                const Icon(Icons.credit_card, color: Colors.redAccent, size: 18),
-                              if (hasDiscount)
-                                const Icon(Icons.discount, color: Colors.greenAccent, size: 18),
-                            ],
+                          value: selectedStatus.value,
+                          dropdownColor: Colors.black.withOpacity(0.9),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: Responsive.getFontSize(context, baseSize: 12),
                           ),
-                        ],
+                          items: const [
+                            DropdownMenuItem(value: 'all', child: Text('Barchasi')),
+                            DropdownMenuItem(value: 'returned', child: Text('Qaytarilgan')),
+                            DropdownMenuItem(value: 'debt', child: Text('Qarzga sotilgan')),
+                            DropdownMenuItem(value: 'discount', child: Text('Chegirmali')),
+                            DropdownMenuItem(value: 'cash', child: Text('Naqd')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) selectedStatus.value = value;
+                          },
+                        ),
                       ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Mijoz: ${sale['customer_name'] ?? 'Noma’lum'}",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Umumiy narx: ${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                ),
-                              ),
-                              Text(
-                                "Chegirma: ${(sale['discount_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                ),
-                              ),
-                              Text(
-                                "To‘langan: ${(sale['paid_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                ),
-                              ),
-                              Text(
-                                "Qoldiq qarz: ${((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0)} so‘m",
-                                style: TextStyle(
-                                  color: hasDebt ? Colors.redAccent : Colors.greenAccent,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                "Mahsulotlar:",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (items.isEmpty)
-                                Text(
-                                  "Mahsulotlar haqida ma‘lumot yo‘q",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  ),
-                                ),
-                              ...items.map((item) => Padding(
-                                padding: const EdgeInsets.only(left: 8.0, top: 4.0),
-                                child: Text(
-                                  "${item['product_name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  ),
-                                ),
-                              )),
-                              const SizedBox(height: 8),
-                              if (sale['comments'] != null && sale['comments'].isNotEmpty)
-                                Text(
-                                  "Izoh: ${sale['comments']}",
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: Responsive.getFontSize(context, baseSize: 12),
-                                  ),
-                                ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  if (sale['sale_type'] == 'debt' || sale['sale_type'] == 'debt_with_discount')
-                                    IconButton(
-                                      icon: const Icon(Icons.payment, color: Colors.blueAccent, size: 18),
-                                      tooltip: 'To‘lash',
-                                      onPressed: controller.isSelling.value
-                                          ? null
-                                          : () => _showPaymentDialog(context, controller, sale),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Obx(
+                            () => DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Saralash',
+                            labelStyle: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.black.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          ),
+                          value: sortOrder.value,
+                          dropdownColor: Colors.black.withOpacity(0.9),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: Responsive.getFontSize(context, baseSize: 12),
+                          ),
+                          items: const [
+                            DropdownMenuItem(value: 'newest', child: Text('Eng yangi')),
+                            DropdownMenuItem(value: 'oldest', child: Text('Eng eski')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) sortOrder.value = value;
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Obx(
+                            () => ElevatedButton(
+                          onPressed: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: startDate.value ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: primaryColor,
+                                      onPrimary: Colors.white,
+                                      surface: Colors.black,
+                                      onSurface: Colors.white70,
                                     ),
-                                  if (sale['sale_type'] != 'returned')
-                                    IconButton(
-                                      icon: const Icon(Icons.undo, color: Colors.orangeAccent, size: 18),
-                                      tooltip: 'Qaytarish',
-                                      onPressed: controller.isSelling.value
-                                          ? null
-                                          : () async {
-                                        await controller.returnProduct(context, sale['sale_id']);
-                                        Navigator.pop(context);
-                                        controller.recentSalesFuture.value =
-                                            controller.apiService.getRecentSales(limit: 2);
-                                      },
-                                    ),
-                                ],
-                              ),
-                            ],
+                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (selectedDate != null) {
+                              startDate.value = selectedDate;
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            startDate.value == null
+                                ? 'Boshlang‘ich sana'
+                                : 'Boshlang‘ich: ${controller.apiService.formatDate(startDate.value!.toIso8601String())}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
                           ),
                         ),
-                      ],
-                    );
-                  },
-                );
-              }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Obx(
+                            () => ElevatedButton(
+                          onPressed: () async {
+                            final selectedDate = await showDatePicker(
+                              context: context,
+                              initialDate: endDate.value ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime.now(),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: primaryColor,
+                                      onPrimary: Colors.white,
+                                      surface: Colors.black,
+                                      onSurface: Colors.white70,
+                                    ),
+                                    dialogBackgroundColor: Colors.black.withOpacity(0.9),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (selectedDate != null) {
+                              endDate.value = selectedDate;
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            endDate.value == null
+                                ? 'Oxirgi sana'
+                                : 'Oxirgi: ${controller.apiService.formatDate(endDate.value!.toIso8601String())}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Obx(() => FutureBuilder<List<dynamic>>(
+                    future: controller.apiService.getAllSalesDetails(
+                      searchQuery: searchQuery.value,
+                      status: selectedStatus.value,
+                      startDate: startDate.value,
+                      endDate: endDate.value,
+                      sortOrder: sortOrder.value,
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            "Xato: ${snapshot.error}",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 14),
+                            ),
+                          ),
+                        );
+                      }
+                      final allSales = snapshot.data ?? [];
+                      if (allSales.isEmpty) {
+                        return Center(
+                          child: Text(
+                            "Sotuvlar mavjud emas",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: Responsive.getFontSize(context, baseSize: 14),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        itemCount: allSales.length,
+                        itemBuilder: (context, index) {
+                          final sale = allSales[index];
+                          bool hasMarkup = false;
+                          bool hasDebt = ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0) <
+                              ((sale['total_amount'] as num?)?.toDouble() ?? 0.0);
+                          bool hasDiscount = ((sale['discount_amount'] as num?)?.toDouble() ?? 0.0) > 0;
+                          final items = sale['sale_items'] as List<dynamic>? ?? [];
+
+                          for (var item in items) {
+                            final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0.0;
+                            final quantity = (item['quantity'] as num?)?.toDouble() ?? 0.0;
+                            final totalPrice = (item['total_price'] as num?)?.toDouble() ?? 0.0;
+                            if (totalPrice > unitPrice * quantity) {
+                              hasMarkup = true;
+                              break;
+                            }
+                          }
+
+                          return ExpansionTile(
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        items.isNotEmpty
+                                            ? items[0]['batches']['products']['name'] ?? 'Noma’lum mahsulot'
+                                            : 'Noma’lum mahsulot',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        sale['sale_date'] != null
+                                            ? controller.apiService.formatDate(sale['sale_date'])
+                                            : 'Noma’lum vaqt',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        ),
+                                      ),
+                                      if (sale['sale_type'] == 'returned')
+                                        Text(
+                                          "Qaytarildi",
+                                          style: TextStyle(
+                                            color: Colors.redAccent,
+                                            fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    if (hasMarkup)
+                                      const Icon(Icons.attach_money, color: Colors.yellow, size: 18),
+                                    if (hasDebt)
+                                      const Icon(Icons.credit_card, color: Colors.redAccent, size: 18),
+                                    if (hasDiscount)
+                                      const Icon(Icons.discount, color: Colors.greenAccent, size: 18),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Mijoz: ${sale['customer_name'] ?? 'Noma’lum'}",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Umumiy narx: ${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Chegirma: ${(sale['discount_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                      ),
+                                    ),
+                                    Text(
+                                      "To‘langan: ${(sale['paid_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                      ),
+                                    ),
+                                    Text(
+                                      "Qoldiq qarz: ${((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0)} so‘m",
+                                      style: TextStyle(
+                                        color: hasDebt ? Colors.redAccent : Colors.greenAccent,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "Mahsulotlar:",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (items.isEmpty)
+                                      Text(
+                                        "Mahsulotlar haqida ma‘lumot yo‘q",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        ),
+                                      ),
+                                    ...items.map((item) => Padding(
+                                      padding: const EdgeInsets.only(left: 8.0, top: 4.0),
+                                      child: Text(
+                                        "${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        ),
+                                      ),
+                                    )),
+                                    const SizedBox(height: 8),
+                                    if (sale['comments'] != null && sale['comments'].isNotEmpty)
+                                      Text(
+                                        "Izoh: ${sale['comments']}",
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                        ),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        if (sale['sale_type'] == 'debt' || sale['sale_type'] == 'debt_with_discount')
+                                          IconButton(
+                                            icon: const Icon(Icons.payment, color: Colors.blueAccent, size: 18),
+                                            tooltip: 'To‘lash',
+                                            onPressed: controller.isSelling.value
+                                                ? null
+                                                : () => _showPaymentDialog(context, controller, sale),
+                                          ),
+                                        if (sale['sale_type'] != 'returned')
+                                          IconButton(
+                                            icon: const Icon(Icons.undo, color: Colors.orangeAccent, size: 18),
+                                            tooltip: 'Qaytarish',
+                                            onPressed: controller.isSelling.value
+                                                ? null
+                                                : () async {
+                                              await controller.returnProduct(context, sale['id']);
+                                              Navigator.pop(context);
+                                              controller.recentSalesFuture.value =
+                                                  controller.apiService.getRecentSales(limit: 2);
+                                            },
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }),
+                ),
+              ),
+            ],
           ),
         ),
-        ]
       ),
-    ))
     );
   }
 
@@ -1324,14 +1350,14 @@ class SalesScreen extends StatelessWidget {
     final TextEditingController paymentController = TextEditingController();
     final remainingDebt =
         ((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0);
-    final items = sale['items'] as List<dynamic>? ?? [];
+    final items = sale['sale_items'] as List<dynamic>? ?? [];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: secondaryColor,
         title: Text(
-          'Qarzni to‘lash (Sotuv ID: ${sale['sale_id']})',
+          'Qarzni to‘lash (Sotuv ID: ${sale['id']})',
           style: TextStyle(
             color: Colors.white,
             fontSize: Responsive.getFontSize(context, baseSize: 18),
@@ -1378,7 +1404,7 @@ class SalesScreen extends StatelessWidget {
               ...items.map((item) => Padding(
                 padding: const EdgeInsets.only(left: 8.0, top: 4.0),
                 child: Text(
-                  "${item['product_name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                  "${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -1454,7 +1480,7 @@ class SalesScreen extends StatelessWidget {
                   return;
                 }
                 controller
-                    .payDebt(context, sale['sale_id'], paymentAmount)
+                    .payDebt(context, sale['id'], paymentAmount)
                     .then((_) {
                   Navigator.pop(context);
                   Navigator.pop(context);
@@ -1569,6 +1595,9 @@ class SalesScreen extends StatelessWidget {
         color: Colors.white,
         fontSize: Responsive.getFontSize(context, baseSize: 16),
       ),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+      ],
       onChanged: controller.updatePrice,
     );
   }
@@ -1583,7 +1612,7 @@ class SalesScreen extends StatelessWidget {
           children: [
             if (controller.selectedProductId.value != null) ...[
               Text(
-                "Jami: $totalPrice so‘m",
+                "Jami: ${totalPrice.toStringAsFixed(2)} so‘m",
                 style: TextStyle(
                   fontSize: Responsive.getFontSize(context, baseSize: 18),
                   color: Colors.white,
@@ -1592,7 +1621,7 @@ class SalesScreen extends StatelessWidget {
               ),
               if (controller.discount.value > 0)
                 Text(
-                  "Chegirma: ${controller.discount.value} so‘m",
+                  "Chegirma: ${controller.discount.value.toStringAsFixed(2)} so‘m",
                   style: TextStyle(
                     fontSize: Responsive.getFontSize(context, baseSize: 13),
                     color: Colors.white70,
@@ -1828,6 +1857,9 @@ class SalesScreen extends StatelessWidget {
             color: Colors.white,
             fontSize: Responsive.getFontSize(context, baseSize: 16),
           ),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+          ],
           onChanged: controller.updateCreditAmount,
         ),
         const SizedBox(height: 12),
@@ -1843,7 +1875,7 @@ class SalesScreen extends StatelessWidget {
             child: Text(
               controller.creditDueDate.value == null
                   ? 'Muddat tanlang'
-                  : 'Muddat: ${controller.creditDueDate.value!.toString().substring(0, 10)}',
+                  : 'Muddat: ${controller.apiService.formatDate(controller.creditDueDate.value!.toIso8601String())}',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: Responsive.getFontSize(context, baseSize: 15),
@@ -1882,6 +1914,9 @@ class SalesScreen extends StatelessWidget {
         color: Colors.white,
         fontSize: Responsive.getFontSize(context, baseSize: 16),
       ),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+      ],
       onChanged: controller.updateDiscount,
     );
   }

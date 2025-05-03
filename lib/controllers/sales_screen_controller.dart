@@ -12,10 +12,9 @@ class SalesScreenController extends GetxController {
 
   var selectedCategoryId = Rxn<String>();
   var selectedProductId = Rxn<String>();
-  var selectedBatchId = Rxn<String>();
+  var selectedBatchIds = <String>[].obs;
   var quantity = 0.0.obs;
   var unitPrice = 0.0.obs;
-  var basePrice = 0.0.obs;
   var showCreditOptions = false.obs;
   var showDiscountOption = false.obs;
   var selectedCustomerId = Rxn<String>();
@@ -60,11 +59,34 @@ class SalesScreenController extends GetxController {
     super.onClose();
   }
 
-  // Jami narxni hisoblash
+  // Jami narxni hisoblash (FIFO bo‘yicha)
   double getTotalPrice() {
-    print('getTotalPrice: selectedBatchId: $selectedBatchId, quantity: $quantity, basePrice: $basePrice, unitPrice: $unitPrice, discount: $discount');
-    final totalWithoutDiscount = quantity.value * (basePrice.value + unitPrice.value);
-    return totalWithoutDiscount - discount.value;
+    if (selectedProductId.value == null || quantity.value <= 0) return 0.0;
+
+    final batches = batchCache.entries
+        .where((entry) => entry.value['product_id'] == selectedProductId.value)
+        .toList()
+      ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+    double remainingQuantity = quantity.value;
+    double totalPrice = 0.0;
+
+    for (var batch in batches) {
+      if (remainingQuantity <= 0) break;
+
+      final batchQuantity = batch.value['quantity'] as double;
+      final batchCostPrice = batch.value['cost_price'] as double;
+      final batchSellingPrice = batch.value['selling_price'] as double;
+      final pricePerUnit = batchCostPrice + batchSellingPrice;
+
+      final quantityToUse = remainingQuantity > batchQuantity ? batchQuantity : remainingQuantity;
+      totalPrice += quantityToUse * (pricePerUnit + unitPrice.value);
+      remainingQuantity -= quantityToUse;
+    }
+
+    totalPrice -= discount.value;
+    print('getTotalPrice: selectedBatchIds: $selectedBatchIds, quantity: $quantity, unitPrice: $unitPrice, discount: $discount, totalPrice: $totalPrice');
+    return totalPrice;
   }
 
   // Partiya ma'lumotlarini oldindan yuklash
@@ -80,11 +102,19 @@ class SalesScreenController extends GetxController {
           'quantity': (batch['quantity'] as num?)?.toDouble() ?? 0.0,
           'cost_price': (batch['cost_price'] as num?)?.toDouble() ?? 0.0,
           'selling_price': (batch['selling_price'] as num?)?.toDouble() ?? 0.0,
-          'received_date': batch['received_date'],
+          'received_date': batch['received_date'] ?? DateTime.now().toIso8601String(),
+          'batch_number': batch['batch_number'] ?? 'Noma’lum',
         };
       }
+      print('batchCache to‘ldirildi: ${batchCache.length} ta partiya');
     } catch (e) {
       print('preloadBatchData xatosi: $e');
+      CustomToast.show(
+        context: Get.context!,
+        title: 'Xatolik',
+        message: 'Partiyalarni yuklashda xato: $e',
+        type: CustomToast.error,
+      );
     } finally {
       isStockLoading.value = false;
     }
@@ -94,23 +124,59 @@ class SalesScreenController extends GetxController {
   void selectCategory(String? id) {
     selectedCategoryId.value = id;
     selectedProductId.value = null;
-    selectedBatchId.value = null;
+    selectedBatchIds.clear();
     cachedStockQuantity.value = null;
     resetSalePanel();
   }
 
-  // Mahsulot tanlash
-  void selectProduct(String productId, String? batchId, double stockQuantity, double costPrice, double sellingPrice) {
+  // Mahsulot tanlash (FIFO bilan)
+  void selectProduct(String productId, double requestedQuantity) {
     selectedProductId.value = productId;
-    selectedBatchId.value = batchId;
-    cachedStockQuantity.value = stockQuantity;
-    basePrice.value = costPrice;
-    unitPrice.value = sellingPrice - costPrice; // Qo‘shimcha narx
-    quantity.value = 1.0;
-    quantityController.text = '1';
-    priceController.text = unitPrice.value.toString();
-    print('selectProduct: productId: $productId, batchId: $batchId, stockQuantity: $stockQuantity, basePrice: $basePrice, unitPrice: $unitPrice');
-    resetSalePanel();
+    selectedBatchIds.clear();
+    cachedStockQuantity.value = 0.0;
+    unitPrice.value = 0.0;
+
+    // FIFO bo‘yicha partiyalarni tanlash
+    final batches = batchCache.entries
+        .where((entry) => entry.value['product_id'] == productId)
+        .toList()
+      ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+    double totalStockQuantity = 0.0; // Umumiy qoldiq
+    double remainingQuantity = requestedQuantity;
+
+    for (var batch in batches) {
+      final batchId = batch.key;
+      final batchQuantity = batch.value['quantity'] as double;
+      totalStockQuantity += batchQuantity;
+
+      if (remainingQuantity <= 0) continue;
+
+      final quantityToUse = remainingQuantity > batchQuantity ? batchQuantity : remainingQuantity;
+      selectedBatchIds.add(batchId);
+      remainingQuantity -= quantityToUse;
+    }
+
+    if (totalStockQuantity > 0) {
+      quantity.value = requestedQuantity; // Avtomatik 1.0
+      cachedStockQuantity.value = totalStockQuantity; // Umumiy qoldiq
+      quantityController.text = quantity.value.toString();
+      priceController.text = unitPrice.value.toString();
+    } else {
+      selectedProductId.value = null;
+      selectedBatchIds.clear();
+      cachedStockQuantity.value = null;
+      resetSalePanel();
+      CustomToast.show(
+        context: Get.context!,
+        title: 'Xatolik',
+        message: 'Omborda yetarli mahsulot yo‘q',
+        type: CustomToast.error,
+      );
+      return;
+    }
+
+    print('selectProduct: productId: $productId, batchIds: $selectedBatchIds, stockQuantity: $cachedStockQuantity, unitPrice: $unitPrice, quantity: $quantity');
     update(['quantity', 'totalPrice']);
   }
 
@@ -146,7 +212,7 @@ class SalesScreenController extends GetxController {
       creditAmount.value = getTotalPrice();
       creditAmountController.text = creditAmount.value?.toString() ?? '';
     }
-    update(['totalPrice']);
+    update(['quantity', 'totalPrice']);
   }
 
   // Miqdorni oshirish
@@ -280,9 +346,6 @@ class SalesScreenController extends GetxController {
 
   // Sotuv panelini tozalash
   void resetSalePanel() {
-    quantity.value = 0.0;
-    unitPrice.value = 0.0;
-    basePrice.value = 0.0;
     showCreditOptions.value = false;
     showDiscountOption.value = false;
     selectedCustomerId.value = null;
@@ -292,8 +355,6 @@ class SalesScreenController extends GetxController {
     creditAmount.value = null;
     creditDueDate.value = null;
     discount.value = 0.0;
-    quantityController.clear();
-    priceController.clear();
     newCustomerNameController.clear();
     newCustomerPhoneController.clear();
     newCustomerAddressController.clear();
@@ -302,7 +363,7 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
-  // Mahsulot sotish
+  // Mahsulot sotish (FIFO bilan)
   Future<void> sellProduct(BuildContext context) async {
     final parsedQuantity = double.tryParse(quantityController.text) ?? quantity.value;
     if (cachedStockQuantity.value != null && parsedQuantity > cachedStockQuantity.value!) {
@@ -389,6 +450,7 @@ class SalesScreenController extends GetxController {
       }
 
       final totalPrice = getTotalPrice();
+      final items = await _prepareSaleItems(selectedProductId.value!, quantity.value);
       final saleResponse = await apiService.addSale(
         saleType: saleType,
         customerId: customerId != null ? int.parse(customerId) : null,
@@ -403,13 +465,7 @@ class SalesScreenController extends GetxController {
             ? 'Chegirma bilan sotuv'
             : 'Naqd sotuv',
         createdBy: _supabase.auth.currentUser!.id,
-        items: [
-          {
-            'product_id': int.parse(selectedProductId.value!),
-            'quantity': quantity.value,
-            'unit_price': basePrice.value + unitPrice.value,
-          }
-        ],
+        items: items,
       );
 
       if (saleResponse.isEmpty) {
@@ -418,14 +474,17 @@ class SalesScreenController extends GetxController {
 
       // Qoldiqni yangilash
       cachedStockQuantity.value = (cachedStockQuantity.value ?? 0.0) - quantity.value;
-      if (selectedBatchId.value != null && batchCache.containsKey(selectedBatchId.value!)) {
-        batchCache[selectedBatchId.value!]!['quantity'] =
-            (batchCache[selectedBatchId.value!]!['quantity'] ?? 0.0) - quantity.value;
+      for (var item in items) {
+        final batchId = item['batch_id'].toString();
+        final itemQuantity = item['quantity'] as double;
+        if (batchCache.containsKey(batchId)) {
+          batchCache[batchId]!['quantity'] = (batchCache[batchId]!['quantity'] ?? 0.0) - itemQuantity;
+        }
       }
 
       // Sotuv panelini tozalash
       selectedProductId.value = null;
-      selectedBatchId.value = null;
+      selectedBatchIds.clear();
       cachedStockQuantity.value = null;
       resetSalePanel();
       recentSalesFuture.value = apiService.getRecentSales(limit: 2);
@@ -451,6 +510,44 @@ class SalesScreenController extends GetxController {
     } finally {
       isSelling.value = false;
     }
+  }
+
+  // FIFO bo‘yicha sotuv elementlarini tayyorlash
+  Future<List<Map<String, dynamic>>> _prepareSaleItems(String productId, double requestedQuantity) async {
+    final batches = batchCache.entries
+        .where((entry) => entry.value['product_id'] == productId)
+        .toList()
+      ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+    double remainingQuantity = requestedQuantity;
+    List<Map<String, dynamic>> items = [];
+
+    for (var batch in batches) {
+      if (remainingQuantity <= 0) break;
+
+      final batchId = batch.key;
+      final batchQuantity = batch.value['quantity'] as double;
+      final batchCostPrice = batch.value['cost_price'] as double;
+      final batchSellingPrice = batch.value['selling_price'] as double;
+      final pricePerUnit = batchCostPrice + batchSellingPrice;
+
+      final quantityToUse = remainingQuantity > batchQuantity ? batchQuantity : remainingQuantity;
+      items.add({
+        'product_id': int.parse(productId),
+        'batch_id': int.parse(batchId),
+        'quantity': quantityToUse,
+        'unit_price': pricePerUnit + unitPrice.value,
+        'total_price': quantityToUse * (pricePerUnit + unitPrice.value),
+      });
+
+      remainingQuantity -= quantityToUse;
+    }
+
+    if (remainingQuantity > 0) {
+      throw Exception('Omborda yetarli mahsulot yo‘q: product_id=$productId');
+    }
+
+    return items;
   }
 
   // Mahsulotni qaytarish
