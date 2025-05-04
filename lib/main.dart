@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/date_symbol_data_file.dart';
 import 'package:provider/provider.dart';
 import 'package:sklad/screens/auth/login_page.dart';
 import 'package:sklad/screens/auth/sign_up_page.dart';
@@ -108,7 +107,7 @@ class MyApp extends StatelessWidget {
       locale: Get.find<GetController>().language,
       routerDelegate: _router.routerDelegate,
       routeInformationParser: _router.routeInformationParser,
-      routeInformationProvider: _router.routeInformationProvider,
+      routeInformationProvider: _router.routeInformationProvider
     );
   }
 }
