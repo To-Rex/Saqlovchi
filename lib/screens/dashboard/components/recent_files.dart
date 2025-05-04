@@ -173,7 +173,12 @@ class RecentFiles extends StatelessWidget {
         DataCell(Text(product.categoryName, style: textStyle)),
         DataCell(Text('${product.costPrice} UZS', style: textStyle)),
         DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
-        DataCell(Text(product.quantity, style: textStyle)),
+        DataCell(
+          Tooltip(
+            message: 'Boshlang‘ich miqdor: ${product.initialQuantity.toStringAsFixed(2)}',
+            child: Text(product.quantity, style: textStyle),
+          ),
+        ),
         DataCell(Text(product.unit, style: textStyle)),
         DataCell(Text(product.batchNumber, style: textStyle)),
         DataCell(Text(product.saleStatus, style: textStyle)),
@@ -261,15 +266,18 @@ class RecentFiles extends StatelessWidget {
                           color: Colors.white70,
                         ),
                       ),
-                      Text(
-                        'Miqdor: ${product.quantity} kg',
-                        style: TextStyle(
-                          fontSize: Responsive.getFontSize(context, baseSize: 12),
-                          color: isOutOfStock
-                              ? outOfStockColor
-                              : product.isLowStock
-                              ? lowStockColor
-                              : Colors.white70,
+                      Tooltip(
+                        message: 'Boshlang‘ich miqdor: ${product.initialQuantity.toStringAsFixed(2)}',
+                        child: Text(
+                          'Miqdor: ${product.quantity} kg',
+                          style: TextStyle(
+                            fontSize: Responsive.getFontSize(context, baseSize: 12),
+                            color: isOutOfStock
+                                ? outOfStockColor
+                                : product.isLowStock
+                                ? lowStockColor
+                                : Colors.white70,
+                          ),
                         ),
                       ),
                       Text(
@@ -318,6 +326,7 @@ class RecentFiles extends StatelessWidget {
       },
     );
   }
+
 
   Widget _buildActionButtons(BuildContext context, ProductDisplayData product) {
     return PopupMenuButton<String>(

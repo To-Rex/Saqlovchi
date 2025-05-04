@@ -10,6 +10,7 @@ class ProductDisplayData {
   final String createdAt;
   final bool isLowStock;
   final String code;
+  final double initialQuantity; // Yangi maydon
 
   ProductDisplayData({
     required this.name,
@@ -23,6 +24,7 @@ class ProductDisplayData {
     required this.createdAt,
     required this.isLowStock,
     required this.code,
+    required this.initialQuantity,
   });
 
   factory ProductDisplayData.fromProduct(dynamic product, List<dynamic> categories) {
@@ -45,6 +47,7 @@ class ProductDisplayData {
       createdAt: product['created_at']?.toString().split('T').first ?? 'Noma’lum',
       isLowStock: stockQuantity > 0 && stockQuantity <= 10,
       code: product['code']?.toString() ?? '',
+      initialQuantity: product['initial_quantity']?.toDouble() ?? 0.0,
     );
   }
 
@@ -60,6 +63,7 @@ class ProductDisplayData {
       'sale_status': saleStatus,
       'created_at': createdAt,
       'code': code,
+      'initial_quantity': initialQuantity,
     };
   }
 }

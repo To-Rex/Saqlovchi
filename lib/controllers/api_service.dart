@@ -436,21 +436,26 @@ class ApiService {
 
   Future<List<dynamic>> getProductsWithStock() async {
     try {
-      final response = await _supabase.from('products').select('''
-      id::integer, name, code, category_id::integer, unit_id::integer, description, created_by, created_at,
-      categories!inner(name),
-      units!inner(name),
-      batches!batches_product_id_fkey(id, batch_number, quantity, cost_price, selling_price, received_date)
-    ''');
-      final productsWithStock = [];
-      for (var product in response) {
-        final stockQuantity = await getStockQuantity(product['id'].toString());
-        productsWithStock.add({
-          ...product,
-          'stock_quantity': stockQuantity,
-        });
-      }
-      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta, mahsulotlar: ${productsWithStock.map((p) => {'id': p['id'], 'name': p['name'], 'code': p['code']}).toList()}');
+      final response = await _supabase.rpc('get_products_with_stock').select();
+
+      final productsWithStock = response.map((product) {
+        return {
+          'id': product['id'],
+          'name': product['name'],
+          'code': product['code'],
+          'category_id': product['category_id'],
+          'unit_id': product['unit_id'],
+          'description': product['description'],
+          'created_by': product['created_by'],
+          'created_at': product['created_at'],
+          'categories': {'name': product['category_name']},
+          'units': {'name': product['unit_name']},
+          'stock_quantity': product['stock_quantity']?.toDouble() ?? 0.0,
+          'initial_quantity': product['initial_quantity']?.toDouble() ?? 0.0,
+        };
+      }).toList();
+
+      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta, mahsulotlar: ${productsWithStock.map((p) => {'id': p['id'], 'name': p['name'], 'code': p['code'], 'stock_quantity': p['stock_quantity'], 'initial_quantity': p['initial_quantity']}).toList()}');
       return productsWithStock;
     } catch (e) {
       final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
