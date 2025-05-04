@@ -179,6 +179,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
+
   Widget _buildSearchBar(
       BuildContext context,
       SalesScreenController controller, {
@@ -188,7 +189,7 @@ class SalesScreen extends StatelessWidget {
       padding: Responsive.getPadding(context, basePadding: padding),
       child: TextField(
         decoration: InputDecoration(
-          hintText: 'Mahsulot qidirish',
+          hintText: 'Nomi yoki kodi bo‘yicha qidirish', // Hint matni yaxshilandi
           hintStyle: TextStyle(
             color: Colors.white70,
             fontSize: Responsive.getFontSize(context, baseSize: 16),
@@ -213,7 +214,10 @@ class SalesScreen extends StatelessWidget {
           color: Colors.white,
           fontSize: Responsive.getFontSize(context, baseSize: 16),
         ),
-        onChanged: (value) => controller.searchQuery.value = value.toLowerCase(),
+        onChanged: (value) {
+          controller.searchQuery.value = value.trim().toLowerCase();
+          print('SalesScreen SearchField: Yangi qidirish qiymati: ${controller.searchQuery.value}');
+        },
       ),
     );
   }
@@ -329,8 +333,12 @@ class SalesScreen extends StatelessWidget {
           .toList();
 
       final searchedProducts = filteredProducts
-          .where((p) => p['name'].toString().toLowerCase().contains(controller.searchQuery.value))
+          .where((p) =>
+      (p['name']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value) ||
+          (p['code']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value))
           .toList();
+
+      print('SalesScreen Qidirish natijalari: ${searchedProducts.length} ta mahsulot topildi (query: ${controller.searchQuery.value}), mahsulotlar: ${searchedProducts.map((p) => {'name': p['name'], 'code': p['code']}).toList()}');
 
       if (controller.isStockLoading.value) {
         return const Center(
@@ -407,7 +415,7 @@ class SalesScreen extends StatelessWidget {
             return GestureDetector(
               onTap: () => controller.selectProduct(
                 product['id'].toString(),
-                1.0, // Dastlabki miqdor sifatida 1.0
+                1.0,
               ),
               child: Tooltip(
                 message: batchDetails,
@@ -455,6 +463,18 @@ class SalesScreen extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
+                            if (product['code'] != null && product['code'].toString().isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Kod: ${product['code']}',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 11),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                             const SizedBox(height: 4),
                             Text(
                               "Narx: ${firstBatchPrice.toStringAsFixed(2)} so‘m",
