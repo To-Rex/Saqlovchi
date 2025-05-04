@@ -413,6 +413,4 @@ class RecentFiles extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     );
   }
-
-
 }
