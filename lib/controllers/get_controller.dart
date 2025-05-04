@@ -32,6 +32,7 @@ class GetController extends GetxController {
   // Yuklanish va xato holatlari
   RxBool isLoading = true.obs;
   RxString error = ''.obs;
+  RxBool isAddingProduct = false.obs;
 
   // Yangi mahsulot/partiya uchun o‘zgaruvchilar
   final newCategoryName = ''.obs;

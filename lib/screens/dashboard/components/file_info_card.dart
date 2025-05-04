@@ -13,7 +13,7 @@ class FileInfoCard extends StatelessWidget {
   final GetController controller;
   final int categoryId;
 
-  const   FileInfoCard({
+  const FileInfoCard({
     super.key,
     required this.title,
     required this.addedUser,

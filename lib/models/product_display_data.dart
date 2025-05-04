@@ -1,4 +1,5 @@
 class ProductDisplayData {
+  final int? productId; // int? sifatida o‘zgartirildi
   final String name;
   final String categoryName;
   final String quantity;
@@ -11,9 +12,10 @@ class ProductDisplayData {
   final bool isLowStock;
   final String code;
   final double initialQuantity;
-  final List<Map<String, dynamic>> batches; // Yangi maydon
+  final List<Map<String, dynamic>> batches;
 
   ProductDisplayData({
+    required this.productId,
     required this.name,
     required this.categoryName,
     required this.quantity,
@@ -41,6 +43,7 @@ class ProductDisplayData {
         : <Map<String, dynamic>>[];
 
     return ProductDisplayData(
+      productId: product['id'] != null ? int.tryParse(product['id'].toString()) : null, // Xavfsiz konvertatsiya
       name: product['name']?.toString() ?? 'Noma’lum',
       categoryName: category != null ? category['name']?.toString() ?? 'Noma’lum' : 'Noma’lum',
       quantity: stockQuantity.toStringAsFixed(2),
@@ -59,6 +62,7 @@ class ProductDisplayData {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': productId,
       'name': name,
       'category_name': categoryName,
       'quantity': quantity,

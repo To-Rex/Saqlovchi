@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../companents/custom_toast.dart';
 import '../../../constants.dart';
 import '../../../controllers/get_controller.dart';
 import '../../../function/dialog_function.dart';
@@ -361,6 +362,19 @@ class RecentFiles extends StatelessWidget {
           DialogFunction().showEditProductDialog(context, controller, productMap);
         } else if (value == 'delete') {
           DialogFunction().showDeleteProductDialog(context, controller, productMap);
+        } else if (value == 'add_batch') {
+          if (product.productId == null) {
+            print('Xato: productId null, product=${product.name}');
+            CustomToast.show(
+              context: context,
+              title: 'Xatolik',
+              message: 'Mahsulot ID topilmadi',
+              type: CustomToast.error,
+            );
+            return;
+          }
+          print('Mahsulot qo‘shish tanlandi: productId=${product.productId}, name=${product.name}');
+          DialogFunction().showAddProductDialog(context, controller, existingProductId: product.productId);
         }
       },
       itemBuilder: (context) => [
@@ -384,9 +398,21 @@ class RecentFiles extends StatelessWidget {
             ],
           ),
         ),
+        PopupMenuItem(
+          value: 'add_batch',
+          child: Row(
+            children: [
+              Icon(Icons.add_circle, size: 12, color: Colors.green),
+              SizedBox(width: 6),
+              Text('Mahsulot qo‘shish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
+            ],
+          ),
+        ),
       ],
       color: secondaryColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     );
   }
+
+
 }
