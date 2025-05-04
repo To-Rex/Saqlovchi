@@ -32,7 +32,7 @@ class GetController extends GetxController {
   // Yuklanish va xato holatlari
   RxBool isLoading = true.obs;
   RxString error = ''.obs;
-  RxBool isAddingProduct = false.obs;
+  RxBool isProcessing = false.obs;
 
   // Yangi mahsulot/partiya uchun o‘zgaruvchilar
   final newCategoryName = ''.obs;
@@ -364,73 +364,42 @@ class GetController extends GetxController {
   }
 
   // Mahsulotni tahrirlash
-  Future<void> editProduct(
-      String id,
-      String name,
-      String categoryId,
-      double costPrice,
-      String unitId, {
-        double? sellingPrice,
-        double? quantity,
-        String? batchNumber,
-      }) async {
-    isLoading.value = true;
+
+
+  // Mahsulotni yangilash
+  Future<void> updateProduct({
+    required String id,
+    required String name,
+    String? code,
+    required int categoryId,
+    required int unitId,
+    String? description,
+  }) async {
+    isProcessing.value = true;
+    print('Mahsulot yangilash boshlandi: productId=$id, name=$name');
     try {
-      if (name.isEmpty) {
-        throw Exception('Mahsulot nomi kiritilishi shart');
-      }
-      if (costPrice <= 0 || (sellingPrice != null && sellingPrice <= 0) || (quantity != null && quantity <= 0)) {
-        throw Exception('Miqdor va narxlar ijobiy bo‘lishi kerak');
-      }
-
       await _apiService.updateProduct(
-        id: int.parse(id),
+        productId: int.parse(id),
         name: name,
-        categoryId: int.parse(categoryId),
-        unitId: int.parse(unitId),
-        description: null,
+        code: code,
+        categoryId: categoryId,
+        unitId: unitId,
+        description: description,
       );
-
-      if (quantity != null || sellingPrice != null || costPrice != 0 || batchNumber != null) {
-        final product = products.firstWhere((p) => p['id'].toString() == id);
-        final batch = product['batches']?.isNotEmpty == true ? product['batches'][0] : null;
-        if (batch != null) {
-          await _apiService.updateBatch(
-            id: batch['id'],
-            quantity: quantity?.toInt() ?? batch['quantity'],
-            costPrice: costPrice,
-            sellingPrice: sellingPrice ?? batch['selling_price'],
-            comments: 'Tahrirlangan',
-          );
-        } else if (quantity != null && batchNumber != null) {
-          await _apiService.addBatch(
-            productId: int.parse(id),
-            batchNumber: batchNumber,
-            quantity: quantity,
-            costPrice: costPrice,
-            sellingPrice: sellingPrice ?? costPrice,
-            comments: 'Tahrirlangan partiya',
-            createdBy: _supabase.auth.currentUser?.id ?? '',
-          );
-        }
-      }
-
       await fetchInitialData();
-      Get.snackbar('Muvaffaqiyat', 'Mahsulot tahrirlandi',
-          backgroundColor: Colors.green, colorText: Colors.white);
     } catch (e) {
-      error.value = 'Mahsulot tahrirlashda xato: $e';
-      print('editProduct xatosi: $e');
-      Get.snackbar('Xatolik', 'Mahsulot tahrirlashda xato: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      error.value = 'Mahsulot yangilashda xato: $e';
+      print('updateProduct xatosi: $e');
     } finally {
-      isLoading.value = false;
+      isProcessing.value = false;
+      print('Yangilash tugadi: isProcessing=false');
     }
   }
 
   // Mahsulotni o‘chirish
   Future<void> deleteProduct(String id) async {
-    isLoading.value = true;
+    isProcessing.value = true;
+    print('O‘chirish boshlandi: productId=$id');
     try {
       await _apiService.deleteProduct(int.parse(id));
       await fetchInitialData();
@@ -442,7 +411,8 @@ class GetController extends GetxController {
       Get.snackbar('Xatolik', 'Mahsulot o‘chirishda xato: $e',
           backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
-      isLoading.value = false;
+      isProcessing.value = false;
+      print('O‘chirish tugadi: isProcessing=false');
     }
   }
 

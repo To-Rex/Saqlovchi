@@ -379,6 +379,16 @@ class RecentFiles extends StatelessWidget {
       },
       itemBuilder: (context) => [
         PopupMenuItem(
+          value: 'add_batch',
+          child: Row(
+            children: [
+              Icon(Icons.add_circle, size: 12, color: Colors.green),
+              SizedBox(width: 6),
+              Text('Mahsulot qo‘shish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
+            ],
+          ),
+        ),
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
@@ -397,17 +407,7 @@ class RecentFiles extends StatelessWidget {
               Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
             ],
           ),
-        ),
-        PopupMenuItem(
-          value: 'add_batch',
-          child: Row(
-            children: [
-              Icon(Icons.add_circle, size: 12, color: Colors.green),
-              SizedBox(width: 6),
-              Text('Mahsulot qo‘shish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
-            ],
-          ),
-        ),
+        )
       ],
       color: secondaryColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

@@ -1076,19 +1076,32 @@ class ApiService {
     }
   }
 
-  // Mahsulotni yangilash
-  Future<Map<String, dynamic>> updateProduct({required int id, required String name, required int categoryId, required int unitId, String? description}) async {
+  Future<void> updateProduct({
+    required int productId,
+    required String name,
+    String? code,
+    required int categoryId,
+    required int unitId,
+    String? description,
+  }) async {
     try {
-      final response = await _supabase.from('products').update({
+      final response = await _supabase
+          .from('products')
+          .update({
         'name': name,
+        'code': code,
         'category_id': categoryId,
         'unit_id': unitId,
-        'description': description,
-      }).eq('id', id).select().single();
-      return response;
+        'description': description ?? '',
+      })
+          .eq('id', productId)
+          .select()
+          .single();
+      print('Mahsulot yangilandi: productId=$productId, name=$name, code=$code');
     } catch (e) {
-      _handleError(e);
-      return {};
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Mahsulot yangilashda xato: productId=$productId, xato=$errorMessage');
+      throw Exception('Mahsulot yangilashda xato: $errorMessage');
     }
   }
 
@@ -1128,10 +1141,12 @@ class ApiService {
 
   Future<void> deleteProduct(int productId) async {
     try {
-      await _supabase.from('products').delete().eq('id', productId);
+      await _supabase.rpc('delete_product_with_relations', params: {'p_product_id': productId});
+      print('Mahsulot o‘chirildi: productId=$productId');
     } catch (e) {
-      _handleError(e);
-      throw Exception('Mahsulotni o‘chirishda xato: $e');
+      final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
+      print('Mahsulot o‘chirishda xato: productId=$productId, xato=$errorMessage');
+      throw Exception('Mahsulot o‘chirishda xato: $errorMessage');
     }
   }
 
