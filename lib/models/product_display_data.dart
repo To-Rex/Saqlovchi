@@ -10,7 +10,8 @@ class ProductDisplayData {
   final String createdAt;
   final bool isLowStock;
   final String code;
-  final double initialQuantity; // Yangi maydon
+  final double initialQuantity;
+  final List<Map<String, dynamic>> batches; // Yangi maydon
 
   ProductDisplayData({
     required this.name,
@@ -25,6 +26,7 @@ class ProductDisplayData {
     required this.isLowStock,
     required this.code,
     required this.initialQuantity,
+    required this.batches,
   });
 
   factory ProductDisplayData.fromProduct(dynamic product, List<dynamic> categories) {
@@ -34,6 +36,9 @@ class ProductDisplayData {
       orElse: () => null,
     );
     final stockQuantity = product['stock_quantity']?.toDouble() ?? 0.0;
+    final batchList = product['batches'] != null
+        ? List<Map<String, dynamic>>.from(product['batches'])
+        : <Map<String, dynamic>>[];
 
     return ProductDisplayData(
       name: product['name']?.toString() ?? 'Noma’lum',
@@ -48,6 +53,7 @@ class ProductDisplayData {
       isLowStock: stockQuantity > 0 && stockQuantity <= 10,
       code: product['code']?.toString() ?? '',
       initialQuantity: product['initial_quantity']?.toDouble() ?? 0.0,
+      batches: batchList,
     );
   }
 
@@ -64,6 +70,7 @@ class ProductDisplayData {
       'created_at': createdAt,
       'code': code,
       'initial_quantity': initialQuantity,
+      'batches': batches,
     };
   }
 }

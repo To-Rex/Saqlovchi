@@ -162,6 +162,18 @@ class RecentFiles extends StatelessWidget {
           ? lowStockColor
           : Colors.white,
     );
+    final batchDetails = product.batches.isNotEmpty
+        ? product.batches.asMap().entries.map((entry) {
+      final batch = entry.value;
+      final quantity = (batch['quantity'] as num?)?.toDouble() ?? 0.0;
+      final costPrice = (batch['cost_price'] as num?)?.toDouble() ?? 0.0;
+      final sellingPrice = (batch['selling_price'] as num?)?.toDouble() ?? 0.0;
+      final receivedDate = batch['received_date']?.toString().split('T').first ?? 'Noma’lum';
+      return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: $costPrice so‘m, Sotish narxi: $sellingPrice so‘m, Yaratilgan: $receivedDate';
+    }).join('\n')
+        : 'Partiyalar mavjud emas';
+    print('Tooltip ma‘lumotlari: product=${product.name}, batchDetails=$batchDetails');
+
     return DataRow(
       color: isOutOfStock
           ? WidgetStateProperty.all(outOfStockColor.withOpacity(0.2))
@@ -175,7 +187,7 @@ class RecentFiles extends StatelessWidget {
         DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
         DataCell(
           Tooltip(
-            message: 'Boshlang‘ich miqdor: ${product.initialQuantity.toStringAsFixed(2)}',
+            message: batchDetails,
             child: Text(product.quantity, style: textStyle),
           ),
         ),
@@ -197,6 +209,18 @@ class RecentFiles extends StatelessWidget {
       itemBuilder: (context, index) {
         final product = filteredProducts[index];
         final isOutOfStock = product.quantity == '0';
+        final batchDetails = product.batches.isNotEmpty
+            ? product.batches.asMap().entries.map((entry) {
+          final batch = entry.value;
+          final quantity = (batch['quantity'] as num?)?.toDouble() ?? 0.0;
+          final costPrice = (batch['cost_price'] as num?)?.toDouble() ?? 0.0;
+          final sellingPrice = (batch['selling_price'] as num?)?.toDouble() ?? 0.0;
+          final receivedDate = batch['received_date']?.toString().split('T').first ?? 'Noma’lum';
+          return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: $costPrice so‘m, Sotish narxi: $sellingPrice so‘m, Yaratilgan: $receivedDate';
+        }).join('\n')
+            : 'Partiyalar mavjud emas';
+        print('Tooltip ma‘lumotlari: product=${product.name}, batchDetails=$batchDetails');
+
         return AnimatedContainer(
           duration: Duration(milliseconds: 200),
           margin: EdgeInsets.symmetric(vertical: defaultPadding / 2),
@@ -267,7 +291,7 @@ class RecentFiles extends StatelessWidget {
                         ),
                       ),
                       Tooltip(
-                        message: 'Boshlang‘ich miqdor: ${product.initialQuantity.toStringAsFixed(2)}',
+                        message: batchDetails,
                         child: Text(
                           'Miqdor: ${product.quantity} kg',
                           style: TextStyle(

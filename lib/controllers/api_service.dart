@@ -434,11 +434,32 @@ class ApiService {
   }
 
 
+
   Future<List<dynamic>> getProductsWithStock() async {
     try {
-      final response = await _supabase.rpc('get_products_with_stock').select();
+      final productResponse = await _supabase.rpc('get_products_with_stock').select();
+      final batchResponse = await _supabase
+          .from('batches')
+          .select('id, product_id, batch_number, quantity, cost_price, selling_price, received_date');
 
-      final productsWithStock = response.map((product) {
+      final batchMap = <String, List<Map<String, dynamic>>>{};
+      for (var batch in batchResponse) {
+        final productId = batch['product_id'].toString();
+        if (!batchMap.containsKey(productId)) {
+          batchMap[productId] = [];
+        }
+        batchMap[productId]!.add({
+          'id': batch['id'],
+          'batch_number': batch['batch_number'],
+          'quantity': batch['quantity'],
+          'cost_price': batch['cost_price'],
+          'selling_price': batch['selling_price'],
+          'received_date': batch['received_date'],
+        });
+      }
+
+      final productsWithStock = productResponse.map((product) {
+        final productId = product['id'].toString();
         return {
           'id': product['id'],
           'name': product['name'],
@@ -446,16 +467,17 @@ class ApiService {
           'category_id': product['category_id'],
           'unit_id': product['unit_id'],
           'description': product['description'],
-          'created_by': product['created_by'],
+          'created_by': product['created_by']?.toString(),
           'created_at': product['created_at'],
           'categories': {'name': product['category_name']},
           'units': {'name': product['unit_name']},
           'stock_quantity': product['stock_quantity']?.toDouble() ?? 0.0,
           'initial_quantity': product['initial_quantity']?.toDouble() ?? 0.0,
+          'batches': batchMap[productId] ?? [],
         };
       }).toList();
 
-      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta, mahsulotlar: ${productsWithStock.map((p) => {'id': p['id'], 'name': p['name'], 'code': p['code'], 'stock_quantity': p['stock_quantity'], 'initial_quantity': p['initial_quantity']}).toList()}');
+      print('Olingan mahsulotlar (qoldiq bilan): ${productsWithStock.length} ta, mahsulotlar: ${productsWithStock.map((p) => {'id': p['id'], 'name': p['name'], 'code': p['code'], 'stock_quantity': p['stock_quantity'], 'initial_quantity': p['initial_quantity'], 'batches': p['batches']}).toList()}');
       return productsWithStock;
     } catch (e) {
       final errorMessage = e.toString().isEmpty ? 'Noma’lum xato yuz berdi' : e.toString();
