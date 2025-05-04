@@ -660,6 +660,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
+
   Widget _buildRecentSales(
       BuildContext context,
       SalesScreenController controller,
@@ -691,7 +692,7 @@ class SalesScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          FutureBuilder<List<dynamic>>(
+          Obx(() => FutureBuilder<List<dynamic>>(
             future: controller.recentSalesFuture.value,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -709,6 +710,7 @@ class SalesScreen extends StatelessWidget {
                 );
               }
               final recentSales = snapshot.data ?? [];
+              print('RecentSales yangilandi: ${recentSales.length} ta sotuv, ma‘lumotlar: ${recentSales.map((s) => {'id': s['id'], 'name': s['sale_items']?[0]?['batches']?['products']?['name'] ?? 'Noma‘lum'}).toList()}');
               return Column(
                 children: [
                   ...recentSales.map((sale) {
@@ -844,7 +846,7 @@ class SalesScreen extends StatelessWidget {
                 ],
               );
             },
-          ),
+          )),
         ],
       ),
     );

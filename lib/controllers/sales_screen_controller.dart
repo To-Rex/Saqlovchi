@@ -363,7 +363,6 @@ class SalesScreenController extends GetxController {
     update(['totalPrice']);
   }
 
-  // Mahsulot sotish (FIFO bilan)
   Future<void> sellProduct(BuildContext context) async {
     final parsedQuantity = double.tryParse(quantityController.text) ?? quantity.value;
     if (cachedStockQuantity.value != null && parsedQuantity > cachedStockQuantity.value!) {
@@ -487,7 +486,11 @@ class SalesScreenController extends GetxController {
       selectedBatchIds.clear();
       cachedStockQuantity.value = null;
       resetSalePanel();
+
+      // Oxirgi sotuvlarni yangilash
       recentSalesFuture.value = apiService.getRecentSales(limit: 2);
+      print('recentSalesFuture yangilandi: saleId=${saleResponse['id']}, saleType=$saleType');
+      update(); // UI ni qayta chizish uchun
 
       CustomToast.show(
         context: context,
