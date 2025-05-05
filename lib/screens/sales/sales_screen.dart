@@ -6,7 +6,7 @@ import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/sales_screen_controller.dart';
 import '../../companents/custom_toast.dart';
 import '../../responsive.dart';
-import '../test_screen.dart';
+import '../dashboard/components/header.dart';
 
 class SalesScreen extends StatelessWidget {
   const SalesScreen({super.key});
@@ -169,11 +169,12 @@ class SalesScreen extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          IconButton(
+          ProfileCard(),
+          /*IconButton(
             icon: const Icon(Icons.fact_check_rounded, color: Colors.white, size: 28),
             onPressed: () => GoRouter.of(context).go('/test'),
             splashRadius: 24,
-          ),
+          ),*/
         ],
       ),
     );

@@ -62,6 +62,7 @@ class ApiService {
           .maybeSingle();
       if (response != null && response['role'] != null) {
         print('Users jadvalidan olingan rol: ${response['role']}');
+        print('Users jadvalidan olingan ism: ${response['full_name']}');
         controller.role.value = response['role'] as String;
         controller.fullName.value = response['full_name'] as String;
         return response['role'] as String;

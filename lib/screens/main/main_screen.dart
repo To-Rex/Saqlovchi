@@ -70,7 +70,7 @@ class MainScreen extends StatelessWidget {
       case 'users':
         return const UsersScreen();
       case 'settings':
-        return const SettingsScreen();
+        return SettingsScreen();
       case '':
         return role == 'seller' ? SalesScreen() : DashboardScreen(); // Default holat
       default:

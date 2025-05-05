@@ -42,14 +42,11 @@ class ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(left: defaultPadding),
-      padding: EdgeInsets.symmetric(
-        horizontal: defaultPadding,
-        vertical: defaultPadding / 2,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: defaultPadding, vertical: defaultPadding / 2),
       decoration: BoxDecoration(
         color: secondaryColor,
         borderRadius: const BorderRadius.all(Radius.circular(10)),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: Colors.white10)
       ),
       child: Row(
         children: [
