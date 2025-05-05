@@ -65,13 +65,7 @@ class SamplePage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Kategoriyalar bo'yicha tahlil",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87)
-                      ),
+                      const Text("Kategoriyalar bo'yicha tahlil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
                       const SizedBox(height: 16),
                     ],
                   ),

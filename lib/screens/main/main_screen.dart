@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../controllers/get_controller.dart';
 import '../../controllers/menu_app_controller.dart';
 import '../../responsive.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../documents/documents_screen.dart';
-import '../notifications/notifications_screen.dart';
 import '../sales/sales_screen.dart';
 import '../settings/settings_screen.dart';
 import '../tasks/tasks_screen.dart';
@@ -19,6 +21,7 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('MainScreen ochildi: initialPage=$initialPage'); // Log qo‘shish
     return Scaffold(
       key: context.read<MenuAppController>().scaffoldKey,
       drawer: const SideMenu(),
@@ -41,12 +44,24 @@ class MainScreen extends StatelessWidget {
   }
 
   Widget _buildMainContent(BuildContext context) {
-    // Joriy sahifa initialPage dan olinadi
     final String currentPage = initialPage;
+    final controller = Get.find<GetController>();
+    final role = controller.role.value;
+
+    print('Sahifa tanlanmoqda: currentPage=$currentPage, role=$role'); // Log qo‘shish
+
+    // Seller roli uchun /home ga kirish cheklanadi
+    if (role == 'seller' && currentPage == 'home') {
+      print('Seller home sahifasiga kirdi, SalesScreen ga yo‘naltirilmoqda');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        GoRouter.of(context).go('/sales');
+      });
+      return SalesScreen(); // Vaqtincha SalesScreen ko‘rsatiladi
+    }
 
     switch (currentPage) {
       case 'home':
-        return DashboardScreen();
+        return DashboardScreen(); // Admin va manager uchun DashboardScreen
       case 'transfers':
         return TransactionsScreen();
       case 'tasks':
@@ -55,16 +70,14 @@ class MainScreen extends StatelessWidget {
         return const DocumentsScreen();
       case 'sales':
         return SalesScreen();
-      case 'notifications':
-        return const NotificationsScreen();
       case 'users':
         return const UsersScreen();
       case 'settings':
         return const SettingsScreen();
       case '':
-        return DashboardScreen(); // Default holatda Dashboard
+        return role == 'seller' ? SalesScreen() : DashboardScreen(); // Default holat
       default:
-        return DashboardScreen(); // Agar sahifa topilmasa
+        return role == 'seller' ? SalesScreen() : DashboardScreen(); // Agar sahifa topilmasa
     }
   }
 }

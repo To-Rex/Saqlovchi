@@ -62,6 +62,7 @@ class ApiService {
           .maybeSingle();
       if (response != null && response['role'] != null) {
         print('Users jadvalidan olingan rol: ${response['role']}');
+        controller.role.value = response['role'] as String;
         return response['role'] as String;
       }
       print('Foydalanuvchi roli topilmadi, standart qiymat: seller');
