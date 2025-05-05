@@ -9,7 +9,6 @@ import '../dashboard/dashboard_screen.dart';
 import '../documents/documents_screen.dart';
 import '../sales/sales_screen.dart';
 import '../settings/settings_screen.dart';
-import '../tasks/tasks_screen.dart';
 import '../transfers/transactions_screen.dart';
 import '../users.dart';
 import 'components/side_menu.dart';
@@ -54,7 +53,7 @@ class MainScreen extends StatelessWidget {
     if (role == 'seller' && currentPage == 'home') {
       print('Seller home sahifasiga kirdi, SalesScreen ga yo‘naltirilmoqda');
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        GoRouter.of(context).go('/sales');
+        GoRouter.of(context).replace('/sales');
       });
       return SalesScreen(); // Vaqtincha SalesScreen ko‘rsatiladi
     }
@@ -64,8 +63,6 @@ class MainScreen extends StatelessWidget {
         return DashboardScreen(); // Admin va manager uchun DashboardScreen
       case 'transfers':
         return TransactionsScreen();
-      case 'tasks':
-        return const TasksScreen();
       case 'documents':
         return const DocumentsScreen();
       case 'sales':

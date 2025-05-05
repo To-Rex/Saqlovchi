@@ -12,7 +12,7 @@ class GetController extends GetxController {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Foydalanuvchi ma'lumotlari
-  var fullName = 'Dilshodjon Haydarov'.obs;
+  var fullName = 'User'.obs;
   var role = 'seller'.obs;
   Locale get language => Locale(GetStorage().read('language') ?? 'uz_UZ');
 

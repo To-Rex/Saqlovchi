@@ -5,8 +5,34 @@ import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../controllers/get_controller.dart';
 
-class SideMenu extends StatelessWidget {
+class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
+
+  @override
+  _SideMenuState createState() => _SideMenuState();
+}
+
+class _SideMenuState extends State<SideMenu> {
+  @override
+  void initState() {
+    super.initState();
+    // GoRouter routerDelegate yo‘nalish o‘zgarishini kuzatish
+    GoRouter.of(context).routerDelegate.addListener(_onRouteChanged);
+  }
+
+  @override
+  void dispose() {
+    // Listener ni o‘chirish
+    GoRouter.of(context).routerDelegate.removeListener(_onRouteChanged);
+    super.dispose();
+  }
+
+  // Yo‘nalish o‘zgarganda setState chaqirish
+  void _onRouteChanged() {
+    setState(() {
+      print('Yo‘nalish o‘zgardi: ${GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString()}');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +53,7 @@ class SideMenu extends StatelessWidget {
         // Foydalanuvchi roliga qarab menyuni shakllantirish
         final String role = controller.role.value;
         print('SideMenu ochildi: role=$role');
-        final bool isSeller = role == 'seller' ? true : false;
+        final bool isSeller = role == 'seller';
 
         // Agar role bo‘sh bo‘lsa, xato ko‘rsatish yoki kirish sahifasiga yo‘naltirish
         if (role.isEmpty) {
@@ -42,6 +68,7 @@ class SideMenu extends StatelessWidget {
             ),
           );
         }
+
         // Menyu elementlari ro‘yxati
         final List<Widget> menuItems = [
           DrawerHeader(
@@ -67,6 +94,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Mijozlar",
               svgSrc: "assets/icons/menu_doc.svg",
+              route: '/documents',
               press: () {
                 print('Navigatsiya: /documents ga replace');
                 GoRouter.of(context).replace('/documents');
@@ -75,6 +103,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Sotuvlar",
               svgSrc: "assets/icons/menu_store.svg",
+              route: '/sales',
               press: () {
                 print('Navigatsiya: /sales ga replace');
                 GoRouter.of(context).replace('/sales');
@@ -87,6 +116,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Uy",
               svgSrc: "assets/icons/menu_dashboard.svg",
+              route: '/home',
               press: () {
                 print('Navigatsiya: /home ga replace');
                 GoRouter.of(context).replace('/home');
@@ -95,22 +125,16 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "O‘tkazmalar",
               svgSrc: "assets/icons/menu_tran.svg",
+              route: '/transfers',
               press: () {
                 print('Navigatsiya: /transfers ga replace');
                 GoRouter.of(context).replace('/transfers');
               },
             ),
             DrawerListTile(
-              title: "Vazifalar",
-              svgSrc: "assets/icons/menu_task.svg",
-              press: () {
-                print('Navigatsiya: /tasks ga replace');
-                GoRouter.of(context).replace('/tasks');
-              },
-            ),
-            DrawerListTile(
               title: "Mijozlar",
               svgSrc: "assets/icons/menu_doc.svg",
+              route: '/documents',
               press: () {
                 print('Navigatsiya: /documents ga replace');
                 GoRouter.of(context).replace('/documents');
@@ -119,6 +143,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Sotuvlar",
               svgSrc: "assets/icons/menu_store.svg",
+              route: '/sales',
               press: () {
                 print('Navigatsiya: /sales ga replace');
                 GoRouter.of(context).replace('/sales');
@@ -127,6 +152,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Foydalanuvchilar",
               svgSrc: "assets/icons/menu_profile.svg",
+              route: '/users',
               press: () {
                 print('Navigatsiya: /users ga replace');
                 GoRouter.of(context).replace('/users');
@@ -135,6 +161,7 @@ class SideMenu extends StatelessWidget {
             DrawerListTile(
               title: "Sozlamalar",
               svgSrc: "assets/icons/menu_setting.svg",
+              route: '/settings',
               press: () {
                 print('Navigatsiya: /settings ga replace');
                 GoRouter.of(context).replace('/settings');
@@ -149,6 +176,7 @@ class SideMenu extends StatelessWidget {
             title: "Chiqish",
             color: Colors.red,
             icon: Icons.logout,
+            route: '/login',
             press: () async {
               print('Chiqish: /login ga replace');
               await Supabase.instance.client.auth.signOut();
@@ -169,30 +197,56 @@ class SideMenu extends StatelessWidget {
 }
 
 class DrawerListTile extends StatelessWidget {
-  const DrawerListTile({super.key, required this.title, this.svgSrc, required this.press, this.color, this.icon});
+  const DrawerListTile({
+    super.key,
+    required this.title,
+    this.svgSrc,
+    required this.press,
+    this.color,
+    this.icon,
+    required this.route,
+  });
 
   final String? title, svgSrc;
   final Color? color;
   final VoidCallback press;
   final IconData? icon;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
+    // Joriy yo‘nalishni aniqlash
+    final bool isSelected = GoRouter.of(context).routerDelegate.currentConfiguration.uri.toString() == route;
+
+    // Log qo‘shish: faol holatni tekshirish
+    print('DrawerListTile: title=$title, route=$route, isSelected=$isSelected');
+
     return ListTile(
       onTap: press,
       horizontalTitleGap: 0.0,
+      selected: isSelected, // Faol holatni belgilash
+      selectedTileColor: Colors.white.withOpacity(0.1), // Faol fon rangi
       leading: svgSrc == null
-          ? Icon(icon, color: color ?? Colors.white54)
+          ? Icon(
+        icon,
+        color: isSelected ? Colors.white : color ?? Colors.white54,
+      )
           : SvgPicture.asset(
         svgSrc!,
-        colorFilter: ColorFilter.mode(color ?? Colors.white54, BlendMode.srcIn),
+        colorFilter: ColorFilter.mode(
+          isSelected ? Colors.white : color ?? Colors.white54,
+          BlendMode.srcIn,
+        ),
         height: 16,
       ),
       title: Text(
         ' $title',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: color ?? Colors.white54),
+        style: TextStyle(
+          color: isSelected ? Colors.white : color ?? Colors.white54,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
     );
   }

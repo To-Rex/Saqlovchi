@@ -57,12 +57,13 @@ class ApiService {
     try {
       final response = await _supabase
           .from('users')
-          .select('role')
+          .select('role, full_name')
           .eq('id', userId)
           .maybeSingle();
       if (response != null && response['role'] != null) {
         print('Users jadvalidan olingan rol: ${response['role']}');
         controller.role.value = response['role'] as String;
+        controller.fullName.value = response['full_name'] as String;
         return response['role'] as String;
       }
       print('Foydalanuvchi roli topilmadi, standart qiymat: seller');
