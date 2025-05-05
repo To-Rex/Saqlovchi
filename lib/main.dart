@@ -27,7 +27,7 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
-      path: '/signup',
+      path: '/signupcreateaccount',
       builder: (context, state) => const SignUpPage(),
     ),
     GoRoute(
@@ -56,8 +56,8 @@ final GoRouter _router = GoRouter(
   redirect: (context, state) async {
     final suPaBase = Supabase.instance.client;
     final session = suPaBase.auth.currentSession;
-    if (session == null && state.uri.toString() == '/signup') {
-      return '/signup';
+    if (session == null && state.uri.toString() == '/signupcreateaccount') {
+      return '/signupcreateaccount';
     }
     if (session == null && state.uri.toString() != '/login') {
       return '/login';

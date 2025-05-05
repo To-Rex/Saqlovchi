@@ -114,32 +114,9 @@ class LoginPage extends StatelessWidget {
                               onChanged: (value) => controller.password.value = value, // Parolni controllerga yozamiz
                             ),
                           ),
-                          SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: false,
-                                    onChanged: (value) {}, // Agar kerak bo‘lsa, controllerda boshqariladi
-                                  ),
-                                  const Text('Remember me'),
-                                ],
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // Forgot password logikasi qo‘shilishi mumkin
-                                },
-                                child: const Text('Forgot password?', style: TextStyle(color: Colors.indigo)),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 16),
+                          SizedBox(height: 36),
                           ElevatedButton(
-                            //onPressed: controller.isLoading.value ? null : controller.handleSubmit(context), // Kirishni boshqarish
                             onPressed: (){
-                              //GoRouter.of(context).go('/home');
                               if(formKey.currentState!.validate()){
                                 controller.handleSubmit(context);
                               }
@@ -153,25 +130,6 @@ class LoginPage extends StatelessWidget {
                             child: const Text('Sign in'),
                           ),
                           SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "Don't have an account? ",
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // Sign up logikasi qo‘shilishi mumkin
-                                  GoRouter.of(context).go('/signup');
-                                },
-                                child: const Text(
-                                  'Sign up',
-                                  style: TextStyle(color: Colors.indigo),
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
