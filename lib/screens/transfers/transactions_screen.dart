@@ -47,8 +47,8 @@ class TransactionsScreen extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white70),
-                        onPressed: () => Get.back(),
+                        icon: const Icon(Icons.info, color: Colors.white70),
+                        onPressed: () => showAdaptiveAboutDialog(context: context),
                       ),
                     ],
                   ),
