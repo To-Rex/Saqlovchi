@@ -70,8 +70,10 @@ class _UsersScreenState extends State<UsersScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-                          onPressed: () => context.pop(),
+                          icon: const Icon(Icons.info, color: Colors.white70, size: 20),
+                          onPressed: (){
+                            showAboutDialog(context: context);
+                          }
                         ),
                       ],
                     ),

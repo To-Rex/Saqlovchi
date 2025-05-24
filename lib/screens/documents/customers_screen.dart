@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/customers_screen_controller.dart';
 import 'package:sklad/companents/custom_toast.dart';
+import 'package:sklad/function/dialog_function.dart';
 import 'package:sklad/responsive.dart';
 
 class CustomersScreen extends StatefulWidget {
@@ -70,8 +71,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-                          onPressed: () => context.pop(),
+                          icon: const Icon(Icons.info, color: Colors.white70, size: 20),
+                          onPressed: () => DialogFunction().showToast('Diqqat!', 'Bu funksiya hali ishlab chiqilmagan', Colors.grey,2),
                         ),
                       ],
                     ),

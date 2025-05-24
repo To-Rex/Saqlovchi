@@ -9,17 +9,7 @@ class DocumentsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: secondaryColor,
-        title: Text(
-          'Hujjatlar',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: Responsive.getFontSize(context, baseSize: 18),
-          ),
-        ),
-      ),
-      body: const CustomersScreen(),
+      body: const CustomersScreen()
     );
   }
 }

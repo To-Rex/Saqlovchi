@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -1633,6 +1634,20 @@ class DialogFunction {
         child: child,
       ),
     );
+  }
+
+  //show toast
+  void showToast(String title,String message, color,int duration) {
+    Fluttertoast.showToast(
+        msg: message,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: duration,
+        backgroundColor: color,
+        //webBgColor color
+        webBgColor: '$color',
+        textColor: Colors.white,
+        fontSize: 16.0);
   }
 
   Widget _buildSectionTitle(String title) => Padding(
