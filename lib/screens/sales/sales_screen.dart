@@ -468,8 +468,7 @@ class SalesScreen extends StatelessWidget {
               ],
               const SizedBox(height: 16),
               // “Tan narxiga sotish” tugmasi
-              Obx(
-                    () => AnimatedScale(
+              Obx(() => AnimatedScale(
                   duration: const Duration(milliseconds: 150),
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
@@ -479,8 +478,43 @@ class SalesScreen extends StatelessWidget {
                         controller.isSelling.value ||
                         controller.cachedStockQuantity.value == null ||
                         controller.cachedStockQuantity.value == 0)
-                        ? null
-                        : () => controller.sellAtCostPrice(context), // Tan narxiga sotish
+                        ? null : () {
+                      //controller.sellAtCostPrice(context)
+                      //dialog ochiladi
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(
+                            "Diqqat!",
+                            style: TextStyle(
+                              fontSize: Responsive.getFontSize(context, baseSize: 18),
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: Text(
+                            "Tan narxiga sotishni tasdiqlaysizmi?",
+                            style: TextStyle(
+                              fontSize:
+                              Responsive.getFontSize(context, baseSize: 16),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              child: Text(
+                                "Tan narxiga sotish",
+                                style: TextStyle(
+                                  fontSize:
+                                  Responsive.getFontSize(context, baseSize: 14),
+                                  color: Colors.red,
+                                ),
+                              ),
+                              onPressed: () => controller.sellAtCostPrice(context),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueGrey,
                       padding: const EdgeInsets.symmetric(
@@ -498,12 +532,8 @@ class SalesScreen extends StatelessWidget {
                         ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : Text(
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    ) : Text(
                       "Tan narxiga sotish",
                       style: TextStyle(
                         fontSize:
