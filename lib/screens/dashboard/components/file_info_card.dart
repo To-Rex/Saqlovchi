@@ -4,6 +4,7 @@ import '../../../controllers/get_controller.dart';
 import '../../../function/dialog_function.dart';
 import '../../../responsive.dart';
 
+/// Kategoriya ma'lumotlari kartasi
 class FileInfoCard extends StatelessWidget {
   final String title;
   final String addedUser;
@@ -13,116 +14,167 @@ class FileInfoCard extends StatelessWidget {
   final GetController controller;
   final int categoryId;
 
-  const FileInfoCard({super.key, required this.title, required this.addedUser, required this.createdAt, required this.productCount, required this.totalQuantity, required this.controller, required this.categoryId});
+  const FileInfoCard({
+    super.key,
+    required this.title,
+    required this.addedUser,
+    required this.createdAt,
+    required this.productCount,
+    required this.totalQuantity,
+    required this.controller,
+    required this.categoryId,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isLowStock = (double.tryParse(totalQuantity) ?? 0) < 10;
 
     return InkWell(
-      onTap: () {
-        DialogFunction().showCategoryDetailsDialog(context, controller, categoryId);
-      },
+      onTap: () => DialogFunction().showCategoryDetailsDialog(context, controller, categoryId),
+      borderRadius: BorderRadius.circular(8),
+      splashColor: Colors.blue.shade200.withOpacity(0.3),
+      highlightColor: Colors.blue.shade100.withOpacity(0.2),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: Responsive.getPadding(context, basePadding: const EdgeInsets.only(right: 10, left: 10, top: 10, bottom: 10)),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [primaryColor.withOpacity(0.8), isLowStock ? Colors.red.withOpacity(0.6) : primaryColor.withOpacity(0.6)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight
-          ),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 6, offset: const Offset(0, 2))]
+        padding: Responsive.getPadding(
+          context,
+          basePadding: const EdgeInsets.all(defaultPadding / 3),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 14), fontWeight: FontWeight.bold, color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1
-                    )
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, size: 14, color: Colors.white),
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        DialogFunction().showEditCategoryDialog(context, controller, {
-                          'id': categoryId,
-                          'name': title,
-                          'created_by': addedUser
-                        });
-                      } else if (value == 'delete') {
-                        DialogFunction().showDeleteCategoryDialog(context, controller, {
-                          'id': categoryId,
-                          'name': title
-                        });
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.edit, size: 12, color: Colors.blue),
-                            const SizedBox(width: 6),
-                            Text('Tahrirlash', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
-                          ],
+        decoration: BoxDecoration(
+          color: isLowStock ? Colors.red.shade700.withOpacity(0.05) : Colors.blue.shade800.withOpacity(0.05),
+          border: Border.all(
+            color: isLowStock ? Colors.red.shade400 : Colors.blue.shade600,
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: Responsive.isMobile(context) ? 80 : 100,
+          ),
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: Responsive.getFontSize(context, baseSize: 13),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            const Icon(Icons.delete, size: 12, color: Colors.red),
-                            const SizedBox(width: 6),
-                            Text('O‘chirish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12))),
-                          ],
-                        ),
-                      ),
-                    ],
-                    color: secondaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  ),
-                ],
-              ),
-              SizedBox(height: defaultPadding / 4),
-              _buildInfoRow(context, 'Mahsulotlar', productCount, maxLines: 1),
-              _buildInfoRow(context, 'Miqdor', '$totalQuantity kg', maxLines: 1),
-              if (isLowStock)
-                Text(
-                  'Kam miqdor!',
-                  style: TextStyle(
-                    fontSize: Responsive.getFontSize(context, baseSize: 10),
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
+                    ),
+                    _buildPopupMenu(context, isLowStock),
+                  ],
                 ),
-            ],
+                SizedBox(height: defaultPadding / 6),
+                _buildInfoRow(context, 'Mahsulotlar', productCount),
+                _buildInfoRow(context, 'Miqdor', '$totalQuantity kg'),
+                if (isLowStock) _buildLowStockBadge(context),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, {int maxLines = 1}) {
+  /// Popup menyuni yaratuvchi funksiya
+  Widget _buildPopupMenu(BuildContext context, bool isLowStock) {
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        size: Responsive.getFontSize(context, baseSize: 14),
+        color: Colors.white.withOpacity(0.8),
+      ),
+      onSelected: (value) {
+        if (value == 'edit') {
+          DialogFunction().showEditCategoryDialog(context, controller, {
+            'id': categoryId,
+            'name': title,
+            'created_by': addedUser,
+          });
+        } else if (value == 'delete') {
+          DialogFunction().showDeleteCategoryDialog(context, controller, {
+            'id': categoryId,
+            'name': title,
+          });
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(
+                Icons.edit,
+                size: Responsive.getFontSize(context, baseSize: 11),
+                color: Colors.blue.shade500,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Tahrirlash',
+                style: TextStyle(
+                  fontSize: Responsive.getFontSize(context, baseSize: 11),
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete,
+                size: Responsive.getFontSize(context, baseSize: 11),
+                color: Colors.red.shade500,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'O‘chirish',
+                style: TextStyle(
+                  fontSize: Responsive.getFontSize(context, baseSize: 11),
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      color: secondaryColor.withOpacity(0.9),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+    );
+  }
+
+  /// Ma'lumot qatorini yaratuvchi funksiya
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0.5),
+      padding: const EdgeInsets.symmetric(vertical: 1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: TextStyle(
-              fontSize: Responsive.getFontSize(context, baseSize: 12),
+              fontSize: Responsive.getFontSize(context, baseSize: 11),
               color: Colors.white70,
             ),
             overflow: TextOverflow.ellipsis,
@@ -131,14 +183,41 @@ class FileInfoCard extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12), color: Colors.white, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: Responsive.getFontSize(context, baseSize: 11),
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
-              maxLines: maxLines
-            )
-          )
-        ]
-      )
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Kam miqdor badge'ini yaratuvchi funksiya
+  Widget _buildLowStockBadge(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 2),
+      padding: EdgeInsets.symmetric(
+        horizontal: defaultPadding / 4,
+        vertical: defaultPadding / 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.red.shade500.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        'Kam miqdor!',
+        style: TextStyle(
+          fontSize: Responsive.getFontSize(context, baseSize: 9),
+          color: Colors.red.shade400,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
