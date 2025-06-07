@@ -131,58 +131,31 @@ class SearchField extends StatelessWidget {
                 print('SearchField: Yangi qidirish qiymati: ${controller.search.value}');
               },
               onSubmitted: (value) => _handleSearch(), // Enter tugmasi bosilganda
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: Responsive.getFontSize(context, baseSize: 12),
-              ),
+              style: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 12)),
               decoration: InputDecoration(
                 hintText: "Nomi yoki kodi bo‘yicha qidiring",
-                hintStyle: TextStyle(
-                  color: Colors.white54,
-                  fontSize: Responsive.getFontSize(context, baseSize: 11),
-                ),
+                hintStyle: TextStyle(color: Colors.white54, fontSize: Responsive.getFontSize(context, baseSize: 11)),
                 filled: true,
                 fillColor: Colors.transparent,
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue.shade300, width: 1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: Responsive.isMobile(context) ? defaultPadding / 2 : defaultPadding / 1.5,
-                  vertical: defaultPadding / 3,
-                ),
-              ),
-            ),
-          ),
+                border: OutlineInputBorder(borderSide: BorderSide.none, borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.blue.shade300, width: 1), borderRadius: BorderRadius.circular(10)),
+                contentPadding: EdgeInsets.symmetric(horizontal: Responsive.isMobile(context) ? defaultPadding / 2 : defaultPadding / 1.5, vertical: defaultPadding / 3)
+              )
+            )
+          )
         ),
         SizedBox(width: defaultPadding / 4),
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          constraints: BoxConstraints(
-            maxHeight: Responsive.isMobile(context) ? 30 : 32,
-            minWidth: Responsive.isMobile(context) ? 30 : 32,
-          ),
-          decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.8),
-            borderRadius: BorderRadius.circular(10),
-          ),
+          constraints: BoxConstraints(maxHeight: Responsive.isMobile(context) ? 30 : 32, minWidth: Responsive.isMobile(context) ? 30 : 32),
+          decoration: BoxDecoration(color: primaryColor.withOpacity(0.8), borderRadius: BorderRadius.circular(10)),
           child: InkWell(
             onTap: _handleSearch,
             borderRadius: BorderRadius.circular(16),
-            child: Center(
-              child: Icon(
-                Icons.search,
-                color: Colors.white,
-                size: Responsive.getFontSize(context, baseSize: 23),
-              ),
-            ),
-          ),
-        ),
-      ],
+            child: Center(child: Icon(Icons.search, color: Colors.white, size: Responsive.getFontSize(context, baseSize: 23)))
+          )
+        )
+      ]
     );
   }
 }
