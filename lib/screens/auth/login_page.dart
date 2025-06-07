@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import '../../../controllers/get_controller.dart';
 
-
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
@@ -11,6 +10,8 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final GetController controller = Get.put(GetController());
     final formKey = GlobalKey<FormState>();
+    final emailFocusNode = FocusNode();
+    final passwordFocusNode = FocusNode();
 
     return Scaffold(
       body: Container(
@@ -70,6 +71,7 @@ class LoginPage extends StatelessWidget {
                       child: Column(
                         children: [
                           TextFormField(
+                            focusNode: emailFocusNode,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
                               labelText: 'Email address',
@@ -85,39 +87,53 @@ class LoginPage extends StatelessWidget {
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
-                            onChanged: (value) => controller.email.value = value, // Emailni controllerga yozamiz
+                            onChanged: (value) {
+                              if (value.contains('@gmail.com')) {
+                                controller.email.value = value;
+                              } else {
+                                controller.email.value = '$value@gmail.com';
+                              }
+                            },
+                            onFieldSubmitted: (value) {
+                              FocusScope.of(context).requestFocus(passwordFocusNode);
+                            },
                           ),
                           SizedBox(height: 16),
                           Obx(() => TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    controller.showPassword.value ? Icons.visibility_off : Icons.visibility,
-                                    color: Colors.grey,
-                                  ),
-                                  onPressed: controller.toggleShowPassword, // Parolni ko‘rsatishni boshqarish
+                            focusNode: passwordFocusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  controller.showPassword.value ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey,
                                 ),
-                                hintText: 'password',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                  borderSide: BorderSide(color: Colors.grey[300]!),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(15),
-                                  borderSide: const BorderSide(color: Colors.indigo),
-                                ),
+                                onPressed: controller.toggleShowPassword,
                               ),
-                              obscureText: !controller.showPassword.value,
-                              onChanged: (value) => controller.password.value = value, // Parolni controllerga yozamiz
+                              hintText: 'password',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: BorderSide(color: Colors.grey[300]!),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(15),
+                                borderSide: const BorderSide(color: Colors.indigo),
+                              ),
                             ),
-                          ),
+                            obscureText: !controller.showPassword.value,
+                            onChanged: (value) => controller.password.value = value,
+                            onFieldSubmitted: (value) {
+                              if (value.length >= 6 && formKey.currentState!.validate()) {
+                                controller.handleSubmit(context);
+                              }
+                            },
+                          )),
                           SizedBox(height: 36),
                           ElevatedButton(
-                            onPressed: (){
-                              if(formKey.currentState!.validate()){
+                            onPressed: () {
+                              if (formKey.currentState!.validate()) {
                                 controller.handleSubmit(context);
                               }
                             },
@@ -143,4 +159,3 @@ class LoginPage extends StatelessWidget {
     );
   }
 }
-// Placeholder HomePage after successful login
