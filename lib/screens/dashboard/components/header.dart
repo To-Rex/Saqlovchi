@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:sklad/controllers/get_controller.dart';
@@ -17,28 +16,17 @@ class Header extends StatelessWidget {
       children: [
         if (!Responsive.isDesktop(context))
           IconButton(
-            icon: Icon(
-              Icons.menu,
-              color: Colors.white,
-              size: Responsive.getFontSize(context, baseSize: 24),
-            ),
+            icon: Icon(Icons.menu, color: Colors.white, size: Responsive.getFontSize(context, baseSize: 24)),
             onPressed: context.read<MenuAppController>().controlMenu,
             padding: EdgeInsets.all(defaultPadding / 2),
           ),
         if (!Responsive.isMobile(context))
-          Text(
-            "Dashboard",
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontSize: Responsive.getFontSize(context, baseSize: 20),
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text("Dashboard", style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: Responsive.getFontSize(context, baseSize: 20), color: Colors.white, fontWeight: FontWeight.bold)),
         if (!Responsive.isMobile(context))
           Spacer(flex: Responsive.isDesktop(context) ? 2 : 1),
         Expanded(child: SearchField()),
-        ProfileCard(),
-      ],
+        ProfileCard()
+      ]
     );
   }
 }

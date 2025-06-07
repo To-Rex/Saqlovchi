@@ -7,6 +7,7 @@ import '../../controllers/menu_app_controller.dart';
 import '../../responsive.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../documents/documents_screen.dart';
+import '../expenses/expenses_page.dart';
 import '../sales/sales_screen.dart';
 import '../settings/settings_screen.dart';
 import '../transfers/transactions_screen.dart';
@@ -69,6 +70,8 @@ class MainScreen extends StatelessWidget {
         return SalesScreen();
       case 'users':
         return const UsersScreen();
+        case 'expenses':
+        return ExpensesPage();
       case 'settings':
         return SettingsScreen();
       case '':

@@ -159,6 +159,15 @@ class _SideMenuState extends State<SideMenu> {
               },
             ),
             DrawerListTile(
+              title: "Xarajatlar",
+              svgSrc: "assets/icons/drop_box.svg",
+              route: '/expenses',
+              press: () {
+                print('Navigatsiya: /users ga replace');
+                GoRouter.of(context).replace('/expenses');
+              },
+            ),
+            DrawerListTile(
               title: "Sozlamalar",
               svgSrc: "assets/icons/menu_setting.svg",
               route: '/settings',
