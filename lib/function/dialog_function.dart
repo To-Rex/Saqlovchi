@@ -39,7 +39,7 @@ class DialogFunction {
           filled: true,
           labelStyle: const TextStyle(color: Colors.white70),
         ),
-        dialogTheme: DialogTheme(backgroundColor: bgColor),
+        //dialogTheme: DialogTheme(backgroundColor: bgColor),
       ),
       child: child,
     );

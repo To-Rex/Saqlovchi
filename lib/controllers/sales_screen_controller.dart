@@ -344,6 +344,199 @@ class SalesScreenController extends GetxController {
     }
   }
 
+  Future<void> sellAtCostPrice(BuildContext context) async {
+    final parsedQuantity = double.tryParse(quantityController.text) ?? quantity.value;
+    if (cachedStockQuantity.value != null && parsedQuantity > cachedStockQuantity.value!) {
+      quantity.value = cachedStockQuantity.value!;
+      quantityController.text = quantity.value.toString();
+      update(['quantity', 'totalPrice']);
+    } else {
+      quantity.value = parsedQuantity;
+    }
+
+    if (selectedProductId.value == null || quantity.value <= 0) {
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'Mahsulot tanlang va miqdor 0 dan katta bo‘lsin',
+        type: CustomToast.error,
+      );
+      return;
+    }
+    if (cachedStockQuantity.value != null && quantity.value > cachedStockQuantity.value!) {
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'Omborda yetarli mahsulot yo‘q',
+        type: CustomToast.error,
+      );
+      return;
+    }
+    if (showCreditOptions.value && (creditAmount.value == null || creditDueDate.value == null)) {
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'Qarz uchun summa va muddatni kiriting',
+        type: CustomToast.error,
+      );
+      return;
+    }
+    if (showCreditOptions.value && selectedCustomerId.value == null && newCustomerName.value.isEmpty) {
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'Mijozni tanlang yoki yangi mijoz ismini kiriting',
+        type: CustomToast.error,
+      );
+      return;
+    }
+    if (discount.value > getTotalPrice()) {
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: 'Chegirma jami summadan katta bo‘lmasligi kerak',
+        type: CustomToast.error,
+      );
+      return;
+    }
+
+    isSelling.value = true;
+
+    try {
+      String? customerId = selectedCustomerId.value;
+      if (customerId == null && newCustomerName.value.isNotEmpty) {
+        final customerResponse = await apiService.addCustomer(
+          fullName: newCustomerName.value,
+          phoneNumber: newCustomerPhone.value.isNotEmpty ? newCustomerPhone.value : null,
+          address: newCustomerAddress.value.isNotEmpty ? newCustomerAddress.value : null,
+          createdBy: _supabase.auth.currentUser!.id,
+        );
+        if (customerResponse.isEmpty) {
+          throw Exception('Mijoz qo‘shishda xato yuz berdi');
+        }
+        customerId = customerResponse['id'].toString();
+        appController.customers.add(customerResponse);
+      }
+
+      String saleType;
+      if (showCreditOptions.value && showDiscountOption.value) {
+        saleType = 'debt_with_discount';
+      } else if (showCreditOptions.value) {
+        saleType = 'debt';
+      } else {
+        saleType = 'discount'; // Chegirmali sotish bilan bir xil
+      }
+
+      // FIFO bo‘yicha partiyalarni tanlash
+      final items = await _prepareCostPriceSaleItems(selectedProductId.value!, quantity.value);
+      double totalPrice = 0.0;
+      double totalDiscount = 0.0;
+      for (var item in items) {
+        totalPrice += item['total_price'] as double;
+        totalDiscount += item['discount_amount'] as double;
+      }
+
+      final saleResponse = await apiService.addSale(
+        saleType: saleType,
+        customerId: customerId != null ? int.parse(customerId) : null,
+        totalAmount: totalPrice,
+        discountAmount: totalDiscount + discount.value,
+        paidAmount: saleType == 'discount' ? totalPrice : 0.0,
+        comments: saleType == 'debt_with_discount'
+            ? 'Qarzga va chegirma bilan sotuv'
+            : saleType == 'debt'
+            ? 'Qarzga sotuv'
+            : 'Tan narxiga chegirma bilan sotuv',
+        createdBy: _supabase.auth.currentUser!.id,
+        items: items,
+      );
+
+      if (saleResponse.isEmpty) {
+        throw Exception('Sotuv qo‘shishda xato yuz berdi');
+      }
+
+      // Qoldiqni yangilash
+      cachedStockQuantity.value = (cachedStockQuantity.value ?? 0.0) - quantity.value;
+      for (var item in items) {
+        final batchId = item['batch_id'].toString();
+        final itemQuantity = item['quantity'] as double;
+        if (batchCache.containsKey(batchId)) {
+          batchCache[batchId]!['quantity'] = (batchCache[batchId]!['quantity'] ?? 0.0) - itemQuantity;
+        }
+      }
+
+      // Sotuv panelini tozalash
+      selectedProductId.value = null;
+      selectedBatchIds.clear();
+      cachedStockQuantity.value = null;
+      resetSalePanel();
+
+      // Oxirgi sotuvlarni yangilash
+      recentSalesFuture.value = apiService.getRecentSales(limit: 2);
+      update();
+
+      CustomToast.show(
+        context: context,
+        title: 'Muvaffaqiyat',
+        message: 'Mahsulot tan narxiga sotildi',
+        type: CustomToast.success,
+      );
+    } catch (e) {
+      String errorMessage = 'Sotuv amalga oshirishda xato yuz berdi';
+      if (e.toString().contains('sale_type')) {
+        errorMessage = 'Ma\'lumotlar bazasida sotuv turi bilan bog‘liq muammo bor';
+      }
+      print('Xatolik: $e');
+      CustomToast.show(
+        context: context,
+        title: 'Xatolik',
+        message: errorMessage,
+        type: CustomToast.error,
+      );
+    } finally {
+      isSelling.value = false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _prepareCostPriceSaleItems(String productId, double requestedQuantity) async {
+    final batches = batchCache.entries
+        .where((entry) => entry.value['product_id'] == productId)
+        .toList()
+      ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+    double remainingQuantity = requestedQuantity;
+    List<Map<String, dynamic>> items = [];
+
+    for (var batch in batches) {
+      if (remainingQuantity <= 0) break;
+
+      final batchId = batch.key;
+      final batchQuantity = batch.value['quantity'] as double;
+      final batchCostPrice = batch.value['cost_price'] as double;
+      final batchSellingPrice = batch.value['selling_price'] as double;
+
+      final quantityToUse = remainingQuantity > batchQuantity ? batchQuantity : remainingQuantity;
+      final discountAmount = batchSellingPrice * quantityToUse; // Sotish narxi chegirma sifatida
+
+      items.add({
+        'product_id': int.parse(productId),
+        'batch_id': int.parse(batchId),
+        'quantity': quantityToUse,
+        'unit_price': batchCostPrice, // Faqat tan narxi
+        'total_price': quantityToUse * batchCostPrice,
+        'discount_amount': discountAmount,
+      });
+
+      remainingQuantity -= quantityToUse;
+    }
+
+    if (remainingQuantity > 0) {
+      throw Exception('Omborda yetarli mahsulot yo‘q: product_id=$productId');
+    }
+
+    return items;
+  }
+
   // Sotuv panelini tozalash
   void resetSalePanel() {
     showCreditOptions.value = false;

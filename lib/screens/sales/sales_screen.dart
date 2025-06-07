@@ -511,13 +511,12 @@ class SalesScreen extends StatelessWidget {
     });
   }
 
+
   Widget _buildSalePanel(
-      BuildContext context,
-      SalesScreenController controller, {
-        double width = 320,
+      BuildContext context, SalesScreenController controller,
+      {double width = 320,
         EdgeInsets padding = const EdgeInsets.all(12),
-        double? height,
-      }) {
+        double? height}) {
     return Container(
       width: width,
       height: height,
@@ -548,7 +547,8 @@ class SalesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              if (controller.selectedProductId.value != null && controller.selectedBatchIds.isNotEmpty) ...[
+              if (controller.selectedProductId.value != null &&
+                  controller.selectedBatchIds.isNotEmpty) ...[
                 Text(
                   "Tanlangan: ${controller.appController.products.firstWhere(
                         (p) => p['id'].toString() == controller.selectedProductId.value,
@@ -563,7 +563,8 @@ class SalesScreen extends StatelessWidget {
                 if (controller.cachedStockQuantity.value != null) ...[
                   Builder(
                     builder: (context) {
-                      final stockQuantity = controller.cachedStockQuantity.value ?? 0.0;
+                      final stockQuantity =
+                          controller.cachedStockQuantity.value ?? 0.0;
                       Color quantityColor = stockQuantity == 0
                           ? Colors.red
                           : stockQuantity <= 10
@@ -576,7 +577,8 @@ class SalesScreen extends StatelessWidget {
                             "Omborda qoldiq: ${stockQuantity.toStringAsFixed(0)}",
                             style: TextStyle(
                               color: quantityColor,
-                              fontSize: Responsive.getFontSize(context, baseSize: 13),
+                              fontSize:
+                              Responsive.getFontSize(context, baseSize: 13),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -585,7 +587,8 @@ class SalesScreen extends StatelessWidget {
                               "Mahsulot omborda mavjud emas",
                               style: TextStyle(
                                 color: Colors.red,
-                                fontSize: Responsive.getFontSize(context, baseSize: 12),
+                                fontSize:
+                                Responsive.getFontSize(context, baseSize: 12),
                               ),
                             ),
                         ],
@@ -602,12 +605,16 @@ class SalesScreen extends StatelessWidget {
               _buildPriceSummary(context, controller),
               const SizedBox(height: 12),
               _buildAdvancedOptionsToggle(context, controller),
-              if (controller.showCreditOptions.value || controller.showDiscountOption.value) ...[
+              if (controller.showCreditOptions.value ||
+                  controller.showDiscountOption.value) ...[
                 const SizedBox(height: 12),
-                if (controller.showCreditOptions.value) _buildCreditOptions(context, controller),
-                if (controller.showDiscountOption.value) _buildDiscountInput(context, controller),
+                if (controller.showCreditOptions.value)
+                  _buildCreditOptions(context, controller),
+                if (controller.showDiscountOption.value)
+                  _buildDiscountInput(context, controller),
               ],
               const SizedBox(height: 16),
+              // “Tan narxiga sotish” tugmasi
               Obx(
                     () => AnimatedScale(
                   duration: const Duration(milliseconds: 150),
@@ -620,7 +627,56 @@ class SalesScreen extends StatelessWidget {
                         controller.cachedStockQuantity.value == null ||
                         controller.cachedStockQuantity.value == 0)
                         ? null
-                        : () => controller.sellProduct(context),
+                        : () => controller.sellAtCostPrice(context), // Tan narxiga sotish
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 24,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.black.withOpacity(0.2),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: controller.isSelling.value
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Text(
+                      "Tan narxiga sotish",
+                      style: TextStyle(
+                        fontSize:
+                        Responsive.getFontSize(context, baseSize: 16),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // “Sotish” tugmasi (umumiy narx uchun)
+              Obx(
+                    () => AnimatedScale(
+                  duration: const Duration(milliseconds: 150),
+                  scale: controller.isSelling.value ? 0.95 : 1.0,
+                  child: ElevatedButton(
+                    onPressed: (controller.selectedProductId.value == null ||
+                        controller.selectedBatchIds.isEmpty ||
+                        controller.quantity.value <= 0 ||
+                        controller.isSelling.value ||
+                        controller.cachedStockQuantity.value == null ||
+                        controller.cachedStockQuantity.value == 0)
+                        ? null
+                        : () => controller.sellProduct(context), // Umumiy narxga sotish
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(
@@ -646,7 +702,8 @@ class SalesScreen extends StatelessWidget {
                         : Text(
                       "Sotish",
                       style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 16),
+                        fontSize:
+                        Responsive.getFontSize(context, baseSize: 16),
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
