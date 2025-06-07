@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/transactions_screen_controller.dart';
+import '../../controllers/get_controller.dart';
 import '../../responsive.dart';
 
 class TransactionsScreen extends StatelessWidget {
@@ -613,7 +614,7 @@ class TransactionsScreen extends StatelessWidget {
                                                       ),
                                                     ),
                                                     Text(
-                                                      "${(transaction['amount'] as num).toStringAsFixed(0)} so‘m",
+                                                      '${GetController().getMoneyFormat(transaction['amount'].toString())} so‘m',
                                                       style: TextStyle(
                                                         color: Colors.white,
                                                         fontSize: Responsive.getFontSize(
@@ -691,14 +692,9 @@ class TransactionsScreen extends StatelessWidget {
 
   Widget _buildStatCard(BuildContext context, String title, String value, Color color, IconData icon) {
     return Container(
-      //width: Responsive.isMobile(context) ? MediaQuery.of(context).size.width * 0.28 : 120,
       width: Responsive.isMobile(context) ? MediaQuery.of(context).size.width * 0.28 : Responsive.isTablet(context) ? MediaQuery.of(context).size.width * 0.28 : Responsive.isDesktop(context) ? MediaQuery.of(context).size.width * 0.25 : 120,
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.4), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.3))),
       child: Column(
         children: [
           Icon(icon, color: color, size: 20),
@@ -713,7 +709,7 @@ class TransactionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            "$value so‘m",
+            '${GetController().getMoneyFormat(value)} so‘m',
             style: TextStyle(
               color: Colors.white,
               fontSize: Responsive.getFontSize(context, baseSize: 14),
@@ -754,7 +750,7 @@ class TransactionsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            "$total so‘m",
+            "${GetController().getMoneyFormat(total)} so‘m",
             style: TextStyle(
               color: Colors.white,
               fontSize: Responsive.getFontSize(context, baseSize: 12),

@@ -978,13 +978,7 @@ class DialogFunction {
               if (snapshot.hasError) {
                 print('Snapshot xatosi: ${snapshot.error}');
                 return Center(
-                  child: Text(
-                    'Ma\'lumotlarni yuklashda xato',
-                    style: TextStyle(
-                      fontSize: Responsive.getFontSize(context, baseSize: 16),
-                      color: Colors.white70,
-                    ),
-                  ),
+                  child: Text('Ma\'lumotlarni yuklashda xato', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 16), color: Colors.white70))
                 );
               }
               final data = snapshot.data ?? {'category': null, 'products': []};
@@ -993,7 +987,7 @@ class DialogFunction {
                 'created_by': 'Noma’lum',
                 'created_at': 'Noma’lum',
                 'product_count': 0,
-                'total_quantity': 0.0,
+                'total_quantity': 0.0
               };
               final products = data['products'] ?? [];
 
@@ -1009,34 +1003,25 @@ class DialogFunction {
                         gradient: LinearGradient(
                           colors: [primaryColor, primaryColor.withOpacity(0.8)],
                           begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          end: Alignment.bottomRight
                         ),
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8, offset: Offset(0, 4))]
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             category['name'],
-                            style: TextStyle(
-                              fontSize: Responsive.getFontSize(context, baseSize: 20),
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 20), fontWeight: FontWeight.bold, color: Colors.white),
+                            overflow: TextOverflow.ellipsis
                           ),
                           SizedBox(height: defaultPadding / 2),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(child: _buildInfoRow(context, 'Yaratuvchi', category['created_by'])),
+                              const VerticalDivider(color: Colors.red, thickness: 10),
                               Expanded(child: _buildInfoRow(context, 'Yaratilgan', category['created_at'])),
                             ],
                           ),
@@ -1044,6 +1029,7 @@ class DialogFunction {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(child: _buildInfoRow(context, 'Mahsulotlar soni', category['product_count'].toString())),
+                              const VerticalDivider(color: Colors.red, thickness: 10),
                               Expanded(child: _buildInfoRow(context, 'Umumiy miqdor', '${category['total_quantity'].toStringAsFixed(2)} kg')),
                             ],
                           ),
@@ -1052,26 +1038,11 @@ class DialogFunction {
                     ),
                     SizedBox(height: defaultPadding),
                     // Mahsulotlar ro‘yxati
-                    Text(
-                      'Mahsulotlar',
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 18),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                    Text('Mahsulotlar', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 18), fontWeight: FontWeight.bold, color: Colors.white)),
                     SizedBox(height: defaultPadding / 2),
-                    products.isEmpty
-                        ? Center(
-                      child: Text(
-                        'Bu kategoriyada mahsulotlar yo‘q',
-                        style: TextStyle(
-                          fontSize: Responsive.getFontSize(context, baseSize: 16),
-                          color: Colors.white70,
-                        ),
-                      ),
-                    )
-                        : ListView.builder(
+                    products.isEmpty ? Center(
+                      child: Text('Bu kategoriyada mahsulotlar yo‘q', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 16), color: Colors.white70))
+                    ) : ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: products.length,
@@ -1120,14 +1091,16 @@ class DialogFunction {
                                       ),
                                     ),
                                     Text(
-                                      'Narxi: ${product['cost_price'].toStringAsFixed(2)} UZS',
+                                      //'Narxi: ${product['cost_price'].toStringAsFixed(2)} UZS',
+                                      'Narxi: ${GetController().getMoneyFormat(product['cost_price'].toStringAsFixed(2))} UZS',
                                       style: TextStyle(
                                         fontSize: Responsive.getFontSize(context, baseSize: 14),
                                         color: Colors.white70,
                                       ),
                                     ),
                                     Text(
-                                      'Sotish narxi: ${product['selling_price'].toStringAsFixed(2)} UZS',
+                                      //'Sotish narxi: ${product['selling_price'].toStringAsFixed(2)} UZS',
+                                      'Sotish narxi: ${GetController().getMoneyFormat(product['selling_price'].toStringAsFixed(2))} UZS',
                                       style: TextStyle(
                                         fontSize: Responsive.getFontSize(context, baseSize: 14),
                                         color: Colors.white70,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/customers_screen_controller.dart';
 import 'package:sklad/companents/custom_toast.dart';
+import 'package:sklad/controllers/get_controller.dart';
 import 'package:sklad/function/dialog_function.dart';
 import 'package:sklad/responsive.dart';
 
@@ -270,7 +271,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                             ),
                                           ),
                                           Text(
-                                            '${debtAmount.toStringAsFixed(2)} so‘m',
+                                            '${GetController().getMoneyFormat(debtAmount.toString())} so‘m',
                                             style: TextStyle(
                                               color: debtAmount > 0
                                                   ? Colors.redAccent
@@ -790,7 +791,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Joriy qarz: ${debtAmount.toStringAsFixed(2)} so‘m',
+                  'Joriy qarz: ${GetController().getMoneyFormat(debtAmount.toStringAsFixed(2))} so‘m',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: Responsive.getFontSize(context, baseSize: 14),
@@ -877,7 +878,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                             ),
                                           ),
                                           Text(
-                                            'Umumiy summa: ${(sale['amount'] as num).toDouble().toStringAsFixed(2)} so‘m',
+                                            'Umumiy summa: ${GetController().getMoneyFormat((sale['amount'] as num).toDouble().toStringAsFixed(2))} so‘m',
                                             style: TextStyle(
                                               color: Colors.white70,
                                               fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -910,7 +911,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                           ...items.map((item) => Padding(
                                             padding: const EdgeInsets.only(left: 8.0, top: 4.0),
                                             child: Text(
-                                              '${item['product_name']}: ${item['quantity']} x ${(item['unit_price'] as num).toDouble().toStringAsFixed(2)} = ${(item['total_price'] as num).toDouble().toStringAsFixed(2)} so‘m',
+                                              '${item['product_name']}: ${item['quantity']} x ${GetController().getMoneyFormat((item['unit_price'] as num).toDouble().toStringAsFixed(2))} = ${GetController().getMoneyFormat((item['total_price'] as num).toDouble().toStringAsFixed(2))} so‘m',
                                               style: TextStyle(
                                                 color: Colors.white70,
                                                 fontSize: Responsive.getFontSize(context, baseSize: 12),

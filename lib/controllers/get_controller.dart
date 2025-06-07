@@ -74,6 +74,9 @@ class GetController extends GetxController {
     super.onInit();
   }
 
+  String getMoneyFormat(value) => value == null ? '0' : value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]} ');
+
+
   // Boshlang‘ich ma'lumotlarni yuklash
   Future<void> fetchInitialData() async {
     isLoading.value = true;

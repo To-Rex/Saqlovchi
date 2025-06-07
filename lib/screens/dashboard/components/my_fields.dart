@@ -63,35 +63,21 @@ class MyFiles extends StatelessWidget {
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          padding: EdgeInsets.symmetric(
-            horizontal: defaultPadding * 0.8,
-            vertical: defaultPadding / (Responsive.isMobile(context) ? 2 : 1),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          elevation: 2,
+          padding: EdgeInsets.symmetric(horizontal: defaultPadding * 0.8, vertical: defaultPadding / (Responsive.isMobile(context) ? 2 : 1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          elevation: 2
         ),
         onPressed: onPressed,
         icon: Icon(icon, size: 18, color: Colors.white),
-        label: Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: Responsive.getFontSize(context, baseSize: 14),
-          ),
-        ),
-      ),
+        label: Text(label, style: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 14)))
+      )
     );
   }
 }
 
 
 class FileInfoCardGridView extends StatelessWidget {
-  const FileInfoCardGridView({
-    super.key,
-    required this.controller,
-  });
+  const FileInfoCardGridView({super.key, required this.controller});
 
   final GetController controller;
 
@@ -135,11 +121,7 @@ class FileInfoCardGridView extends StatelessWidget {
             crossAxisCount: Responsive.getCrossAxisCount(context),
             crossAxisSpacing: defaultPadding / 2,
             mainAxisSpacing: defaultPadding / 2,
-            childAspectRatio: size.width < 700
-                ? 1.5
-                : size.width < 1100
-                ? 1.7
-                : 2.0, // Balandlikni yanada oshirdik
+            childAspectRatio: size.width < 700 ? 1.5 : size.width < 1100 ? 1.7 : 2.0
           ),
           itemBuilder: (context, index) {
             final category = controller.categories[index];
@@ -149,7 +131,7 @@ class FileInfoCardGridView extends StatelessWidget {
               'created_by': 'Noma’lum',
               'created_at': 'Noma’lum',
               'product_count': 0,
-              'total_quantity': 0.0,
+              'total_quantity': 0.0
             };
             return FileInfoCard(
               title: stats['name'],
@@ -158,11 +140,11 @@ class FileInfoCardGridView extends StatelessWidget {
               productCount: stats['product_count'].toString(),
               totalQuantity: stats['total_quantity'].toStringAsFixed(2),
               controller: controller,
-              categoryId: int.parse(categoryId),
+              categoryId: int.parse(categoryId)
             );
-          },
+          }
         ));
-      },
+      }
     );
   }
 }

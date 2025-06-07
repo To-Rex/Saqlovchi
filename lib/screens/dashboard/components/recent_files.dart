@@ -170,7 +170,7 @@ class RecentFiles extends StatelessWidget {
       final costPrice = (batch['cost_price'] as num?)?.toDouble() ?? 0.0;
       final sellingPrice = (batch['selling_price'] as num?)?.toDouble() ?? 0.0;
       final receivedDate = batch['received_date']?.toString().split('T').first ?? 'Noma’lum';
-      return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: $costPrice so‘m, Sotish narxi: $sellingPrice so‘m, Yaratilgan: $receivedDate';
+      return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: ${GetController().getMoneyFormat(costPrice)} so‘m, Sotish narxi: ${GetController().getMoneyFormat(sellingPrice)} so‘m, Yaratilgan: $receivedDate';
     }).join('\n')
         : 'Partiyalar mavjud emas';
     print('Tooltip ma‘lumotlari: product=${product.name}, batchDetails=$batchDetails');
@@ -184,14 +184,9 @@ class RecentFiles extends StatelessWidget {
       cells: [
         DataCell(Text(product.name, style: textStyle)),
         DataCell(Text(product.categoryName, style: textStyle)),
-        DataCell(Text('${product.costPrice} UZS', style: textStyle)),
-        DataCell(Text('${product.sellingPrice} UZS', style: textStyle)),
-        DataCell(
-          Tooltip(
-            message: batchDetails,
-            child: Text(product.quantity, style: textStyle),
-          ),
-        ),
+        DataCell(Text('${GetController().getMoneyFormat(product.costPrice)} UZS', style: textStyle)),
+        DataCell(Text('${GetController().getMoneyFormat(product.sellingPrice)} UZS', style: textStyle)),
+        DataCell(Tooltip(message: batchDetails, child: Text(product.quantity, style: textStyle))),
         DataCell(Text(product.unit, style: textStyle)),
         DataCell(Text(product.batchNumber, style: textStyle)),
         DataCell(Text(product.saleStatus, style: textStyle)),
@@ -217,7 +212,7 @@ class RecentFiles extends StatelessWidget {
           final costPrice = (batch['cost_price'] as num?)?.toDouble() ?? 0.0;
           final sellingPrice = (batch['selling_price'] as num?)?.toDouble() ?? 0.0;
           final receivedDate = batch['received_date']?.toString().split('T').first ?? 'Noma’lum';
-          return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: $costPrice so‘m, Sotish narxi: $sellingPrice so‘m, Yaratilgan: $receivedDate';
+          return 'Partiya ${entry.key + 1}: Miqdor: $quantity kg, Xarid narxi: ${GetController().getMoneyFormat(costPrice)} so‘m, Sotish narxi: ${GetController().getMoneyFormat(sellingPrice)} so‘m, Yaratilgan: $receivedDate';
         }).join('\n')
             : 'Partiyalar mavjud emas';
         print('Tooltip ma‘lumotlari: product=${product.name}, batchDetails=$batchDetails');

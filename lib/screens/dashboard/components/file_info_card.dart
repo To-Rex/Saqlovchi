@@ -13,16 +13,7 @@ class FileInfoCard extends StatelessWidget {
   final GetController controller;
   final int categoryId;
 
-  const FileInfoCard({
-    super.key,
-    required this.title,
-    required this.addedUser,
-    required this.createdAt,
-    required this.productCount,
-    required this.totalQuantity,
-    required this.controller,
-    required this.categoryId,
-  });
+  const FileInfoCard({super.key, required this.title, required this.addedUser, required this.createdAt, required this.productCount, required this.totalQuantity, required this.controller, required this.categoryId});
 
   @override
   Widget build(BuildContext context) {
@@ -37,21 +28,12 @@ class FileInfoCard extends StatelessWidget {
         padding: Responsive.getPadding(context, basePadding: const EdgeInsets.only(right: 10, left: 10, top: 10, bottom: 10)),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              primaryColor.withOpacity(0.8),
-              isLowStock ? Colors.red.withOpacity(0.6) : primaryColor.withOpacity(0.6),
-            ],
+            colors: [primaryColor.withOpacity(0.8), isLowStock ? Colors.red.withOpacity(0.6) : primaryColor.withOpacity(0.6)],
             begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            end: Alignment.bottomRight
           ),
           borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 6, offset: const Offset(0, 2))]
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -64,14 +46,10 @@ class FileInfoCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: TextStyle(
-                        fontSize: Responsive.getFontSize(context, baseSize: 14),
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 14), fontWeight: FontWeight.bold, color: Colors.white),
                       overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
+                      maxLines: 1
+                    )
                   ),
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.more_vert, size: 14, color: Colors.white),
@@ -80,12 +58,12 @@ class FileInfoCard extends StatelessWidget {
                         DialogFunction().showEditCategoryDialog(context, controller, {
                           'id': categoryId,
                           'name': title,
-                          'created_by': addedUser,
+                          'created_by': addedUser
                         });
                       } else if (value == 'delete') {
                         DialogFunction().showDeleteCategoryDialog(context, controller, {
                           'id': categoryId,
-                          'name': title,
+                          'name': title
                         });
                       }
                     },
@@ -153,18 +131,14 @@ class FileInfoCard extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                fontSize: Responsive.getFontSize(context, baseSize: 12),
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 12), color: Colors.white, fontWeight: FontWeight.w500),
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
-              maxLines: maxLines,
-            ),
-          ),
-        ],
-      ),
+              maxLines: maxLines
+            )
+          )
+        ]
+      )
     );
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:go_router/go_router.dart';
 import 'package:sklad/constants.dart';
 import 'package:sklad/controllers/sales_screen_controller.dart';
 import '../../companents/custom_toast.dart';
+import '../../controllers/get_controller.dart';
 import '../../responsive.dart';
 import '../dashboard/components/header.dart';
 
@@ -42,10 +42,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopLayout(
-      BuildContext context,
-      SalesScreenController controller,
-      ) {
+  Widget _buildDesktopLayout(BuildContext context, SalesScreenController controller) {
     return Column(
       children: [
         _buildHeader(context),
@@ -55,19 +52,16 @@ class SalesScreen extends StatelessWidget {
             children: [
               _buildCategoryList(context, controller, width: 160),
               Expanded(child: _buildProductGrid(context, controller)),
-              _buildSalePanel(context, controller, width: 320),
-            ],
-          ),
+              _buildSalePanel(context, controller, width: 320)
+            ]
+          )
         ),
-        _buildRecentSales(context, controller),
-      ],
+        _buildRecentSales(context, controller)
+      ]
     );
   }
 
-  Widget _buildTabletLayout(
-      BuildContext context,
-      SalesScreenController controller,
-      ) {
+  Widget _buildTabletLayout(BuildContext context, SalesScreenController controller) {
     return Column(
       children: [
         _buildHeader(context),
@@ -86,10 +80,7 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMobileLayout(
-      BuildContext context,
-      SalesScreenController controller,
-      ) {
+  Widget _buildMobileLayout(BuildContext context, SalesScreenController controller) {
     return CustomScrollView(
       slivers: [
         SliverAppBar(
@@ -99,123 +90,59 @@ class SalesScreen extends StatelessWidget {
             background: Column(
               children: [
                 _buildHeader(context),
-                _buildSearchBar(
-                  context,
-                  controller,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-              ],
-            ),
+                _buildSearchBar(context, controller, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8))
+              ]
+            )
           ),
-          expandedHeight: 140,
+          expandedHeight: 140
         ),
         SliverToBoxAdapter(
           child: Column(
             children: [
-              _buildCategoryList(
-                context,
-                controller,
-                isHorizontal: true,
-                height: 50,
-              ),
-              _buildProductGrid(
-                context,
-                controller,
-                maxCrossAxisExtent: 140,
-                childAspectRatio: 1.4,
-                height: 360,
-              ),
-              _buildSalePanel(
-                context,
-                controller,
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-              ),
-              _buildRecentSales(context, controller),
-            ],
-          ),
-        ),
-      ],
+              _buildCategoryList(context, controller, isHorizontal: true, height: 50),
+              _buildProductGrid(context, controller, maxCrossAxisExtent: 140, childAspectRatio: 1.4, height: 360),
+              _buildSalePanel(context, controller, width: double.infinity, padding: const EdgeInsets.all(12)),
+              _buildRecentSales(context, controller)
+            ]
+          )
+        )
+      ]
     );
   }
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: Responsive.getPadding(
-        context,
-        basePadding: const EdgeInsets.all(12),
-      ),
+      padding: Responsive.getPadding(context, basePadding: const EdgeInsets.all(12)),
       decoration: BoxDecoration(
         color: primaryColor.withOpacity(0.15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8, offset: const Offset(0, 2))]
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "Sotuv",
-            style: TextStyle(
-              fontSize: Responsive.getFontSize(context, baseSize: 26),
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0.5,
-            ),
-          ),
+          Text("Sotuv", style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 26), fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
           ProfileCard(),
-          /*IconButton(
-            icon: const Icon(Icons.fact_check_rounded, color: Colors.white, size: 28),
-            onPressed: () => GoRouter.of(context).go('/test'),
-            splashRadius: 24,
-          ),*/
         ],
       ),
     );
   }
 
 
-  Widget _buildSearchBar(
-      BuildContext context,
-      SalesScreenController controller, {
-        EdgeInsets padding = const EdgeInsets.all(12),
-      }) {
+  Widget _buildSearchBar(BuildContext context, SalesScreenController controller, {EdgeInsets padding = const EdgeInsets.all(12)}) {
     return Padding(
       padding: Responsive.getPadding(context, basePadding: padding),
       child: TextField(
         decoration: InputDecoration(
           hintText: 'Nomi yoki kodi bo‘yicha qidirish', // Hint matni yaxshilandi
-          hintStyle: TextStyle(
-            color: Colors.white70,
-            fontSize: Responsive.getFontSize(context, baseSize: 16),
-          ),
+          hintStyle: TextStyle(color: Colors.white70, fontSize: Responsive.getFontSize(context, baseSize: 16)),
           filled: true,
           fillColor: Colors.white.withOpacity(0.1),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: primaryColor, width: 2),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryColor, width: 2)),
           prefixIcon: const Icon(Icons.search, color: Colors.white70, size: 24),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 14,
-            horizontal: 16,
-          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16)
         ),
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: Responsive.getFontSize(context, baseSize: 16),
-        ),
+        style: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 16)),
         onChanged: (value) {
           controller.searchQuery.value = value.trim().toLowerCase();
           print('SalesScreen SearchField: Yangi qidirish qiymati: ${controller.searchQuery.value}');
@@ -224,38 +151,22 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryList(
-      BuildContext context,
-      SalesScreenController controller, {
-        double width = 160,
-        bool isHorizontal = false,
-        double height = 400,
-      }) {
+  Widget _buildCategoryList(BuildContext context, SalesScreenController controller, {double width = 160, bool isHorizontal = false, double height = 400}) {
     return Container(
       width: isHorizontal ? double.infinity : width,
       height: height,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
       child: Obx(() => isHorizontal
           ? SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
             _buildCategoryItem(context, controller, null, "Barchasi"),
-            ...controller.appController.categories.map(
-                  (category) => _buildCategoryItem(
-                context,
-                controller,
-                category['id'].toString(),
-                category['name'],
-              ),
-            ),
-          ],
-        ),
-      )
-          : ListView.builder(
+            ...controller.appController.categories.map((category) => _buildCategoryItem(context, controller, category['id'].toString(), category['name'])
+            )
+          ]
+        )
+      ) : ListView.builder(
         scrollDirection: isHorizontal ? Axis.horizontal : Axis.vertical,
         itemCount: controller.appController.categories.length + 1,
         itemBuilder: (context, index) {
@@ -279,54 +190,34 @@ class SalesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryItem(
-      BuildContext context,
-      SalesScreenController controller,
-      String? id,
-      String name,
-      ) {
+  Widget _buildCategoryItem(BuildContext context, SalesScreenController controller, String? id, String name) {
     return GestureDetector(
       onTap: () => controller.selectCategory(id),
-      child: Obx(
-            () => AnimatedContainer(
+      child: Obx(() => AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: controller.selectedCategoryId.value == id
-                ? primaryColor.withOpacity(0.9)
-                : Colors.white.withOpacity(0.1),
+            color: controller.selectedCategoryId.value == id ? primaryColor.withOpacity(0.9) : Colors.white.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
+              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+            ]
           ),
           child: Text(
             name,
             style: TextStyle(
-              color: controller.selectedCategoryId.value == id
-                  ? Colors.white
-                  : Colors.white70,
+              color: controller.selectedCategoryId.value == id ? Colors.white : Colors.white70,
               fontWeight: FontWeight.w600,
-              fontSize: Responsive.getFontSize(context, baseSize: 15),
-            ),
-          ),
-        ),
-      ),
+              fontSize: Responsive.getFontSize(context, baseSize: 15)
+            )
+          )
+        )
+      )
     );
   }
 
-  Widget _buildProductGrid(
-      BuildContext context,
-      SalesScreenController controller, {
-        double maxCrossAxisExtent = 180,
-        double childAspectRatio = 1.5,
-        double height = 400,
-      }) {
+  Widget _buildProductGrid(BuildContext context, SalesScreenController controller, {double maxCrossAxisExtent = 180, double childAspectRatio = 1.5, double height = 400}) {
     return Obx(() {
       final filteredProducts = controller.selectedCategoryId.value == null
           ? controller.appController.products
@@ -334,29 +225,17 @@ class SalesScreen extends StatelessWidget {
           .where((p) => p['category_id'].toString() == controller.selectedCategoryId.value)
           .toList();
 
-      final searchedProducts = filteredProducts
-          .where((p) =>
-      (p['name']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value) ||
-          (p['code']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value))
-          .toList();
+      final searchedProducts = filteredProducts.where((p) =>
+      (p['name']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value) || (p['code']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value)).toList();
 
       print('SalesScreen Qidirish natijalari: ${searchedProducts.length} ta mahsulot topildi (query: ${controller.searchQuery.value}), mahsulotlar: ${searchedProducts.map((p) => {'name': p['name'], 'code': p['code']}).toList()}');
 
       if (controller.isStockLoading.value) {
-        return const Center(
-          child: CircularProgressIndicator(color: primaryColor),
-        );
+        return const Center(child: CircularProgressIndicator(color: primaryColor));
       }
 
-      return searchedProducts.isEmpty
-          ? Center(
-        child: Text(
-          "Mahsulot topilmadi",
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: Responsive.getFontSize(context, baseSize: 16),
-          ),
-        ),
+      return searchedProducts.isEmpty ? Center(
+        child: Text("Mahsulot topilmadi", style: TextStyle(color: Colors.white70, fontSize: Responsive.getFontSize(context, baseSize: 16))),
       )
           : SizedBox(
         height: height,
@@ -388,24 +267,16 @@ class SalesScreen extends StatelessWidget {
             }
 
             // Eng eski partiya narxi
-            final firstBatchPrice = batches.isNotEmpty
-                ? (batches.first.value['cost_price'] as double) + (batches.first.value['selling_price'] as double)
-                : 0.0;
+            final firstBatchPrice = batches.isNotEmpty ? (batches.first.value['cost_price'] as double) + (batches.first.value['selling_price'] as double) : 0.0;
 
             // Tooltip uchun partiyalar ro‘yxati
-            final batchDetails = batches.isNotEmpty
-                ? batches
-                .asMap()
-                .entries
-                .map((entry) {
+            final batchDetails = batches.isNotEmpty ? batches.asMap().entries.map((entry) {
               final batch = entry.value.value;
               final batchNumber = batch['batch_number'] as String;
               final quantity = batch['quantity'] as double;
               final price = (batch['cost_price'] as double) + (batch['selling_price'] as double);
-              return 'Partiya ${entry.key + 1} ($batchNumber): $quantity kg, ${price.toStringAsFixed(2)} so‘m/kg';
-            })
-                .join('\n')
-                : 'Partiyalar mavjud emas';
+              return 'Partiya ${entry.key + 1} ($batchNumber): $quantity kg, ${GetController().getMoneyFormat(price)} so‘m/kg';
+            }).join('\n') : 'Partiyalar mavjud emas';
 
             Color borderColor = Colors.transparent;
             if (stockQuantity == 0) {
@@ -415,37 +286,20 @@ class SalesScreen extends StatelessWidget {
             }
 
             return GestureDetector(
-              onTap: () => controller.selectProduct(
-                product['id'].toString(),
-                1.0,
-              ),
+              onTap: () => controller.selectProduct(product['id'].toString(), 1.0,),
               child: Tooltip(
                 message: batchDetails,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                textStyle: TextStyle(
-                  color: Colors.white,
-                  fontSize: Responsive.getFontSize(context, baseSize: 12),
-                ),
+                decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(8)),
+                textStyle: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 12)),
                 padding: const EdgeInsets.all(8),
                 preferBelow: true,
-                child: Obx(
-                      () => AnimatedScale(
+                child: Obx(() => AnimatedScale(
                     duration: const Duration(milliseconds: 200),
-                    scale: controller.selectedProductId.value == product['id'].toString()
-                        ? 0.95
-                        : 1.0,
+                    scale: controller.selectedProductId.value == product['id'].toString() ? 0.95 : 1.0,
                     child: Card(
                       elevation: 3,
-                      color: controller.selectedProductId.value == product['id'].toString()
-                          ? primaryColor.withOpacity(0.9)
-                          : Colors.white.withOpacity(0.1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(color: borderColor, width: 2),
-                      ),
+                      color: controller.selectedProductId.value == product['id'].toString() ? primaryColor.withOpacity(0.9) : Colors.white.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: borderColor, width: 2)),
                       child: Padding(
                         padding: const EdgeInsets.all(8),
                         child: Column(
@@ -479,7 +333,7 @@ class SalesScreen extends StatelessWidget {
                             ],
                             const SizedBox(height: 4),
                             Text(
-                              "Narx: ${firstBatchPrice.toStringAsFixed(2)} so‘m",
+                              "Narx: ${GetController().getMoneyFormat(firstBatchPrice)} so‘m",
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: Responsive.getFontSize(context, baseSize: 11),
@@ -491,9 +345,7 @@ class SalesScreen extends StatelessWidget {
                             Text(
                               "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
                               style: TextStyle(
-                                color: borderColor == Colors.transparent
-                                    ? Colors.white70
-                                    : borderColor,
+                                color: borderColor == Colors.transparent ? Colors.white70 : borderColor,
                                 fontSize: Responsive.getFontSize(context, baseSize: 11),
                                 fontWeight: FontWeight.bold,
                               ),
@@ -865,29 +717,20 @@ class SalesScreen extends StatelessWidget {
                           Row(
                             children: [
                               Text(
-                                "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 13),
-                                ),
+                                '${GetController().getMoneyFormat(sale['total_amount'].toString())} so‘m',
+                                style: TextStyle(color: Colors.white70, fontSize: Responsive.getFontSize(context, baseSize: 13))
                               ),
                               const SizedBox(width: 6),
                               if (sale['sale_type'] != 'returned')
                                 IconButton(
-                                  icon: const Icon(
-                                    Icons.undo,
-                                    color: Colors.orange,
-                                    size: 16,
-                                  ),
+                                  icon: const Icon(Icons.undo, color: Colors.orange, size: 16),
                                   tooltip: 'Qaytarish',
-                                  onPressed: controller.isSelling.value
-                                      ? null
-                                      : () => controller.returnProduct(context, sale['id']),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
+                                  onPressed: controller.isSelling.value ? null : () => controller.returnProduct(context, sale['id'])
+                                )
+                            ]
+                          )
+                        ]
+                      )
                     );
                   }),
                   const SizedBox(height: 8),
@@ -1282,7 +1125,7 @@ class SalesScreen extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text(
-                                      "${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      '${GetController().getMoneyFormat(sale['total_amount'].toString())} so‘m',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: Responsive.getFontSize(context, baseSize: 14),
@@ -1315,28 +1158,28 @@ class SalesScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      "Umumiy narx: ${(sale['total_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      'Umumiy narx: ${GetController().getMoneyFormat(sale['total_amount'].toString())} so‘m',
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: Responsive.getFontSize(context, baseSize: 12),
                                       ),
                                     ),
                                     Text(
-                                      "Chegirma: ${(sale['discount_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      'Chegirma: ${GetController().getMoneyFormat(sale['discount_amount'].toString())} so‘m',
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: Responsive.getFontSize(context, baseSize: 12),
                                       ),
                                     ),
                                     Text(
-                                      "To‘langan: ${(sale['paid_amount'] as num?)?.toStringAsFixed(0) ?? '0'} so‘m",
+                                      'To‘langan: ${GetController().getMoneyFormat(sale['paid_amount'].toString())} so‘m',
                                       style: TextStyle(
                                         color: Colors.white70,
                                         fontSize: Responsive.getFontSize(context, baseSize: 12),
                                       ),
                                     ),
                                     Text(
-                                      "Qoldiq qarz: ${((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0)} so‘m",
+                                      'Qoldiq qarz: ${GetController().getMoneyFormat(((sale['total_amount'] as num?)?.toDouble() ?? 0.0) - ((sale['paid_amount'] as num?)?.toDouble() ?? 0.0))} so‘m',
                                       style: TextStyle(
                                         color: hasDebt ? Colors.redAccent : Colors.greenAccent,
                                         fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -1363,7 +1206,7 @@ class SalesScreen extends StatelessWidget {
                                     ...items.map((item) => Padding(
                                       padding: const EdgeInsets.only(left: 8.0, top: 4.0),
                                       child: Text(
-                                        "${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                                        '${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${GetController().getMoneyFormat(item['unit_price'].toString())} = ${GetController().getMoneyFormat(item['total_price'].toString())}',
                                         style: TextStyle(
                                           color: Colors.white70,
                                           fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -1458,7 +1301,7 @@ class SalesScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Jami qarz: ${remainingDebt.toStringAsFixed(0)} so‘m',
+                'Jami qarz: ${GetController().getMoneyFormat(remainingDebt.toString())}',
                 style: TextStyle(
                   color: Colors.redAccent,
                   fontSize: Responsive.getFontSize(context, baseSize: 14),
@@ -1485,7 +1328,7 @@ class SalesScreen extends StatelessWidget {
               ...items.map((item) => Padding(
                 padding: const EdgeInsets.only(left: 8.0, top: 4.0),
                 child: Text(
-                  "${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${(item['unit_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} = ${(item['total_price'] as num?)?.toDouble().toStringAsFixed(2) ?? '0'} so‘m",
+                  '${item['batches']['products']['name'] ?? 'Noma’lum'}: ${item['quantity'] ?? 0} x ${GetController().getMoneyFormat(item['unit_price'].toString())} = ${GetController().getMoneyFormat(item['total_price'].toString())} so‘m',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: Responsive.getFontSize(context, baseSize: 12),
@@ -1693,23 +1536,16 @@ class SalesScreen extends StatelessWidget {
           children: [
             if (controller.selectedProductId.value != null) ...[
               Text(
-                "Jami: ${totalPrice.toStringAsFixed(2)} so‘m",
-                style: TextStyle(
-                  fontSize: Responsive.getFontSize(context, baseSize: 18),
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Jami: ${GetController().getMoneyFormat(totalPrice.toString())} so‘m',
+                style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 18), color: Colors.white, fontWeight: FontWeight.bold)
               ),
               if (controller.discount.value > 0)
                 Text(
-                  "Chegirma: ${controller.discount.value.toStringAsFixed(2)} so‘m",
-                  style: TextStyle(
-                    fontSize: Responsive.getFontSize(context, baseSize: 13),
-                    color: Colors.white70,
-                  ),
-                ),
-            ],
-          ],
+                  'Chegirma: ${GetController().getMoneyFormat(controller.discount.value.toString())} so‘m',
+                  style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 13), color: Colors.white70)
+                )
+            ]
+          ]
         );
       },
     );
