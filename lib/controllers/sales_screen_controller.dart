@@ -47,6 +47,8 @@ class SalesScreenController extends GetxController {
     preloadBatchData();
   }
 
+
+
   @override
   void onClose() {
     quantityController.dispose();

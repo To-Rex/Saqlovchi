@@ -22,6 +22,12 @@ class TransactionsScreenController extends GetxController {
     _updateTypeStats();
   }
 
+  void upDateData() {
+    _updateTransactions();
+    _updateStats();
+    _updateTypeStats();
+  }
+
   void _updateTransactions() {
     transactionsFuture.value = apiService.getAllTransactions(
       searchQuery: searchQuery.value.isEmpty ? null : searchQuery.value,

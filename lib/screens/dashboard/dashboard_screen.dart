@@ -16,8 +16,10 @@ class DashboardScreen extends StatelessWidget {
   final GetController controller = Get.put(GetController());
   final ApiService apiService = ApiService();
 
+
   @override
   Widget build(BuildContext context) {
+    controller.fetchInitialData();
     return SafeArea(
       child: SingleChildScrollView(
         primary: false,

@@ -34,7 +34,7 @@ class SettingsScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Test ma\'lumotlarini tozalash',
+                  'Test ma\'lumotlarini boshqarish',
                   style: TextStyle(
                     fontSize: Responsive.getFontSize(context, baseSize: 24),
                     fontWeight: FontWeight.bold,
@@ -65,6 +65,30 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 )),
+                const SizedBox(height: 20),
+                Obx(() => ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : () => controller.exportCsv(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: controller.isLoading.value
+                      ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                      : Text(
+                    'CSV eksport qilish',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: Responsive.getFontSize(context, baseSize: 16),
+                    ),
+                  ),
+                )),
               ],
             ),
           ),
@@ -73,5 +97,3 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 }
-
-// Boshqa sahifalar uchun ham shunga o‘xshash tarzda...

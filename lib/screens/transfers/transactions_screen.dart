@@ -12,6 +12,7 @@ class TransactionsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(TransactionsScreenController());
 
+    controller.upDateData();
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

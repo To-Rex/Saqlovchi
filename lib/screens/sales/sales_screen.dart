@@ -15,6 +15,7 @@ class SalesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(SalesScreenController());
 
+    controller.preloadBatchData();
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

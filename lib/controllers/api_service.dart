@@ -810,6 +810,26 @@ class ApiService {
     }
   }
 
+
+// controllers/api_service.dart (faqat qo‘shimcha metodlar)
+  Future<List<Map<String, dynamic>>> getPublicTables() async {
+    try {
+      final response = await _supabase.rpc('get_public_tables');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw Exception('Jadvallar ro‘yxatini olishda xato: $e');
+    }
+  }
+
+  Future<List<String>> getTableCsv(String tableName) async {
+    try {
+      final response = await _supabase.rpc('get_table_as_csv', params: {'p_table_name': tableName});
+      return List<String>.from(response.map((row) => row['csv_text']));
+    } catch (e) {
+      throw Exception('CSV olishda xato: $e');
+    }
+  }
+
   // Tranzaksiya turlari statistikasi
   Future<Map<String, Map<String, dynamic>>> getTransactionTypeStats({DateTime? startDate, DateTime? endDate}) async {
     try {
