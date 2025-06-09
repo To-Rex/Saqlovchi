@@ -589,7 +589,7 @@ class ApiService {
   }
 
   // Ombor statistikasini olish
-  Future<Map<String, dynamic>> getWarehouseStats() async {
+  Future<Map<String, dynamic>> getWarehouseStatss() async {
     try {
       final products = await _supabase.from('products').select('id').count();
       final outOfStock = await _supabase
@@ -629,6 +629,46 @@ class ApiService {
         'debt_sales': 0,
         'discount_sales': 0,
         'debt_with_discount_sales': 0,
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> getWarehouseStats() async {
+    try {
+      final response = await _supabase.rpc('get_warehouse_stats').select().single();
+      print('Sotuv statistikasi: $response');
+      return {
+        'total_products': response['total_products'] ?? 0,
+        'out_of_stock': response['out_of_stock'] ?? 0,
+        'debt_sales': response['debt_sales'] ?? 0,
+        'discount_sales': response['discount_sales'] ?? 0,
+        'debt_with_discount_sales': response['debt_with_discount_sales'] ?? 0,
+        'total_stock_quantity': response['total_stock_quantity']?.toDouble() ?? 0.0,
+        'total_value': response['total_value']?.toDouble() ?? 0.0,
+        'total_cost_value': response['total_cost_value']?.toDouble() ?? 0.0,
+        'total_selling_value': response['total_selling_value']?.toDouble() ?? 0.0,
+      };
+    } catch (e) {
+      final errorMessage = 'Statistikani olishda xato: $e';
+      print(errorMessage);
+      Get.snackbar(
+        'Xatolik',
+        e is PostgrestException
+            ? 'Ma\'lumotlar bazasi xatosi: ${e.message} (Kod: ${e.code})'
+            : 'Noma\'lum xato: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 5),
+      );
+      return {
+        'total_products': 0,
+        'out_of_stock': 0,
+        'debt_sales': 0,
+        'discount_sales': 0,
+        'debt_with_discount_sales': 0,
+        'total_stock_quantity': 0.0,
+        'total_value': 0.0,
+        'total_cost_value': 0.0,
+        'total_selling_value': 0.0,
       };
     }
   }

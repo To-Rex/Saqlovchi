@@ -19,17 +19,14 @@ class RecentFiles extends StatelessWidget {
   List<ProductDisplayData> _filterProducts(
       List<dynamic> products, String searchQuery, String filterUnit, String filterCategory) {
     final trimmedQuery = searchQuery.trim().toLowerCase();
-    var filtered = products
-        .where((p) {
+    var filtered = products.where((p) {
       final name = (p['name'] ?? '').toString().toLowerCase();
       final code = (p['code'] ?? '').toString().toLowerCase();
       final matchesName = name.contains(trimmedQuery);
       final matchesCode = code.contains(trimmedQuery);
       print('Mahsulot: ${p['name']}, code: ${p['code']}, matchesName: $matchesName, matchesCode: $matchesCode, query: $trimmedQuery');
       return matchesName || matchesCode;
-    })
-        .map((p) => ProductDisplayData.fromProduct(p, controller.categories))
-        .toList();
+    }).map((p) => ProductDisplayData.fromProduct(p, controller.categories)).toList();
 
     if (filterUnit.isNotEmpty && controller.units.any((u) => u['name'] == filterUnit)) {
       filtered = filtered.where((p) => p.unit == filterUnit).toList();

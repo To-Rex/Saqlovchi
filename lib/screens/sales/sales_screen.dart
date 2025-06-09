@@ -226,7 +226,8 @@ class SalesScreen extends StatelessWidget {
           .toList();
 
       final searchedProducts = filteredProducts.where((p) =>
-      (p['name']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value) || (p['code']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value)).toList();
+      (p['name']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value) ||
+          (p['code']?.toString().toLowerCase() ?? '').contains(controller.searchQuery.value)).toList();
 
       print('SalesScreen Qidirish natijalari: ${searchedProducts.length} ta mahsulot topildi (query: ${controller.searchQuery.value}), mahsulotlar: ${searchedProducts.map((p) => {'name': p['name'], 'code': p['code']}).toList()}');
 
@@ -234,7 +235,8 @@ class SalesScreen extends StatelessWidget {
         return const Center(child: CircularProgressIndicator(color: primaryColor));
       }
 
-      return searchedProducts.isEmpty ? Center(
+      return searchedProducts.isEmpty
+          ? Center(
         child: Text("Mahsulot topilmadi", style: TextStyle(color: Colors.white70, fontSize: Responsive.getFontSize(context, baseSize: 16))),
       )
           : SizedBox(
@@ -253,76 +255,92 @@ class SalesScreen extends StatelessWidget {
           itemCount: searchedProducts.length,
           itemBuilder: (context, index) {
             final product = searchedProducts[index];
-            double stockQuantity = 0.0;
+            return FutureBuilder<double>(
+              future: controller.apiService.getStockQuantity(product['id'].toString()), // ApiService’dan qoldiq olish
+              builder: (context, snapshot) {
+                double stockQuantity = snapshot.data ?? 0.0;
+                Color borderColor = Colors.transparent;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: primaryColor));
+                }
+                if (snapshot.hasError) {
+                  print('Qoldiq olishda xato: ${snapshot.error}');
+                  stockQuantity = 0.0;
+                }
 
-            // Partiyalarni FIFO bo‘yicha tartiblash
-            final batches = controller.batchCache.entries
-                .where((entry) => entry.value['product_id'] == product['id'].toString())
-                .toList()
-              ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+                if (stockQuantity == 0) {
+                  borderColor = Colors.red;
+                } else if (stockQuantity <= 10) {
+                  borderColor = Colors.yellow;
+                }
 
-            for (var batch in batches) {
-              final batchQuantity = batch.value['quantity'] as double;
-              stockQuantity += batchQuantity;
-            }
+                // Partiyalar uchun tooltip
+                final batches = controller.batchCache.entries
+                    .where((entry) => entry.value['product_id'] == product['id'].toString())
+                    .toList()
+                  ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
 
-            // Eng eski partiya narxi
-            final firstBatchPrice = batches.isNotEmpty ? (batches.first.value['cost_price'] as double) + (batches.first.value['selling_price'] as double) : 0.0;
+                final firstBatchPrice = batches.isNotEmpty ? (batches.first.value['cost_price'] as double) + (batches.first.value['selling_price'] as double) : 0.0;
 
-            // Tooltip uchun partiyalar ro‘yxati
-            final batchDetails = batches.isNotEmpty ? batches.asMap().entries.map((entry) {
-              final batch = entry.value.value;
-              final batchNumber = batch['batch_number'] as String;
-              final quantity = batch['quantity'] as double;
-              final price = (batch['cost_price'] as double) + (batch['selling_price'] as double);
-              return 'Partiya ${entry.key + 1} ($batchNumber): $quantity kg, ${GetController().getMoneyFormat(price)} so‘m/kg';
-            }).join('\n') : 'Partiyalar mavjud emas';
+                final batchDetails = batches.isNotEmpty
+                    ? batches.asMap().entries.map((entry) {
+                  final batch = entry.value.value;
+                  final batchNumber = batch['batch_number'] as String;
+                  final quantity = batch['quantity'] as double;
+                  final price = (batch['cost_price'] as double) + (batch['selling_price'] as double);
+                  return 'Partiya ${entry.key + 1} ($batchNumber): $quantity kg, ${GetController().getMoneyFormat(price)} so‘m/kg';
+                }).join('\n')
+                    : 'Partiyalar mavjud emas';
 
-            Color borderColor = Colors.transparent;
-            if (stockQuantity == 0) {
-              borderColor = Colors.red;
-            } else if (stockQuantity <= 10) {
-              borderColor = Colors.yellow;
-            }
-
-            return GestureDetector(
-              onTap: () => controller.selectProduct(product['id'].toString(), 1.0,),
-              child: Tooltip(
-                message: batchDetails,
-                decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(8)),
-                textStyle: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 12)),
-                padding: const EdgeInsets.all(8),
-                preferBelow: true,
-                child: Obx(() => AnimatedScale(
-                    duration: const Duration(milliseconds: 200),
-                    scale: controller.selectedProductId.value == product['id'].toString() ? 0.95 : 1.0,
-                    child: Card(
-                      elevation: 3,
-                      color: controller.selectedProductId.value == product['id'].toString() ? primaryColor.withOpacity(0.9) : Colors.white.withOpacity(0.1),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: borderColor, width: 2)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                product['name'] ?? 'Noma’lum',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: Responsive.getFontSize(context, baseSize: 14),
+                return GestureDetector(
+                  onTap: () => controller.selectProduct(product['id'].toString(), 1.0),
+                  child: Tooltip(
+                    message: batchDetails,
+                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.8), borderRadius: BorderRadius.circular(8)),
+                    textStyle: TextStyle(color: Colors.white, fontSize: Responsive.getFontSize(context, baseSize: 12)),
+                    padding: const EdgeInsets.all(8),
+                    preferBelow: true,
+                    child: Obx(() => AnimatedScale(
+                      duration: const Duration(milliseconds: 200),
+                      scale: controller.selectedProductId.value == product['id'].toString() ? 0.95 : 1.0,
+                      child: Card(
+                        elevation: 3,
+                        color: controller.selectedProductId.value == product['id'].toString() ? primaryColor.withOpacity(0.9) : Colors.white.withOpacity(0.1),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: BorderSide(color: borderColor, width: 2)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  product['name'] ?? 'Noma’lum',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            if (product['code'] != null && product['code'].toString().isNotEmpty) ...[
+                              if (product['code'] != null && product['code'].toString().isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Kod: ${product['code']}',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: Responsive.getFontSize(context, baseSize: 11),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                               const SizedBox(height: 4),
                               Text(
-                                'Kod: ${product['code']}',
+                                "Narx: ${GetController().getMoneyFormat(firstBatchPrice)} so‘m",
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: Responsive.getFontSize(context, baseSize: 11),
@@ -330,40 +348,29 @@ class SalesScreen extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
+                                style: TextStyle(
+                                  color: borderColor == Colors.transparent ? Colors.white70 : borderColor,
+                                  fontSize: Responsive.getFontSize(context, baseSize: 11),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
-                            const SizedBox(height: 4),
-                            Text(
-                              "Narx: ${GetController().getMoneyFormat(firstBatchPrice)} so‘m",
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: Responsive.getFontSize(context, baseSize: 11),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              "Qoldiq: ${stockQuantity.toStringAsFixed(0)}",
-                              style: TextStyle(
-                                color: borderColor == Colors.transparent ? Colors.white70 : borderColor,
-                                fontSize: Responsive.getFontSize(context, baseSize: 11),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    )),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         ),
       );
     });
   }
-
 
   Widget _buildSalePanel(
       BuildContext context, SalesScreenController controller,

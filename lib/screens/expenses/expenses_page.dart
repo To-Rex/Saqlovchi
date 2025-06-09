@@ -175,35 +175,20 @@ class _AnimatedScaleButtonState extends State<AnimatedScaleButton> {
             ),
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
-              BoxShadow(
-                color: primaryColor.withOpacity(0.3),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
+              BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))
             ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.check,
-                size: Responsive.getFontSize(context, baseSize: 16),
-                color: Colors.white,
-              ),
+              Icon(Icons.check, size: Responsive.getFontSize(context, baseSize: 16), color: Colors.white),
               SizedBox(width: defaultPadding / 4),
-              Text(
-                'Kiritish',
-                style: TextStyle(
-                  fontSize: Responsive.getFontSize(context, baseSize: 14),
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+              Text('Kiritish', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 14), color: Colors.white, fontWeight: FontWeight.w600))
+            ]
+          )
+        )
+      )
     );
   }
 }
