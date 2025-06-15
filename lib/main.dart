@@ -80,6 +80,7 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6bHFmY2ZyY3liaHJtdnVqb3llIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0MTA2OCwiZXhwIjoyMDYwMTE3MDY4fQ.owr3Mk5q7J1zXfBFuIe_FthFEc_-bw4ocwWwv6nBtgk',
   );*/
 
+
   await Supabase.initialize(
     url: 'https://vzcppxvadolivfxiouzp.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6Y3BweHZhZG9saXZmeGlvdXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NzU5MTUsImV4cCI6MjA2NDU1MTkxNX0.IpahnEqI9oIddZcT8TuR-rfcSWcFgDcYkBw0cYe48wE',
