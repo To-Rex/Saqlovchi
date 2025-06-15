@@ -46,7 +46,7 @@ class DialogFunction {
   }
 
 
-  void showAddProductDialog(BuildContext context, GetController controller, {int? existingProductId}) {
+  void showAddProductDialog1(BuildContext context, GetController controller, {int? existingProductId}) {
     final TextEditingController productNameController = TextEditingController();
     final TextEditingController codeController = TextEditingController();
     final TextEditingController quantityController = TextEditingController();
@@ -446,6 +446,275 @@ class DialogFunction {
         ),
       ),
     )));
+  }
+
+
+  void showAddProductDialog(BuildContext context, GetController controller, {int? existingProductId}) {
+    final TextEditingController productNameController = TextEditingController();
+    final TextEditingController codeController = TextEditingController();
+    final TextEditingController quantityController = TextEditingController();
+    final TextEditingController costPriceController = TextEditingController();
+    final TextEditingController sellingPriceController = TextEditingController();
+    final RxnInt selectedProductId = RxnInt(existingProductId);
+
+    if (existingProductId != null) {
+      final product = controller.products.firstWhere(
+            (p) => p['id'] == existingProductId,
+        orElse: () => null,
+      );
+      if (product != null) {
+        productNameController.text = product['name'];
+        codeController.text = product['code']?.toString() ?? '';
+        controller.newProductName.value = product['name'];
+        controller.newProductCategoryId.value = product['category_id'];
+        controller.newProductUnitId.value = product['unit_id'];
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          constraints: const BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+            color: secondaryColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            child: Obx(() {
+              final bool isExistingSelected = selectedProductId.value != null;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Yangi mahsulot yoki partiya", style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 20), fontWeight: FontWeight.bold, color: Colors.white)),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Mahsulotni tanlang (ixtiyoriy)', style: TextStyle(fontSize: Responsive.getFontSize(context, baseSize: 10), color: Colors.white)),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<int>(
+                          decoration: const InputDecoration(
+                            labelText: 'Mavjud mahsulot',
+                            border: InputBorder.none,
+                            labelStyle: TextStyle(color: Colors.white70),
+                          ),
+                          dropdownColor: secondaryColor,
+                          style: const TextStyle(color: Colors.white),
+                          value: selectedProductId.value,
+                          items: [
+                            const DropdownMenuItem<int>(
+                              value: null,
+                              child: Text('— Tanlanmagan —'),
+                            ),
+                            ...controller.products.map((p) {
+                              return DropdownMenuItem<int>(
+                                value: int.parse(p['id'].toString()),
+                                child: Text(p['name']),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (value) {
+                            selectedProductId.value = value;
+                            if (value != null) {
+                              final p = controller.products.firstWhere((e) => e['id'] == value);
+                              productNameController.text = p['name'];
+                              codeController.text = p['code'] ?? '';
+                              controller.newProductName.value = p['name'];
+                              controller.newProductCategoryId.value = p['category_id'];
+                              controller.newProductUnitId.value = p['unit_id'];
+                            } else {
+                              productNameController.clear();
+                              codeController.clear();
+                              controller.newProductName.value = '';
+                              controller.newProductCategoryId.value = null;
+                              controller.newProductUnitId.value = null;
+                            }
+                          },
+                        ),
+
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.white.withOpacity(0.2)),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: productNameController,
+                    enabled: !isExistingSelected,
+                    decoration: _inputDecoration('Mahsulot nomi'),
+                    style: TextStyle(
+                      color: isExistingSelected ? Colors.white38 : Colors.white,
+                    ),
+                    onChanged: (v) => controller.newProductName.value = v,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: codeController,
+                    enabled: !isExistingSelected,
+                    decoration: _inputDecoration('Kod (ixtiyoriy)'),
+                    style: TextStyle(
+                      color: isExistingSelected ? Colors.white38 : Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Obx(() => _dropdownField(
+                          'Kategoriya',
+                          controller.categories.toList().cast<Map<String, dynamic>>(),
+                          controller.newProductCategoryId,
+                          enabled: !isExistingSelected,
+                        )),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Obx(() => _dropdownField(
+                          'Birlik',
+                          controller.units.toList().cast<Map<String, dynamic>>(),
+                          controller.newProductUnitId,
+                          enabled: !isExistingSelected,
+                        )),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: quantityController,
+                    decoration: _inputDecoration('Miqdor (kg)'),
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(color: Colors.white),
+                    onChanged: (v) => controller.newProductQuantity.value = double.tryParse(v) ?? 0.0,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: costPriceController,
+                          decoration: _inputDecoration('Xarid narxi'),
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white),
+                          onChanged: (v) => controller.newProductCostPrice.value = double.tryParse(v) ?? 0.0,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          controller: sellingPriceController,
+                          decoration: _inputDecoration('Sotuv narxi'),
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white),
+                          onChanged: (v) => controller.newProductSellingPrice.value = double.tryParse(v) ?? 0.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Bekor qilish', style: TextStyle(color: Colors.white70)),
+                      ),
+                      const SizedBox(width: 8),
+                      Obx(() => controller.isProcessing.value
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : ElevatedButton(
+                        onPressed: () async {
+                          if (productNameController.text.isEmpty && selectedProductId.value == null) return;
+                          controller.isProcessing.value = true;
+                          await controller.addProduct(
+                            existingProductId: selectedProductId.value,
+                            code: codeController.text.trim().isEmpty ? null : codeController.text.trim(),
+                          );
+                          controller.isProcessing.value = false;
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Qo‘shish', style: TextStyle(color: Colors.white)),
+                      )),
+                    ],
+                  )
+                ],
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dropdownField(String label, List<Map<String, dynamic>> items, Rxn<int> selectedId, {bool enabled = true}) {
+    return DropdownButtonFormField<int>(
+      value: selectedId.value,
+      onChanged: enabled ? (val) => selectedId.value = val : null,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
+      ),
+      dropdownColor: secondaryColor,
+      style: const TextStyle(color: Colors.white),
+      items: items.map((item) {
+        return DropdownMenuItem<int>(
+          value: int.tryParse(item['id'].toString()),
+          child: Text(item['name']),
+        );
+      }).toList(),
+    );
+  }
+
+
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white70),
+      filled: true,
+      fillColor: Colors.white.withOpacity(0.1),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primaryColor, width: 2),
+      ),
+    );
   }
 
 
