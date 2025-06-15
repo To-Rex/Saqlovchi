@@ -486,36 +486,81 @@ class SalesScreen extends StatelessWidget {
                       //dialog ochiladi
                       showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
-                          title: Text(
-                            "Diqqat!",
-                            style: TextStyle(
-                              fontSize: Responsive.getFontSize(context, baseSize: 18),
-                              color: Colors.red,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          content: Text(
-                            "Tan narxiga sotishni tasdiqlaysizmi?",
-                            style: TextStyle(
-                              fontSize:
-                              Responsive.getFontSize(context, baseSize: 16),
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              child: Text(
-                                "Tan narxiga sotish",
-                                style: TextStyle(
-                                  fontSize:
-                                  Responsive.getFontSize(context, baseSize: 14),
-                                  color: Colors.red,
-                                ),
+                        builder: (context) {
+                          final selectedProduct = controller.appController.products.firstWhere(
+                                (p) => p['id'].toString() == controller.selectedProductId.value,
+                            orElse: () => null,
+                          );
+
+                          double costPrice = 0.0;
+                          double quantity = controller.quantity.value;
+
+                          final batches = controller.batchCache.entries
+                              .where((entry) => entry.value['product_id'] == controller.selectedProductId.value)
+                              .toList()
+                            ..sort((a, b) => DateTime.parse(a.value['received_date']).compareTo(DateTime.parse(b.value['received_date'])));
+
+                          if (batches.isNotEmpty) {
+                            final batch = batches.first;
+                            costPrice = (batch.value['cost_price'] as double?) ?? 0.0;
+                          }
+
+                          double totalCost = quantity * costPrice;
+
+                          return AlertDialog(
+                            backgroundColor: secondaryColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            title: Text(
+                              "Diqqat!",
+                              style: TextStyle(
+                                fontSize: Responsive.getFontSize(context, baseSize: 18),
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.bold,
                               ),
-                              onPressed: () => controller.sellAtCostPrice(context),
                             ),
-                          ],
-                        ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Tan narxiga sotishni tasdiqlaysizmi?",
+                                  style: TextStyle(
+                                    fontSize: Responsive.getFontSize(context, baseSize: 16),
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                if (selectedProduct != null)
+                                  Text(
+                                    "🧾 Mahsulot: ${selectedProduct['name']}",
+                                    style: TextStyle(fontSize: 14, color: Colors.white70),
+                                  ),
+                                Text(
+                                  "⚖️ Miqdor: ${quantity.toStringAsFixed(2)} kg",
+                                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                                ),
+                                Text(
+                                  "💰 Tan narx: ${quantity.toStringAsFixed(2)} x ${GetController().getMoneyFormat(costPrice)} = ${GetController().getMoneyFormat(totalCost)} so‘m",
+                                  style: TextStyle(fontSize: 14, color: Colors.greenAccent, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                child: Text(
+                                  "Tan narxiga sotish",
+                                  style: TextStyle(
+                                    fontSize: Responsive.getFontSize(context, baseSize: 14),
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                onPressed: () => controller.sellAtCostPrice(context),
+                              ),
+                            ],
+                          );
+                        },
+
                       );
                     },
                     style: ElevatedButton.styleFrom(

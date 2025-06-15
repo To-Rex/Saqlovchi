@@ -1062,7 +1062,7 @@ class DialogFunction {
     );
   }
 
-  void showAddCategoryDialog(BuildContext context, GetController controller) {
+  void showAddCategoryDialog1(BuildContext context, GetController controller) {
     TextEditingController nameController = TextEditingController();
     TextEditingController descriptionController = TextEditingController();
 
@@ -1127,6 +1127,113 @@ class DialogFunction {
       ),
     );
   }
+
+  void showAddCategoryDialog(BuildContext context, GetController controller) {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final FocusNode nameFocus = FocusNode();
+    final FocusNode descriptionFocus = FocusNode();
+    final RxBool isSaving = false.obs;
+
+    showDialog(
+      context: context,
+      builder: (context) => _applyDarkTheme(
+        context,
+        Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: secondaryColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Obx(() => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Yangi Kategoriya',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  focusNode: nameFocus,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) {
+                    FocusScope.of(context).requestFocus(descriptionFocus);
+                  },
+                  decoration: _inputDecoration('Nomi'),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: descriptionController,
+                  focusNode: descriptionFocus,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) async {
+                    await _saveCategory(controller, nameController, isSaving);
+                    Navigator.pop(context);
+                  },
+                  decoration: _inputDecoration('Tavsif (ixtiyoriy)'),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Bekor qilish', style: TextStyle(color: Colors.white70)),
+                    ),
+                    const SizedBox(width: 12),
+                    isSaving.value
+                        ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                        : ElevatedButton(
+                      onPressed: () async {
+                        await _saveCategory(controller, nameController, isSaving);
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('Saqlash', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            )),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _saveCategory(GetController controller, TextEditingController nameController, RxBool isSaving) async {
+    if (nameController.text.trim().isEmpty) return;
+    isSaving.value = true;
+    controller.newCategoryName.value = nameController.text.trim();
+    await controller.addCategory();
+    isSaving.value = false;
+  }
+
+
 
   void showEditCategoryDialog(BuildContext context, GetController controller, Map<String, dynamic> category) {
     TextEditingController nameController = TextEditingController(text: category['name']);
