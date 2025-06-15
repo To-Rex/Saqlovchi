@@ -24,19 +24,23 @@ class TransactionsScreenController extends GetxController {
   }
 
   void upDateData() {
+    updateFinancialStats();
     _updateTransactions();
     _updateStats();
     _updateTypeStats();
-    updateFinancialStats();
-
   }
+
 
   void updateFinancialStats() {
+    print('====================================================================================');
+    print('startDate: ${startDate.value}, endDate: ${endDate.value}');
+    print('====================================================================================');
     financialStatsFuture.value = apiService.getFinancialSummary(
-      startDate: DateTime(2025, 1, 1),
-      endDate: DateTime(2025, 6, 30),
+      startDate: startDate.value,
+      endDate: endDate.value,
     );
   }
+
 
 
   void _updateTransactions() {
@@ -83,16 +87,12 @@ class TransactionsScreenController extends GetxController {
 
   void setStartDate(DateTime? date) {
     startDate.value = date;
-    _updateTransactions();
-    _updateStats();
-    _updateTypeStats();
+    upDateData();
   }
 
   void setEndDate(DateTime? date) {
     endDate.value = date;
-    _updateTransactions();
-    _updateStats();
-    _updateTypeStats();
+    upDateData();
   }
 
   void clearFilters() {
@@ -101,8 +101,6 @@ class TransactionsScreenController extends GetxController {
     sortOrder.value = 'newest';
     startDate.value = null;
     endDate.value = null;
-    _updateTransactions();
-    _updateStats();
-    _updateTypeStats();
+    upDateData();
   }
 }

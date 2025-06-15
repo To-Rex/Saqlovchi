@@ -249,8 +249,7 @@ class TransactionsScreen extends StatelessWidget {
                       Row(
                         children: [
                           Expanded(
-                            child: Obx(
-                                  () => ElevatedButton(
+                            child: Obx(() => ElevatedButton(
                                 onPressed: () async {
                                   final selectedDate = await showDatePicker(
                                     context: context,
@@ -273,6 +272,7 @@ class TransactionsScreen extends StatelessWidget {
                                     },
                                   );
                                   if (selectedDate != null) {
+                                    print('Selected start date: ${selectedDate.toString().substring(0, 10)}');
                                     controller.setStartDate(selectedDate);
                                   }
                                 },
@@ -295,8 +295,7 @@ class TransactionsScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Obx(
-                                  () => ElevatedButton(
+                            child: Obx(() => ElevatedButton(
                                 onPressed: () async {
                                   final selectedDate = await showDatePicker(
                                     context: context,
@@ -319,6 +318,7 @@ class TransactionsScreen extends StatelessWidget {
                                     },
                                   );
                                   if (selectedDate != null) {
+                                    print('Selected end date: ${selectedDate.toString().substring(0, 10)}');
                                     controller.setEndDate(selectedDate);
                                   }
                                 },

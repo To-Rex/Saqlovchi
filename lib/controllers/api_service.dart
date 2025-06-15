@@ -1092,11 +1092,16 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getFinancialSummary({DateTime? startDate, DateTime? endDate}) async {
+
+  Future<Map<String, dynamic>> getFinancialSummary({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    print('getFinancialSummary: startDate=$startDate, endDate=$endDate');
     try {
       final params = <String, dynamic>{};
-      if (startDate != null) params['start_date'] = startDate.toIso8601String().split('T').first;
-      if (endDate != null) params['end_date'] = endDate.toIso8601String().split('T').first;
+      if (startDate != null) params['start_date'] = startDate.toIso8601String();
+      if (endDate != null) params['end_date'] = endDate.toIso8601String();
 
       final response = await Supabase.instance.client
           .rpc('get_full_financial_summary', params: params)
