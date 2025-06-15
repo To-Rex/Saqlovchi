@@ -97,8 +97,7 @@ class GetController extends GetxController {
     } catch (e) {
       //error.value = 'Ma’lumotlarni olishda xato: $e';
       print('fetchInitialData xatosi: $e');
-      Get.snackbar('Xatolik', 'Ma’lumotlarni olishda xato: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('Xatolik', 'Ma’lumotlarni olishda xato: $e', backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

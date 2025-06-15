@@ -13,6 +13,7 @@ class TransactionsScreenController extends GetxController {
   var sortOrder = 'newest'.obs;
   var startDate = Rxn<DateTime>();
   var endDate = Rxn<DateTime>();
+  var financialStatsFuture = Rxn<Future<Map<String, dynamic>>>();
 
   @override
   void onInit() {
@@ -26,7 +27,17 @@ class TransactionsScreenController extends GetxController {
     _updateTransactions();
     _updateStats();
     _updateTypeStats();
+    updateFinancialStats();
+
   }
+
+  void updateFinancialStats() {
+    financialStatsFuture.value = apiService.getFinancialSummary(
+      startDate: DateTime(2025, 1, 1),
+      endDate: DateTime(2025, 6, 30),
+    );
+  }
+
 
   void _updateTransactions() {
     transactionsFuture.value = apiService.getAllTransactions(

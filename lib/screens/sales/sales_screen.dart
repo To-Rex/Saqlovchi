@@ -393,8 +393,7 @@ class SalesScreen extends StatelessWidget {
         ],
       ),
       child: SingleChildScrollView(
-        child: Obx(
-              () => Column(
+        child: Obx(() => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -410,10 +409,7 @@ class SalesScreen extends StatelessWidget {
               if (controller.selectedProductId.value != null &&
                   controller.selectedBatchIds.isNotEmpty) ...[
                 Text(
-                  "Tanlangan: ${controller.appController.products.firstWhere(
-                        (p) => p['id'].toString() == controller.selectedProductId.value,
-                    orElse: () => {'name': 'Noma’lum'},
-                  )['name']}",
+                  "Tanlangan: ${controller.appController.products.firstWhere((p) => p['id'].toString() == controller.selectedProductId.value, orElse: () => {'name': 'Noma’lum'},)['name']}",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: Responsive.getFontSize(context, baseSize: 15),
@@ -554,8 +550,7 @@ class SalesScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               // “Sotish” tugmasi (umumiy narx uchun)
-              Obx(
-                    () => AnimatedScale(
+              Obx(() => AnimatedScale(
                   duration: const Duration(milliseconds: 150),
                   scale: controller.isSelling.value ? 0.95 : 1.0,
                   child: ElevatedButton(
@@ -658,7 +653,6 @@ class SalesScreen extends StatelessWidget {
                 );
               }
               final recentSales = snapshot.data ?? [];
-              print('RecentSales yangilandi: ${recentSales.length} ta sotuv, ma‘lumotlar: ${recentSales.map((s) => {'id': s['id'], 'name': s['sale_items']?[0]?['batches']?['products']?['name'] ?? 'Noma‘lum'}).toList()}');
               return Column(
                 children: [
                   ...recentSales.map((sale) {

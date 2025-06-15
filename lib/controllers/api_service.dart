@@ -1092,6 +1092,43 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getFinancialSummary({DateTime? startDate, DateTime? endDate}) async {
+    try {
+      final params = <String, dynamic>{};
+      if (startDate != null) params['start_date'] = startDate.toIso8601String().split('T').first;
+      if (endDate != null) params['end_date'] = endDate.toIso8601String().split('T').first;
+
+      final response = await Supabase.instance.client
+          .rpc('get_full_financial_summary', params: params)
+          .select()
+          .single();
+
+      print('Moliyaviy statistika olingan: $response');
+
+      return {
+        'total_income': double.tryParse(response['total_income'].toString()) ?? 0.0,
+        'total_expense': double.tryParse(response['total_expense'].toString()) ?? 0.0,
+        'total_profit': double.tryParse(response['total_profit'].toString()) ?? 0.0,
+        'total_debt_sales': double.tryParse(response['total_debt_sales'].toString()) ?? 0.0,
+        'total_cash_sales': double.tryParse(response['total_cash_sales'].toString()) ?? 0.0,
+        'total_debt_payment': double.tryParse(response['total_debt_payment'].toString()) ?? 0.0,
+        'total_returns': double.tryParse(response['total_returns'].toString()) ?? 0.0,
+      };
+    } catch (e) {
+      print('Moliyaviy statistikani olishda xato: $e');
+      return {
+        'total_income': 0.0,
+        'total_expense': 0.0,
+        'total_profit': 0.0,
+        'total_debt_sales': 0.0,
+        'total_cash_sales': 0.0,
+        'total_debt_payment': 0.0,
+        'total_returns': 0.0,
+      };
+    }
+  }
+
+
   // Sotuv elementi qo‘shish
   Future<Map<String, dynamic>> addSaleItem({required int saleId, required int batchId, required int quantity, required double unitPrice, required int productId, required String sellerId}) async {
     try {

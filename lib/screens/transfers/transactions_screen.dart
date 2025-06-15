@@ -14,6 +14,7 @@ class TransactionsScreen extends StatelessWidget {
     final controller = Get.put(TransactionsScreenController());
 
     controller.upDateData();
+    controller.updateFinancialStats();
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -70,43 +71,43 @@ class TransactionsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
+
                       Obx(() => FutureBuilder<Map<String, dynamic>>(
-                        future: controller.statsFuture.value,
+                        future: controller.financialStatsFuture.value,
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(
-                              child: CircularProgressIndicator(color: primaryColor),
-                            );
+                            return const Center(child: CircularProgressIndicator(color: primaryColor));
                           }
-                          final stats = snapshot.data ?? {'income': 0.0, 'expense': 0.0, 'profit': 0.0};
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          final stats = snapshot.data ?? {};
+                          return Column(
                             children: [
-                              _buildStatCard(
-                                context,
-                                'Kirim',
-                                stats['income'].toStringAsFixed(0),
-                                Colors.greenAccent,
-                                Icons.arrow_upward,
+                              Text(
+                                'Moliyaviy statistikalar',
+                                style: TextStyle(
+                                  fontSize: Responsive.getFontSize(context, baseSize: 16),
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
-                              _buildStatCard(
-                                context,
-                                'Chiqim',
-                                stats['expense'].toStringAsFixed(0),
-                                Colors.redAccent,
-                                Icons.arrow_downward,
-                              ),
-                              _buildStatCard(
-                                context,
-                                stats['profit'] >= 0 ? 'Foyda' : 'Zarar',
-                                stats['profit'].abs().toStringAsFixed(0),
-                                stats['profit'] >= 0 ? Colors.blueAccent : Colors.orangeAccent,
-                                stats['profit'] >= 0 ? Icons.trending_up : Icons.trending_down,
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                children: [
+                                  _buildStatCard(context, 'Naqd savdo', stats['total_cash_sales'].toString(), Colors.green, Icons.attach_money),
+                                  _buildStatCard(context, 'Qarz savdo', stats['total_debt_sales'].toString(), Colors.red, Icons.money_off),
+                                  _buildStatCard(context, 'Qarz to‘lov', stats['total_debt_payment'].toString(), Colors.blue, Icons.payment),
+                                  _buildStatCard(context, 'Kirim (foyda)', stats['total_income'].toString(), Colors.teal, Icons.trending_up),
+                                  _buildStatCard(context, 'Chiqim', stats['total_expense'].toString(), Colors.orange, Icons.trending_down),
+                                  _buildStatCard(context, 'Foyda', stats['total_profit'].toString(), Colors.purple, Icons.stacked_bar_chart),
+                                  _buildStatCard(context, 'Qaytarish', stats['total_returns'].toString(), Colors.grey, Icons.undo),
+                                ],
                               ),
                             ],
                           );
                         },
                       )),
+
                     ],
                   ),
                 ),
