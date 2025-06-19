@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:sklad/controllers/expense_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'get_controller.dart';
 
@@ -356,16 +357,7 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> addProductAndBatch({
-    required String name,
-    required int categoryId,
-    required int unitId,
-    required double batchQuantity,
-    required double batchCostPrice,
-    required double batchSellingPrice,
-    required String createdBy,
-    String? code,
-  }) async {
+  Future<Map<String, dynamic>> addProductAndBatch({required String name, required int categoryId, required int unitId, required double batchQuantity, required double batchCostPrice, required double batchSellingPrice, required String createdBy, String? code}) async {
     try {
       final response = await _supabase.rpc('add_product_and_batch', params: {
         'p_name': name,
@@ -1026,6 +1018,60 @@ class ApiService {
     }
   }
 
+  Future<void> submitExpense(String title, String amountText) async {
+    final amount = double.tryParse(amountText);
+    if (title.isEmpty || amount == null || amount <= 0) {
+      Get.snackbar('Xatolik', 'To‘g‘ri ma’lumot kiriting');
+      return;
+    }
+
+    try {
+      final user = _supabase.auth.currentUser;
+      await _supabase.from('expenses').insert({
+        'title': title,
+        'amount': amount,
+        'created_by': user?.id,
+      });
+      print('Xarajat qo‘shildi: title=$title, amount=$amount');
+    } catch (e) {
+      print('Xarajat qo‘shishda xato yuz berdi: $e');
+    }
+  }
+
+
+  Future<void> fetchExpenses() async {
+    try {
+      final response = await _supabase
+          .from('expenses')
+          .select()
+          .order('created_at', ascending: false);
+
+      print('Xarajatlar olingan: $response');
+
+      // TO‘G‘RI controller bilan bog‘lanish
+      final controller = Get.find<ExpensesController>();
+      controller.changeExpenseList(response);
+    } catch (e) {
+      print('Xatolik: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchExpensesWithUserStats() async {
+    try {
+      final response = await Supabase.instance.client
+          .rpc('get_expenses_with_user_stats')
+          .select();
+      print('📊 Statistika bilan xarajatlar: ${response.length} ta');
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      print('Xatolik: $e');
+      return [];
+    }
+  }
+
+
+
+
 
   // Partiya qo‘shish
   Future<Map<String, dynamic>> addBatch({required int productId, required String batchNumber, required double quantity, required double costPrice, required double sellingPrice, String? comments, required String createdBy}) async {
@@ -1093,10 +1139,7 @@ class ApiService {
   }
 
 
-  Future<Map<String, dynamic>> getFinancialSummary({
-    DateTime? startDate,
-    DateTime? endDate,
-  }) async {
+  Future<Map<String, dynamic>> getFinancialSummary({DateTime? startDate, DateTime? endDate}) async {
     print('getFinancialSummary: startDate=$startDate, endDate=$endDate');
     try {
       final params = <String, dynamic>{};
@@ -1181,14 +1224,7 @@ class ApiService {
     }
   }
 
-  Future<void> updateProduct({
-    required int productId,
-    required String name,
-    String? code,
-    required int categoryId,
-    required int unitId,
-    String? description,
-  }) async {
+  Future<void> updateProduct({required int productId, required String name, String? code, required int categoryId, required int unitId, String? description}) async {
     try {
       final response = await _supabase
           .from('products')
